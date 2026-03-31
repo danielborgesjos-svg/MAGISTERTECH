@@ -13,7 +13,12 @@ const DB_PATH_RIMA = path.join(DB_DIR, 'rima_db.json');
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { index: false }));
+
+// Forçar a raiz do site para a Rima Imóveis
+app.get('/', (req, res) => {
+    res.redirect('/rima_imoveis/index.html');
+});
 
 // Rota amigável para o Robo Financeiro
 app.get('/vendas', (req, res) => {
