@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Restrito | Rima Imóveis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: {
+                colors: {
+                    gold: { DEFAULT: '#D4E64A', light: '#E9F29E', dark: '#A2B52A' },
+                    dark: { DEFAULT: '#0a0a0a', surface: '#141414' }
+                },
+                fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Playfair Display', 'serif'] }
+            }}
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background: #0a0a0a; color: #f5f5f5; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(20,20,20,0.8); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.07); }
+        .input-field {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .input-field:focus { border-color: #D4E64A; background: rgba(255,255,255,0.07); }
+        .input-field::placeholder { color: rgba(255,255,255,0.25); }
+        .bg-pattern {
+            background-image: radial-gradient(circle at 20% 50%, rgba(212,175,55,0.05) 0%, transparent 50%),
+                              radial-gradient(circle at 80% 50%, rgba(212,175,55,0.03) 0%, transparent 50%);
+        }
+        @keyframes float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-12px)} }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex bg-pattern">
+
+    <!-- Left Panel: Branding -->
+    <div class="hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center p-20">
+        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80" 
+             alt="Rima Imóveis" class="absolute inset-0 w-full h-full object-cover opacity-20">
+        <div class="absolute inset-0 bg-gradient-to-r from-dark via-dark/80 to-transparent"></div>
+        
+        <div class="relative z-10 animate-float">
+            <!-- Logo -->
+            <div class="flex items-center mb-16">
+                <img src="https://i.imgur.com/my1yk0N.png" alt="Rima Imóveis" class="w-[320px] object-contain transform origin-left">
+            </div>
+
+            <h2 class="font-serif text-5xl text-white leading-tight mb-8">
+                Gestão de <br /> <span class="italic text-gold">Alto Padrão.</span>
+            </h2>
+            <p class="text-gray-400 font-light text-lg max-w-sm leading-relaxed">
+                Sistema operacional exclusivo para consultores e administradores da Rima Imóveis.
+            </p>
+
+            <div class="mt-16 flex items-center gap-6">
+                <div class="w-12 h-[1px] bg-gold/30"></div>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 text-gray-500 text-sm">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-gold"></i>
+                        <span>Acesso protegido com criptografia</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-gray-500 text-sm">
+                        <i data-lucide="users" class="w-4 h-4 text-gold"></i>
+                        <span>Controle de roles: Admin & Consultor</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-gray-500 text-sm">
+                        <i data-lucide="clock" class="w-4 h-4 text-gold"></i>
+                        <span>Sessão automática de 8 horas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Login Form -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-20">
+        <div class="fade-in w-full max-w-md">
+            <!-- Mobile Logo -->
+            <div class="flex lg:hidden items-center mb-12">
+                <img src="https://i.imgur.com/my1yk0N.png" alt="Rima Imóveis" class="w-[220px] object-contain transform origin-left">
+            </div>
+
+            <div class="mb-12">
+                <p class="text-gold text-[11px] font-black uppercase tracking-[0.3em] mb-3">Área Restrita</p>
+                <h1 class="font-serif text-4xl text-white">Bem-vindo de volta</h1>
+                <p class="text-gray-500 mt-2 text-sm">Entre com suas credenciais para acessar o painel.</p>
+            </div>
+
+            <!-- Error message -->
+            <div id="error-msg" class="hidden mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm flex items-center gap-3">
+                <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+                <span id="error-text"></span>
+            </div>
+
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3">E-mail</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600"></i>
+                        <input id="email" type="email" placeholder="seu@email.com" 
+                               class="input-field w-full pl-12 pr-4 py-4 rounded-xl text-sm" required
+                               value="admin@rimaimoveis.com">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3">Senha</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600"></i>
+                        <input id="senha" type="password" placeholder="••••••••" 
+                               class="input-field w-full pl-12 pr-12 py-4 rounded-xl text-sm" required
+                               value="rima2026">
+                        <button type="button" id="toggle-pass" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gold transition-colors">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-btn" 
+                        class="w-full bg-gold hover:bg-gold-dark text-dark font-black py-5 rounded-xl uppercase tracking-widest text-[11px] transition-all shadow-2xl shadow-gold/10 flex items-center justify-center gap-3 mt-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span id="btn-text">Acessar Painel</span>
+                </button>
+            </form>
+
+            <div class="mt-10 pt-8 border-t border-white/5 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-gray-600 hover:text-gray-300 transition-colors text-sm">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao site
+                </a>
+                <p class="text-gray-700 text-xs">v4.2 Business Suite</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Check if already authenticated
+        const token = localStorage.getItem('rima_token');
+        if (token) {
+            fetch('/api/rima/me', { headers: { 'x-auth-token': token } })
+                .then(r => { if (r.ok) window.location.href = 'painel.html'; })
+                .catch(() => localStorage.removeItem('rima_token'));
+        }
+
+        // Toggle password visibility
+        document.getElementById('toggle-pass').onclick = function() {
+            const input = document.getElementById('senha');
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        };
+
+        document.getElementById('login-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            const errDiv = document.getElementById('error-msg');
+            const errText = document.getElementById('error-text');
+
+            btn.disabled = true;
+            btnText.textContent = 'Verificando...';
+            errDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/rima/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        senha: document.getElementById('senha').value
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('rima_token', data.token);
+                    localStorage.setItem('rima_user', JSON.stringify(data.user));
+                    btnText.textContent = 'Acesso liberado!';
+                    btn.classList.add('bg-emerald-500');
+                    setTimeout(() => { window.location.href = 'painel.html'; }, 800);
+                } else {
+                    errText.textContent = data.error || 'Credenciais inválidas.';
+                    errDiv.classList.remove('hidden');
+                    btn.disabled = false;
+                    btnText.textContent = 'Acessar Painel';
+                }
+            } catch {
+                errText.textContent = 'Servidor indisponível. Verifique a conexão.';
+                errDiv.classList.remove('hidden');
+                btn.disabled = false;
+                btnText.textContent = 'Acessar Painel';
+            }
+        };
+    </script>
+</body>
+</html>

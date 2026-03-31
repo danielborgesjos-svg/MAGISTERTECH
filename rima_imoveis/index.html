@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Rima Imóveis - Residências de Alto Padrão em Curitiba. Design de Interiores e Home Staging.">
+    <title>Rima Imóveis | Curitiba Flagship</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: { DEFAULT: '#D4E64A', light: '#E9F29E', dark: '#A2B52A' },
+                        dark: { DEFAULT: '#0a0a0a', surface: '#141414', border: '#2a2a2a' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Playfair Display', 'serif'] }
+                }
+            }
+        }
+    </script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .glass-input:focus {
+            border-color: #D4E64A;
+            background: rgba(255, 255, 255, 0.05);
+            outline: none;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #E9F29E 0%, #D4E64A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-overlay {
+            background: linear-gradient(to bottom, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.7) 60%, #0a0a0a 100%);
+        }
+
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s, transform 1s;
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Banner Slider Logic */
+        .slider-container {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #D4E64A;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-gold selection:text-dark">
+
+    <!-- Navbar -->
+    <nav id="navbar" class="absolute w-full z-50 py-4 px-4 lg:py-6 lg:px-12">
+        <div class="max-w-[1400px] mx-auto flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center group">
+                <img src="https://i.imgur.com/my1yk0N.png" alt="Rima Imóveis" class="w-[360px] object-contain hover:scale-105 transition-transform origin-left" style="filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));">
+            </a>
+
+            <!-- Menu -->
+            <div class="hidden lg:flex items-center gap-12">
+                <ul class="flex items-center gap-10 text-[11px] uppercase tracking-widest font-bold text-gray-400">
+                    <li><a href="#home" class="hover:text-gold transition-colors">Início</a></li>
+                    <li><a href="#buscar" class="hover:text-gold transition-colors">Propriedades</a></li>
+                    <li><a href="#design" class="hover:text-gold transition-colors">Design & Staging</a></li>
+                    <li><a href="#contato" class="hover:text-gold transition-colors">Consultoria</a></li>
+                </ul>
+                <div class="flex items-center gap-4 pl-10 border-l border-white/10">
+                    <a href="login.html"
+                        class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-5 py-2.5 rounded-full text-[10px] uppercase tracking-widest font-bold text-white transition-all">
+                        <i data-lucide="lock" class="w-3 h-3 text-gold"></i> Painel Adm
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button id="mobile-menu-btn" class="lg:hidden text-white"><i data-lucide="menu"
+                    class="w-7 h-7"></i></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed inset-0 z-40 hidden lg:hidden glass pt-32 px-10">
+        <ul class="flex flex-col gap-8 text-2xl font-serif text-white">
+            <li><a href="#home" onclick="closeMobile()">Início</a></li>
+            <li><a href="#buscar" onclick="closeMobile()">Busca</a></li>
+            <li><a href="#design" onclick="closeMobile()">Design</a></li>
+            <li><a href="painel.html">Painel Adm</a></li>
+        </ul>
+    </div>
+
+    <!-- Hero Banner Slider -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div class="slider-container">
+            <div class="slide active">
+                <img src="https://i.imgur.com/7gqvsjj.jpeg" alt="Curitiba Luxury 1" class="w-full h-full object-cover">
+            </div>
+            <div class="slide">
+                <img src="https://i.imgur.com/Y9Bp8YA.jpeg" alt="Curitiba Luxury 2" class="w-full h-full object-cover">
+            </div>
+            <div class="slide">
+                <img src="https://i.imgur.com/leH6xzJ.jpeg" alt="Curitiba Luxury 3" class="w-full h-full object-cover">
+            </div>
+            <div class="absolute inset-0 hero-overlay"></div>
+        </div>
+
+        <div class="relative z-10 text-center px-6 mt-10">
+            <span
+                class="fade-up tracking-[0.4em] text-gold uppercase text-[10px] font-black mb-6 flex justify-center items-center gap-4">
+                <span class="w-12 h-[1px] bg-gold/30"></span>
+                Flagship Curitiba
+                <span class="w-12 h-[1px] bg-gold/30"></span>
+            </span>
+            <h1 class="fade-up font-serif text-6xl md:text-8xl lg:text-9xl font-bold text-white mb-8 leading-none">
+                Estilo <br /> <span class="italic text-gradient">Curitibano</span>
+            </h1>
+            <p class="fade-up text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 font-light">
+                Curadoria exclusiva de ativos de alto valor no Batel, Ecoville e Cabral. Especialistas em Design de
+                Interiores e Home Staging.
+            </p>
+            <div class="fade-up flex justify-center gap-6">
+                <a href="#buscar"
+                    class="bg-gold hover:bg-gold-dark text-dark font-black px-10 py-5 rounded text-[11px] uppercase tracking-widest transition-all">Explorar
+                    Ativos</a>
+                <a href="#design"
+                    class="border border-white/20 hover:bg-white/10 text-white font-black px-10 py-5 rounded text-[11px] uppercase tracking-widest transition-all">Staging
+                    & Design</a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-40">
+            <span class="text-[10px] uppercase tracking-widest text-white vertical-text">Scroll</span>
+            <div class="w-[1px] h-12 bg-white animate-pulse"></div>
+        </div>
+    </section>
+
+    <!-- SECTION: BUSCA E FILTRO (O ESPAÇO) -->
+    <section id="buscar" class="py-32 relative z-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 fade-up">
+                <h2 class="font-serif text-4xl text-white mb-4">Filtrar por <span
+                        class="italic text-gold">Interesse</span></h2>
+                <p class="text-gray-500 text-sm">Encontre a residência que se adapta ao seu estilo de vida em Curitiba.
+                </p>
+            </div>
+
+            <div class="fade-up glass p-1 rounded-2xl flex flex-col md:flex-row gap-2 shadow-3xl">
+                <input type="text" placeholder="Bairro ou Tag (Ex: Batel, Garden...)"
+                    class="flex-1 bg-white/5 border-none p-6 rounded-xl text-white focus:ring-1 focus:ring-gold outline-none text-sm">
+                <select
+                    class="bg-white/5 border-none p-6 rounded-xl text-white focus:ring-1 focus:ring-gold outline-none text-sm cursor-pointer min-w-[200px]">
+                    <option class="bg-dark">Todos os Tipos</option>
+                    <option class="bg-dark">Mansão</option>
+                    <option class="bg-dark">Cobertura</option>
+                    <option class="bg-dark">Apartamento Luxo</option>
+                </select>
+                <select
+                    class="bg-white/5 border-none p-6 rounded-xl text-white focus:ring-1 focus:ring-gold outline-none text-sm cursor-pointer min-w-[200px]">
+                    <option class="bg-dark">Preço Automático</option>
+                    <option class="bg-dark">R$ 5M - 15M</option>
+                    <option class="bg-dark">Acima de R$ 15M</option>
+                </select>
+                <button
+                    class="bg-gold hover:bg-gold-dark text-dark font-black p-6 rounded-xl flex items-center justify-center group transition-all min-w-[80px]">
+                    <i data-lucide="search" class="w-6 h-6 group-hover:scale-110 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: COLEÇÃO -->
+    <section id="colecao" class="py-32 bg-dark-surface border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-20 fade-up">
+                <div>
+                    <span class="text-gold uppercase tracking-[0.3em] text-[10px] font-black mb-3 block">Ativos
+                        Selecionados</span>
+                    <h2 class="font-serif text-5xl text-white leading-tight underline decoration-gold/30">Curadoria
+                        Curitiba</h2>
+                </div>
+                <p class="text-gray-500 max-w-sm mt-6 md:mt-0 text-sm italic font-light">"Representamos exclusivamente
+                    propriedades que definem o novo horizonte paranaense."</p>
+            </div>
+
+            <div id="property-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- JS Populated -->
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: DESIGN & STAGING -->
+    <section id="design" class="py-40 relative">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div class="fade-up relative">
+                <div class="absolute -top-10 -left-10 w-40 h-40 border border-gold/20 -z-10"></div>
+                <img src="https://i.imgur.com/6FcC3zF.png" alt="Home Staging"
+                    class="rounded-2xl transition-all duration-700 shadow-2xl hover:scale-[1.02]">
+                <div class="absolute bottom-8 right-8 bg-gold p-6 rounded-xl shadow-xl">
+                    <p class="text-dark font-black text-xs uppercase leading-none">Home Staging</p>
+                    <p class="text-dark/60 text-[10px] uppercase font-bold mt-1">Valorização de Ativos</p>
+                </div>
+            </div>
+            <div class="fade-up">
+                <span
+                    class="text-gold uppercase tracking-widest text-[10px] font-black mb-4 block underline decoration-gold/50 underline-offset-8">Elevando
+                    Padrões</span>
+                <h2 class="font-serif text-5xl text-white mb-8">Design que <span
+                        class="italic text-gray-500">Valoriza.</span></h2>
+                <p class="text-gray-400 font-light leading-relaxed mb-10 text-lg">
+                    Diferente de imobiliárias tradicionais, a **Rima Imóveis** oferece consultoria completa em **Home
+                    Staging** e **Design de Interiores**. Preparamos sua propriedade para brilhar no mercado, acelerando
+                    a venda e maximizando o ROI através da estética.
+                </p>
+                <div class="grid grid-cols-2 gap-8 mb-12">
+                    <div class="border-l-2 border-gold/30 pl-6">
+                        <h4 class="text-white font-bold mb-2">Curadoria Artística</h4>
+                        <p class="text-gray-500 text-sm">Mobiliário assinado e arte contemporânea em cada apresentação.
+                        </p>
+                    </div>
+                    <div class="border-l-2 border-gold/30 pl-6">
+                        <h4 class="text-white font-bold mb-2">Engenharia de Valor</h4>
+                        <p class="text-gray-500 text-sm">Reformas estratégicas focadas em retorno financeiro imediato.
+                        </p>
+                    </div>
+                </div>
+                <a href="#contato"
+                    class="inline-flex items-center gap-4 text-gold font-black uppercase text-[11px] tracking-widest group">
+                    SOLICITAR CONSULTORIA DE DESIGN <i data-lucide="chevron-right"
+                        class="w-4 h-4 group-hover:translate-x-2 transition-transform text-gray-600"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: CONTATO -->
+    <section id="contato" class="py-40 bg-dark-surface border-t border-white/5">
+        <div class="max-w-5xl mx-auto px-10 text-center">
+            <span class="text-gold uppercase tracking-[0.5em] text-[10px] font-black mb-8 block">Concierge
+                Privado</span>
+            <h2 class="font-serif text-5xl md:text-7xl text-white mb-10">Pronto para sua <br /> <span
+                    class="text-gradient underline decoration-white/10">Próxima Conquista?</span></h2>
+
+            <form id="lead-form" class="mt-20 space-y-6 max-w-2xl mx-auto">
+                <input type="text" placeholder="Nome Completo" class="glass-input w-full p-6 rounded-2xl text-sm"
+                    required>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <input type="email" placeholder="E-mail" class="glass-input w-full p-6 rounded-2xl text-sm"
+                        required>
+                    <input type="tel" placeholder="WhatsApp (DDD)" class="glass-input w-full p-6 rounded-2xl text-sm"
+                        required>
+                </div>
+                <select class="glass-input w-full p-6 rounded-2xl text-sm appearance-none cursor-pointer">
+                    <option class="bg-dark">Tenho interesse em um Ativo</option>
+                    <option class="bg-dark">Quero vender com Home Staging</option>
+                    <option class="bg-dark">Desejo consultoria de Portfólio</option>
+                </select>
+                <button type="submit"
+                    class="w-full bg-gold hover:bg-gold-dark text-dark font-black p-6 rounded-2xl uppercase tracking-[0.2em] text-xs transition-all shadow-2xl shadow-gold/10">Iniciar
+                    Atendimento Confidencial</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-20 border-t border-white/5 opacity-60">
+        <div
+            class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-10 text-[10px] uppercase font-bold tracking-widest text-gray-400">
+            <p>&copy; 2026 Rima Imóveis | Curitiba Flagship. Todos os direitos reservados.</p>
+            <div class="flex gap-8">
+                <a href="#" class="hover:text-gold transition-colors">Instagram</a>
+                <a href="#" class="hover:text-gold transition-colors">LinkedIn</a>
+                <a href="#" class="hover:text-gold transition-colors">YouTube</a>
+            </div>
+            <p>Batel • Ecoville • Cabral • Curitiba PR</p>
+        </div>
+    </footer>
+
+    <!-- BOTÕES FLUTUANTES -->
+    <!-- WhatsApp -->
+    <a id="wa-btn" href="https://wa.me/5541999999999" target="_blank"
+        class="site-contact-wa-link fixed bottom-28 right-6 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 z-40 group">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        <span class="absolute right-16 bg-dark text-white text-xs font-bold px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">WhatsApp</span>
+    </a>
+    <!-- Instagram -->
+    <a href="https://instagram.com/rimaimoveis" target="_blank"
+        class="fixed bottom-48 right-6 w-14 h-14 text-white rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 z-40 group"
+        style="background: linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        <span class="absolute right-16 bg-dark text-white text-xs font-bold px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Instagram</span>
+    </a>
+    <!-- Chat Button -->
+    <button id="chat-toggle-btn" onclick="toggleChat()"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-dark-surface border border-gold/30 text-gold rounded-full shadow-2xl flex items-center justify-center transition-all hover:bg-gold hover:text-dark hover:scale-110 z-40 group">
+        <svg class="w-6 h-6 chat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        <span id="chat-unread-dot" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full"></span>
+    </button>
+
+    <!-- WIDGET DE CHAT -->
+    <div id="chat-widget" class="fixed bottom-24 right-6 w-[360px] z-50 hidden" style="max-height: 520px;">
+        <!-- PRE-CHAT FORM -->
+        <div id="chat-prechat" class="bg-[#0f0f0f] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+            <div class="bg-dark-surface p-5 flex items-center gap-4 border-b border-white/5">
+                <div class="w-10 h-10 bg-gold/20 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+                </div>
+                <div>
+                    <p class="text-white font-bold text-sm">Atendimento Rima</p>
+                    <p class="text-gray-500 text-xs">Geralmente responde em minutos</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-400 text-sm mb-6">Antes de começar, precisamos de algumas informações:</p>
+                <form id="prechat-form" class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Nome Completo</label>
+                        <input id="pc-nome" type="text" required placeholder="Seu nome" class="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm outline-none focus:border-gold/50 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-2">Telefone / WhatsApp</label>
+                        <input id="pc-tel" type="tel" required placeholder="(41) 9xxxx-xxxx" class="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-3 text-sm outline-none focus:border-gold/50 transition-colors">
+                    </div>
+                    <button type="submit" class="w-full bg-gold hover:bg-gold-dark text-dark font-black py-3 rounded-xl text-sm uppercase tracking-widest transition-all">
+                        Iniciar Conversa
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- CHAT BOX -->
+        <div id="chat-box" class="hidden bg-[#0f0f0f] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col" style="height: 480px">
+            <div class="bg-dark-surface p-4 flex items-center justify-between border-b border-white/5 flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
+                    <p class="text-white font-bold text-sm">Concierge Rima</p>
+                </div>
+                <button onclick="toggleChat()" class="text-gray-600 hover:text-white transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                <div class="flex gap-2">
+                    <div class="w-7 h-7 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0 mt-1">
+                        <span class="text-gold text-[10px] font-black">R</span>
+                    </div>
+                    <div class="bg-dark-surface border border-white/5 rounded-2xl rounded-tl-none p-3 max-w-[80%]">
+                        <p class="text-white text-sm">Olá! 👋 Bem-vindo à Rima Imóveis. Como posso ajudar?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 border-t border-white/5 flex gap-2 flex-shrink-0">
+                <input id="chat-input" type="text" placeholder="Escreva sua mensagem..." 
+                    class="flex-1 bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-gold/30 transition-colors"
+                    onkeydown="if(event.key==='Enter')sendChatMsg()">
+                <button onclick="sendChatMsg()" class="bg-gold hover:bg-gold-dark text-dark p-2.5 rounded-xl transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE IMÓVEL -->
+    <div id="property-modal" class="fixed inset-0 z-[60] hidden opacity-0 transition-opacity duration-300">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[97%] max-w-5xl bg-[#111] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col" style="max-height: 90vh;">
+            <button onclick="closeModal()" class="absolute top-4 right-4 z-[70] w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-gold hover:text-dark transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div id="modal-content" class="flex flex-col md:flex-row h-full" style="max-height: 90vh;"></div>
+        </div>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        const API = '/api/rima';
+        let properties = [];
+        let currentImgIndex = 0;
+        let chatId = null;
+        let chatPollInterval = null;
+        let lastMsgCount = 0;
+
+        lucide.createIcons();
+
+        // Banner Slider
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        function rotateBanner() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+        setInterval(rotateBanner, 5000);
+
+        // Data init
+        async function init() {
+            const [resI, resS] = await Promise.all([fetch(`${API}/imoveis`), fetch(`${API}/settings`)]);
+            properties = await resI.json();
+            const settings = await resS.json();
+            document.querySelectorAll('.site-brand-name').forEach(el => el.innerText = settings.siteName);
+            if (settings.whatsapp) document.getElementById('wa-btn').href = `https://wa.me/${settings.whatsapp}`;
+            renderProperties();
+        }
+
+        function renderProperties() {
+            const grid = document.getElementById('property-grid');
+            
+            let displayList = [...properties];
+            
+            // Truque de UX: Se houver apenas 1 imóvel, criar "clones" baseados nas fotos dele 
+            // para o site parecer sempre farto e bem povoado.
+            if (properties.length === 1 && properties[0].imagens.length > 1) {
+                const single = properties[0];
+                displayList = single.imagens.map((imgUrl, idx) => {
+                    return { 
+                        ...single, 
+                        _coverIdx: idx, 
+                        _tituloVariante: idx === 0 ? single.titulo : `${single.titulo} — Perspectiva ${idx + 1}` 
+                    };
+                });
+            }
+
+            grid.innerHTML = displayList.map((p, i) => `
+                <div class="fade-up relative group cursor-pointer rounded-2xl overflow-hidden bg-dark-surface border border-white/5 hover:border-[#D4E64A]/20 transition-all duration-300" onclick="openModal('${p.id}')">
+                    <div class="relative overflow-hidden h-[320px]">
+                        <img src="${p.imagens[p._coverIdx || 0]}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark-surface via-transparent to-transparent opacity-80"></div>
+                        <div class="absolute top-5 left-5 bg-[#D4E64A] text-dark text-[9px] font-black px-3 py-1.5 uppercase tracking-widest rounded-full">${p.tag || p.tipo}</div>
+                    </div>
+                    <div class="p-7">
+                        <p class="text-[#D4E64A] text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            ${p.localizacao}
+                        </p>
+                        <h4 class="font-serif text-2xl text-white mb-5 group-hover:text-[#D4E64A] transition-colors">${p._tituloVariante || p.titulo}</h4>
+                        <div class="flex items-center gap-5 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-t border-white/5 pt-5">
+                            <span>${p.area}m²</span>
+                            <span>${p.suites} Suítes</span>
+                            <span>${p.vagas} Vagas</span>
+                            <span class="ml-auto text-white font-serif text-lg font-semibold">R$ ${Number(p.preco).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+            document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+        }
+
+        // Modal - Layout Revista de Luxo Plena
+        const modal = document.getElementById('property-modal');
+        window.openModal = function(id) {
+            const p = properties.find(x => x.id === id);
+            currentImgIndex = 0;
+
+            document.getElementById('modal-content').innerHTML = `
+                <div class="flex flex-col lg:flex-row w-full h-full overflow-hidden bg-[#050505]">
+                    
+                    <!-- IMAGEM HERO (ESQUERDA) -->
+                    <div class="w-full lg:w-[55%] h-[40vh] lg:h-full relative overflow-hidden flex-shrink-0 group">
+                        <img id="modal-img" src="${p.imagens[0]}" class="w-full h-full object-cover transition-transform duration-1000 scale-100 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-[#050505] via-transparent to-transparent opacity-90 lg:opacity-60"></div>
+                        
+                        <button class="absolute top-6 left-6 w-12 h-12 rounded-full border border-white/20 glass flex items-center justify-center hover:bg-white hover:text-black transition-colors z-10 lg:hidden" onclick="closeModal()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+
+                        <div class="absolute bottom-6 left-6 right-6 lg:bottom-12 lg:left-12 flex justify-between items-end z-10">
+                            <div>
+                                <span class="bg-[#D4E64A] text-black text-[10px] font-black px-4 py-1.5 uppercase tracking-widest rounded-sm mb-4 inline-block shadow-lg">${p.tag || p.tipo}</span>
+                            </div>
+                            <!-- Pontos do Slide -->
+                            ${p.imagens.length > 1 ? `
+                            <div class="flex gap-2 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                                ${p.imagens.map((_, i) => `<button onclick="changeImg(${i})" class="w-2 h-2 rounded-full transition-all ${i===0?'bg-[#D4E64A] scale-125':'bg-white/40 hover:bg-white'}"></button>`).join('')}
+                            </div>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- CONTEÚDO EDITORIAL (DIREITA) -->
+                    <div class="flex-1 overflow-y-auto custom-scrollbar relative">
+                        <div class="p-8 lg:p-14 pb-32">
+                            <div class="flex justify-between items-start mb-10">
+                                <div>
+                                    <p class="text-[#D4E64A] text-[11px] font-black uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                                        <span class="w-6 h-[1px] bg-[#D4E64A]"></span>
+                                        ${p.localizacao}
+                                    </p>
+                                    <h2 class="font-serif text-4xl lg:text-5xl text-white leading-[1.1] mb-2">${p.titulo}</h2>
+                                </div>
+                                <button class="hidden lg:flex w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-colors" onclick="closeModal()">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- Grid Specs Alto Padrão -->
+                            <div class="grid grid-cols-3 gap-1 borders border-y border-white/10 mb-12 py-8">
+                                <div class="text-left px-2">
+                                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Área Privativa</p>
+                                    <p class="text-white font-serif text-2xl">${p.area} <span class="text-sm font-sans text-gray-500">m²</span></p>
+                                </div>
+                                <div class="text-left px-2 border-l border-white/10">
+                                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Suítes</p>
+                                    <p class="text-white font-serif text-2xl">${p.suites}</p>
+                                </div>
+                                <div class="text-left px-2 border-l border-white/10">
+                                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-1">Vagas</p>
+                                    <p class="text-white font-serif text-2xl">${p.vagas}</p>
+                                </div>
+                            </div>
+
+                            <!-- Descrição -->
+                            <div class="prose prose-invert max-w-none">
+                                <p class="text-gray-400 font-light text-[15px] leading-[1.8] text-justify" style="white-space: pre-line">${p.desc || 'Uma obra de arte habitável projetada para aqueles que exigem o absoluto. Localização prestigiada, design atemporal e uma experiência de luxo 360.'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Sticky Footer Rodapé Ação -->
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#050505] via-[#050505] to-transparent pt-12 pb-8 px-8 lg:px-14 flex flex-col sm:flex-row justify-between items-center sm:items-end borders-b gap-6">
+                            <div>
+                                <p class="text-gray-500 text-[9px] uppercase font-bold tracking-widest mb-2">Valor de Investimento</p>
+                                <p class="text-white font-serif text-3xl font-semibold tracking-tight">R$ ${Number(p.preco).toLocaleString()}</p>
+                            </div>
+                            <button onclick="closeModal(); document.getElementById('contato').scrollIntoView({behavior:'smooth'});" 
+                                class="w-full sm:w-auto bg-[#D4E64A] hover:bg-white text-black font-black px-10 py-4 uppercase text-[11px] tracking-[0.2em] transition-all shadow-xl shadow-[#D4E64A]/10">
+                                Iniciar Consultoria
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        window.changeImg = function(idx) {
+            currentImgIndex = idx;
+            const title = document.querySelector('#modal-content h2')?.innerText;
+            const p = properties.find(x => x.titulo === title);
+            if (!p) return;
+            document.getElementById('modal-img').src = p.imagens[idx];
+            
+            // Atualiza os dots corretos dentro do modal novo
+            const dots = document.querySelectorAll('#modal-content .rounded-full');
+            dots.forEach((dot, i) => {
+                if (dot.onclick) { // apenas os botões de dot
+                    dot.className = `w-2 h-2 rounded-full transition-all ${i === idx ? 'bg-[#D4E64A] scale-125' : 'bg-white/40 hover:bg-white'}`;
+                }
+            });
+        }
+
+        window.closeModal = function() {
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); document.body.style.overflow = ''; }, 300);
+        }
+
+        // Form Lead
+        document.getElementById('lead-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const inputs = e.target.querySelectorAll('input, select');
+            const data = { nome: inputs[0].value, email: inputs[1].value, telefone: inputs[2].value, interesse: inputs[3].value };
+            await fetch(`${API}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            alert("✅ Solicitação encaminhada ao concierge exclusivo Rima.");
+            e.target.reset();
+        }
+
+        // ===== CHAT AO VIVO =====
+        function toggleChat() {
+            const widget = document.getElementById('chat-widget');
+            widget.classList.toggle('hidden');
+            document.getElementById('chat-unread-dot').classList.add('hidden');
+        }
+
+        document.getElementById('prechat-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('pc-nome').value;
+            const telefone = document.getElementById('pc-tel').value;
+            const res = await fetch(`${API}/chat/start`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, telefone })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                chatId = data.chatId;
+                document.getElementById('chat-prechat').classList.add('hidden');
+                document.getElementById('chat-box').classList.remove('hidden');
+                document.getElementById('chat-box').classList.add('flex');
+                startChatPolling();
+            }
+        };
+
+        async function sendChatMsg() {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if (!txt || !chatId) return;
+            input.value = '';
+            appendMsg({ autor: 'visitante', texto: txt, hora: new Date().toISOString() });
+            await fetch(`${API}/chat/${chatId}/mensagem`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto: txt })
+            });
+        }
+
+        function appendMsg(msg) {
+            const c = document.getElementById('chat-messages');
+            const isVisitor = msg.autor === 'visitante';
+            const div = document.createElement('div');
+            div.className = `flex gap-2 ${isVisitor ? 'flex-row-reverse' : ''}`;
+            div.innerHTML = isVisitor
+                ? `<div class="bg-gold text-dark rounded-2xl rounded-tr-none p-3 max-w-[80%] text-sm font-medium">${msg.texto}</div>`
+                : `<div class="w-7 h-7 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0 mt-1"><span class="text-gold text-[10px] font-black">R</span></div>
+                   <div class="bg-dark-surface border border-white/5 rounded-2xl rounded-tl-none p-3 max-w-[80%] text-sm text-white">${msg.texto}</div>`;
+            c.appendChild(div);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function startChatPolling() {
+            chatPollInterval = setInterval(async () => {
+                if (!chatId) return;
+                const res = await fetch(`${API}/chat/${chatId}`);
+                const chat = await res.json();
+                if (chat.mensagens.length > lastMsgCount) {
+                    const newMsgs = chat.mensagens.slice(lastMsgCount);
+                    newMsgs.forEach(m => { if (m.autor === 'atendente') appendMsg(m); });
+                    lastMsgCount = chat.mensagens.length;
+                    if (document.getElementById('chat-widget').classList.contains('hidden')) {
+                        document.getElementById('chat-unread-dot').classList.remove('hidden');
+                    }
+                }
+            }, 3000);
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        document.getElementById('mobile-menu-btn').onclick = () => document.getElementById('mobile-menu').classList.toggle('hidden');
+        window.closeMobile = () => document.getElementById('mobile-menu').classList.add('hidden');
+
+        init();
+    </script>
+</body>
+</html>

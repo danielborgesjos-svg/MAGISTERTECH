@@ -1,0 +1,63 @@
+{
+  "settings": {
+    "siteName": "Rima Imóveis",
+    "siteSubtitle": "Curitiba Flagship",
+    "logoUrl": "assets/logo.png",
+    "whatsapp": "5541999999999",
+    "email": "concierge@rimaimoveis.com",
+    "address": "Av. do Batel, 1550 - Curitiba, PR"
+  },
+  "imoveis": [
+    {
+      "id": "im1774932444227",
+      "titulo": "Cobertura ED. Porto Rico",
+      "localizacao": "Agua Verde , Curitiba - PR",
+      "preco": 1500000,
+      "tipo": "Cobertura",
+      "tag": "Exclusivo",
+      "suites": 0,
+      "area": 92,
+      "vagas": 1,
+      "desc": "Apartamento com excelente localização, a apenas meia quadra da Praça do Japão, em Curitiba. Situado na divisa dos bairros Batel e Água Verde, o imóvel está em uma das regiões mais valorizadas da cidade, conhecida pela infraestrutura completa, segurança e qualidade de vida.\n\nCom fácil acesso às principais vias da cidade, o apartamento está localizado em uma rua tranquila e arborizada, ideal para quem busca comodidade e sossego em uma das melhores regiões de Curitiba.\n\nO condomínio oferece infraestrutura completa, incluindo:\n- Portaria 24h\n- Sistema de câmeras de segurança\n- Interfone\n- Zeladoria\n- Dois elevadores\n- Salão de festas\n\nA região conta com ampla oferta de comércios e serviços. Em um raio de poucas quadras, é possível encontrar:\n- Supermercado Festval\n- Academia Studio Corpo Livre\n- Panificadora Boulevard\n- Empório Kaminski\n- Feira de orgânicos na Praça do Japão\n- Feiras livres nas ruas próximas\n\nAlém disso, o imóvel está próximo ao Clube Curitibano, ao Shopping Pátio Batel e a diversos restaurantes, farmácias, escolas, clínicas e outros estabelecimentos que facilitam o dia a dia.\n\nSe você busca um apartamento bem localizado em Curitiba, em uma área nobre entre o Batel e o Água Verde, essa é uma excelente oportunidade.",
+      "imagens": [
+        "https://i.imgur.com/SVQPnnk.jpeg",
+        "https://i.imgur.com/sXerssI.jpeg",
+        "https://i.imgur.com/CCuhmjB.jpeg"
+      ],
+      "criadoEm": "2026-03-31T04:47:24.229Z"
+    }
+  ],
+  "leads": [],
+  "comunicacoes": [],
+  "users": [
+    {
+      "id": "u1",
+      "nome": "Daniel",
+      "email": "admin@rimaimoveis.com",
+      "senha": "398a96ef09a3a89371fa894eba64b963ad436216e3cb49c1e2dede9fcac82b5c",
+      "role": "admin",
+      "criadoEm": "2026-03-31T04:30:48.227Z"
+    }
+  ],
+  "chats": [
+    {
+      "id": "c1774933566886",
+      "visitante": {
+        "nome": "daniel Borges",
+        "telefone": "41987225702"
+      },
+      "mensagens": [
+        {
+          "id": "m1774933570020",
+          "autor": "visitante",
+          "texto": "Olá tudo bem",
+          "hora": "2026-03-31T05:06:10.020Z"
+        }
+      ],
+      "status": "ativo",
+      "criadoEm": "2026-03-31T05:06:06.886Z",
+      "ultimaAtividade": "2026-03-31T05:06:10.020Z",
+      "naoLidas": 1
+    }
+  ]
+}

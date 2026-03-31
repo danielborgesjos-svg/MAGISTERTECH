@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Suite | Rima Imóveis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #D4E64A; --bg: #0a0a0a; --surface: #141414; --text: #f3f4f6; --muted: #9ca3af; --border: rgba(255,255,255,0.1); }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); }
+        .sidebar { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .sidebar-link.active { background: #fef9e7; color: #856404; font-weight: 700; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: white; border: 1px solid var(--border); border-radius: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.2s; }
+        .btn-gold { background: var(--gold); color: white; transition: all 0.3s; }
+        .btn-gold:hover { background: #A2B52A; box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
+        .badge-novo { background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd; }
+        .badge-visita { background:#fefce8; color:#a16207; border:1px solid #fef08a; }
+        .badge-negociacao { background:#faf5ff; color:#7e22ce; border:1px solid #e9d5ff; }
+        .badge-fechado { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+        .badge-perdido { background:#fff1f2; color:#be123c; border:1px solid #fecdd3; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        @media(max-width:1024px) { .sidebar { position:fixed; transform:translateX(-100%); z-index:50; height:100vh; } .sidebar.open { transform:translateX(0); } }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <div id="overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-72 bg-[#141414] border-r border-white/10 flex flex-col h-full shadow-sm">
+        <div class="p-8 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <img src="https://i.imgur.com/my1yk0N.png" alt="Rima Imóveis" class="w-[180px] object-contain transform origin-left">
+                <div>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest">Business Suite</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <p class="text-[9px] font-black uppercase text-gray-600 tracking-widest px-4 mb-3">Gestão</p>
+            <button onclick="switchTab('dashboard')" class="sidebar-link active w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-[#0a0a0a] transition text-sm">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+            </button>
+            <button onclick="switchTab('imoveis')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-[#0a0a0a] transition text-sm">
+                <i data-lucide="home" class="w-4 h-4"></i> Ativos
+            </button>
+            <button onclick="switchTab('crm')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-[#0a0a0a] transition text-sm">
+                <i data-lucide="users" class="w-4 h-4"></i> CRM / Leads
+            </button>
+            <button onclick="switchTab('chat')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-[#0a0a0a] transition text-sm">
+                <i data-lucide="message-circle" class="w-4 h-4"></i> Chat ao Vivo
+                <span id="chat-badge" class="ml-auto bg-red-500/100 text-white text-[9px] font-black px-2 py-0.5 rounded-full hidden">!</span>
+            </button>
+            <p class="text-[9px] font-black uppercase text-gray-600 tracking-widest px-4 mt-6 mb-3">Sistema</p>
+            <button onclick="switchTab('users')" id="nav-users" class="sidebar-link w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-[#0a0a0a] transition text-sm">
+                <i data-lucide="shield" class="w-4 h-4"></i> Usuários
+            </button>
+            <button onclick="switchTab('settings')" class="sidebar-link w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-gray-400 hover:bg-[#0a0a0a] transition text-sm">
+                <i data-lucide="settings" class="w-4 h-4"></i> Configurações
+            </button>
+        </nav>
+
+        <div class="p-5 border-t border-white/10">
+            <div id="user-card" class="flex items-center gap-3 p-3 rounded-xl bg-[#0a0a0a] mb-4">
+                <div id="user-avatar" class="w-10 h-10 rounded-full bg-[#D4E64A] flex items-center justify-center text-white font-black text-sm">D</div>
+                <div>
+                    <p id="user-name" class="text-sm font-bold text-gray-100">Daniel</p>
+                    <p id="user-role" class="text-[10px] text-gray-500 uppercase tracking-widest">Admin</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="../rima_imoveis/index.html" target="_blank" class="flex-1 flex items-center justify-center gap-2 text-gray-500 hover:text-blue-500 text-xs py-2 transition">
+                    <i data-lucide="external-link" class="w-3 h-3"></i> Ver Site
+                </a>
+                <button onclick="doLogout()" class="flex-1 flex items-center justify-center gap-2 text-gray-500 hover:text-rose-500 text-xs py-2 transition">
+                    <i data-lucide="log-out" class="w-3 h-3"></i> Sair
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-[#0a0a0a]">
+
+        <!-- Header -->
+        <header class="bg-[#141414]/90 backdrop-blur-md sticky top-0 z-30 border-b border-white/10 px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-[#1a1a1a]">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <div>
+                    <h2 id="tab-title" class="font-bold text-gray-100">Dashboard</h2>
+                    <p id="tab-sub" class="text-xs text-gray-500">Visão operacional em tempo real</p>
+                </div>
+            </div>
+            <button onclick="openModalImovel()" class="btn-gold px-6 py-2.5 rounded-full text-xs font-bold flex items-center gap-2">
+                <i data-lucide="plus" class="w-3 h-3"></i> Incluir Ativo
+            </button>
+        </header>
+
+        <div class="p-8 max-w-7xl mx-auto">
+
+            <!-- DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content active space-y-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div class="card p-6 border-l-4 border-[#D4E64A]">
+                        <p class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Ativos</p>
+                        <h3 id="stat-imoveis" class="text-4xl font-bold text-gray-100">--</h3>
+                    </div>
+                    <div class="card p-6 border-l-4 border-blue-500">
+                        <p class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Leads</p>
+                        <h3 id="stat-leads" class="text-4xl font-bold text-gray-100">--</h3>
+                    </div>
+                    <div class="card p-6 border-l-4 border-emerald-500">
+                        <p class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Fechados</p>
+                        <h3 id="stat-fechados" class="text-4xl font-bold text-gray-100">--</h3>
+                    </div>
+                    <div class="card p-6 border-l-4 border-purple-500">
+                        <p class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Usuários</p>
+                        <h3 id="stat-users" class="text-4xl font-bold text-gray-100">--</h3>
+                    </div>
+                </div>
+                <div class="card p-8 h-[380px]">
+                    <h4 class="font-bold text-gray-200 mb-6">Pipeline de Leads</h4>
+                    <canvas id="dashChart"></canvas>
+                </div>
+            </section>
+
+            <!-- ATIVOS -->
+            <section id="tab-imoveis" class="tab-content">
+                <div class="card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-[#0a0a0a] border-b border-white/10">
+                            <tr>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Foto</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Propriedade</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Localização</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Preço</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="imoveis-body" class="divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- CRM -->
+            <section id="tab-crm" class="tab-content">
+                <div class="card overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-[#0a0a0a] border-b border-white/10">
+                            <tr>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Cliente</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Contato</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Interesse</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Status</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-body" class="divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- CHAT AO VIVO -->
+            <section id="tab-chat" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[72vh]">
+                    <!-- Lista de conversas -->
+                    <div class="card overflow-hidden flex flex-col">
+                        <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+                            <h4 class="font-bold text-gray-200 text-sm">Conversas</h4>
+                            <span id="chats-total" class="text-[10px] text-gray-500">0 ativas</span>
+                        </div>
+                        <div id="chats-list" class="flex-1 overflow-y-auto divide-y divide-slate-50"></div>
+                    </div>
+                    <!-- Área da conversa -->
+                    <div class="lg:col-span-2 card overflow-hidden flex flex-col">
+                        <div id="chat-header-panel" class="px-6 py-4 border-b border-white/10 flex items-center gap-4">
+                            <div class="w-9 h-9 rounded-full bg-[#D4E64A]/10 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-[#D4E64A]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+                            </div>
+                            <div id="chat-visitor-info">
+                                <p class="font-bold text-gray-100 text-sm">Selecione uma conversa</p>
+                                <p class="text-xs text-gray-500">—</p>
+                            </div>
+                            <button id="btn-encerrar" onclick="encerrarChat()" class="ml-auto px-4 py-2 rounded-xl bg-red-500/10 text-red-500 text-xs font-bold hidden hover:bg-red-500/100 hover:text-white transition">Encerrar</button>
+                        </div>
+                        <div id="panel-messages" class="flex-1 overflow-y-auto p-6 space-y-3" style="background:#0a0a0a"></div>
+                        <div class="p-4 border-t border-white/10 flex gap-3">
+                            <input id="panel-input" type="text" placeholder="Responder ao visitante..." 
+                                class="flex-1 bg-[#141414] border border-white/20 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#D4E64A]/20"
+                                onkeydown="if(event.key==='Enter')sendPanelReply()">
+                            <button onclick="sendPanelReply()" class="bg-[#D4E64A] text-white p-3 rounded-xl hover:bg-[#A2B52A] transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- USUÁRIOS -->
+            <section id="tab-users" class="tab-content space-y-6">
+                <div id="users-note-admin" class="hidden bg-[#D4E64A]/10 border border-[#D4E64A]/30 p-4 rounded-xl text-[#D4E64A] text-sm flex items-center gap-3">
+                    <i data-lucide="info" class="w-4 h-4 flex-shrink-0"></i>
+                    Somente administradores podem criar e remover usuários.
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Lista -->
+                    <div class="lg:col-span-2 card overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-[#0a0a0a] border-b border-white/10">
+                                <tr>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Usuário</th>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Role</th>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Criado</th>
+                                    <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-body" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                    <!-- Formulário de novo usuário -->
+                    <div id="new-user-form-card" class="card p-8">
+                        <h4 class="font-bold text-gray-100 mb-6">Novo Usuário</h4>
+                        <form id="form-new-user" class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Nome</label>
+                                <input type="text" id="nu-nome" class="w-full p-3 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none focus:ring-2 focus:ring-[#D4E64A]/20 text-sm" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">E-mail</label>
+                                <input type="email" id="nu-email" class="w-full p-3 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Senha</label>
+                                <input type="password" id="nu-senha" class="w-full p-3 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Perfil</label>
+                                <select id="nu-role" class="w-full p-3 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm">
+                                    <option value="consultor">Consultor</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full btn-gold py-3 rounded-xl font-bold text-sm mt-2">Criar Acesso</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONFIGURAÇÕES -->
+            <section id="tab-settings" class="tab-content">
+                <div class="card p-10 max-w-2xl mx-auto">
+                    <h4 class="text-2xl font-bold text-white mb-8">Identidade da Marca</h4>
+                    <form id="form-settings" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Nome do Site</label>
+                                <input type="text" id="s-name" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Slogan</label>
+                                <input type="text" id="s-subtitle" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">URL do Logo</label>
+                            <input type="text" id="s-logo" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">WhatsApp</label>
+                                <input type="text" id="s-whatsapp" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">E-mail</label>
+                                <input type="email" id="s-email" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none text-sm">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full btn-gold py-4 rounded-xl font-bold">Salvar Configurações</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- MODAL ATIVO -->
+    <div id="modal-imovel" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onclick="closeModalImovel()"></div>
+        <div class="bg-[#141414] w-full max-w-3xl rounded-3xl p-10 relative z-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 id="modal-imovel-title" class="text-2xl font-bold text-white mb-8">Gestão de Ativo</h3>
+            <form id="form-imovel" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <input type="hidden" id="m-id">
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Título</label>
+                    <input type="text" id="m-titulo" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Localização</label>
+                    <input type="text" id="m-local" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Tipo</label>
+                    <select id="m-tipo" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none">
+                        <option>Cobertura</option><option>Mansão</option><option>Apartamento Luxo</option><option>Beach House</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Preço (R$)</label>
+                    <input type="number" id="m-preco" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Selo/Tag</label>
+                    <input type="text" id="m-tag" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none">
+                </div>
+                <div class="md:col-span-2 grid grid-cols-3 gap-4">
+                    <div><label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Suítes</label><input type="number" id="m-suites" class="w-full p-3 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Área m²</label><input type="number" id="m-area" class="w-full p-3 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none"></div>
+                    <div><label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Vagas</label><input type="number" id="m-vagas" class="w-full p-3 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none"></div>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Descrição</label>
+                    <textarea id="m-desc" rows="3" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none resize-none"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Galeria de Imagens (URLs, uma por linha)</label>
+                    <textarea id="m-imagens" rows="4" class="w-full p-4 rounded-xl bg-[#0a0a0a] border border-white/20 outline-none resize-none font-mono text-xs" placeholder="https://exemplo.com/foto1.jpg&#10;https://exemplo.com/foto2.jpg"></textarea>
+                </div>
+                <div class="md:col-span-2 flex gap-4 pt-4">
+                    <button type="button" onclick="closeModalImovel()" class="flex-1 py-4 rounded-xl font-bold bg-[#1a1a1a] text-gray-300">Cancelar</button>
+                    <button type="submit" class="flex-1 btn-gold py-4 rounded-xl font-bold">Salvar Ativo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL LEAD (FOLLOW-UP) -->
+    <div id="modal-lead" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onclick="closeModalLead()"></div>
+        <div class="bg-[#141414] w-full max-w-xl rounded-3xl p-10 relative z-10 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <h3 id="lead-nome" class="text-2xl font-bold text-white">--</h3>
+                    <p id="lead-contact" class="text-sm text-gray-500 mt-1">--</p>
+                </div>
+                <select id="lead-status-sel" onchange="updateLeadStatus()" class="p-3 rounded-xl bg-[#0a0a0a] border border-white/20 font-bold text-xs uppercase tracking-widest outline-none cursor-pointer">
+                    <option value="Novo">Novo</option>
+                    <option value="Visita">Visita</option>
+                    <option value="Negociacao">Negociação</option>
+                    <option value="Fechado">Fechado</option>
+                    <option value="Perdido">Perdido</option>
+                </select>
+            </div>
+            <div id="followups-list" class="flex-1 overflow-y-auto space-y-3 mb-6 pr-2"></div>
+            <div class="flex gap-3 bg-[#0a0a0a] p-4 rounded-2xl border border-white/10">
+                <input type="text" id="followup-input" placeholder="Registrar nota de atendimento..." class="flex-1 bg-[#141414] border border-white/20 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#D4E64A]/20">
+                <button onclick="addFollowup()" class="bg-slate-900 text-white p-3 rounded-xl hover:bg-slate-800 transition"><i data-lucide="plus" class="w-5 h-5"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api/rima';
+        let token = localStorage.getItem('rima_token');
+        let currentUser = JSON.parse(localStorage.getItem('rima_user') || '{}');
+        let allImoveis = [], allLeads = [], activeLeadId = null, chart = null;
+
+        // Auth guard
+        if (!token) { window.location.href = 'login.html'; }
+
+        function authFetch(url, opts = {}) {
+            return fetch(url, { ...opts, headers: { ...(opts.headers||{}), 'x-auth-token': token, 'Content-Type': 'application/json' } });
+        }
+
+        // Init UI
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+
+            // Verify token
+            const me = await authFetch(`${API}/me`);
+            if (!me.ok) { localStorage.clear(); window.location.href = 'login.html'; return; }
+            const user = await me.json();
+            currentUser = user;
+
+            document.getElementById('user-name').innerText = user.nome;
+            document.getElementById('user-role').innerText = user.role;
+            document.getElementById('user-avatar').innerText = user.nome[0].toUpperCase();
+
+            if (user.role !== 'admin') {
+                document.getElementById('nav-users').parentElement.classList.add('hidden');
+            }
+
+            await fetchAll();
+            initChart();
+        });
+
+        async function fetchAll() {
+            const [ri, rl, rs, ru] = await Promise.all([
+                authFetch(`${API}/imoveis`).then(r => r.json()),
+                authFetch(`${API}/leads`).then(r => r.json()),
+                authFetch(`${API}/settings`).then(r => r.json()),
+                authFetch(`${API}/users`).then(r => r.json())
+            ]);
+            allImoveis = ri; allLeads = rl;
+            renderImoveis(); renderLeads(); renderSettings(rs); renderUsers(ru);
+            document.getElementById('stat-imoveis').innerText = allImoveis.length;
+            document.getElementById('stat-leads').innerText = allLeads.length;
+            document.getElementById('stat-fechados').innerText = allLeads.filter(l => l.status === 'Fechado').length;
+            document.getElementById('stat-users').innerText = ru.length;
+        }
+
+        // --- RENDER ---
+        function renderImoveis() {
+            document.getElementById('imoveis-body').innerHTML = allImoveis.map(i => `
+                <tr class="hover:bg-[#0a0a0a] transition">
+                    <td class="px-6 py-4"><img src="${i.imagens[0]}" class="w-14 h-14 object-cover rounded-xl shadow-sm"></td>
+                    <td class="px-6 py-4"><p class="font-bold text-sm text-gray-100">${i.titulo}</p><p class="text-[10px] text-gray-500 uppercase font-bold">${i.tipo}</p></td>
+                    <td class="px-6 py-4 text-sm text-gray-400">${i.localizacao}</td>
+                    <td class="px-6 py-4 font-bold text-[#D4E64A]">R$ ${Number(i.preco).toLocaleString()}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-3 text-gray-600">
+                            <button onclick="editImovel('${i.id}')" class="hover:text-blue-500 transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteImovel('${i.id}')" class="hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderLeads() {
+            document.getElementById('leads-body').innerHTML = allLeads.map(l => {
+                const s = (l.status || 'Novo').toLowerCase().replace('ç','c').replace('ã','a');
+                return `<tr class="hover:bg-[#0a0a0a] transition">
+                    <td class="px-6 py-4"><p class="font-bold text-gray-100 text-sm">${l.nome}</p><p class="text-[10px] text-gray-500">${new Date(l.data).toLocaleDateString()}</p></td>
+                    <td class="px-6 py-4 text-xs text-gray-400">${l.email}<br>${l.telefone}</td>
+                    <td class="px-6 py-4 text-sm italic text-gray-400 max-w-[180px] truncate">${l.interesse}</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest badge-${s}">${l.status}</span></td>
+                    <td class="px-6 py-4 text-right"><button onclick="openModalLead('${l.id}')" class="bg-[#D4E64A]/10 text-[#D4E64A] px-4 py-2 rounded-full text-xs font-bold hover:bg-[#D4E64A] hover:text-white transition">Follow-up</button></td>
+                </tr>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderUsers(users) {
+            document.getElementById('users-body').innerHTML = users.map(u => `
+                <tr class="hover:bg-[#0a0a0a] transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-[#D4E64A] flex items-center justify-center text-white font-black text-xs">${u.nome[0]}</div>
+                            <div><p class="font-bold text-sm text-gray-100">${u.nome}</p><p class="text-xs text-gray-500">${u.email}</p></div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${u.role==='admin'?'bg-[#D4E64A]/10 text-amber-700 border border-[#D4E64A]/20':'bg-blue-50 text-blue-700 border border-blue-100'}">${u.role}</span></td>
+                    <td class="px-6 py-4 text-xs text-gray-500">${new Date(u.criadoEm).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 text-center">
+                        ${u.id !== 'u1' && currentUser.role === 'admin' ? `<button onclick="deleteUser('${u.id}')" class="text-gray-600 hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : '<span class="text-slate-200 text-xs">—</span>'}
+                    </td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderSettings(s) {
+            document.getElementById('s-name').value = s.siteName || '';
+            document.getElementById('s-subtitle').value = s.siteSubtitle || '';
+            document.getElementById('s-logo').value = s.logoUrl || '';
+            document.getElementById('s-whatsapp').value = s.whatsapp || '';
+            document.getElementById('s-email').value = s.email || '';
+        }
+
+        // --- ACTIONS ---
+        async function deleteImovel(id) {
+            if (!confirm("Excluir este ativo permanentemente?")) return;
+            await authFetch(`${API}/imoveis/${id}`, { method: 'DELETE' });
+            fetchAll();
+        }
+
+        function editImovel(id) {
+            const i = allImoveis.find(x => x.id === id);
+            document.getElementById('m-id').value = i.id;
+            document.getElementById('m-titulo').value = i.titulo;
+            document.getElementById('m-local').value = i.localizacao;
+            document.getElementById('m-preco').value = i.preco;
+            document.getElementById('m-tipo').value = i.tipo;
+            document.getElementById('m-tag').value = i.tag || '';
+            document.getElementById('m-suites').value = i.suites;
+            document.getElementById('m-area').value = i.area;
+            document.getElementById('m-vagas').value = i.vagas;
+            document.getElementById('m-desc').value = i.desc || '';
+            document.getElementById('m-imagens').value = (i.imagens || []).join('\n');
+            document.getElementById('modal-imovel-title').innerText = "Editar Ativo";
+            openModalImovel();
+        }
+
+        document.getElementById('form-imovel').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('m-id').value;
+            const data = {
+                titulo: document.getElementById('m-titulo').value,
+                localizacao: document.getElementById('m-local').value,
+                preco: parseFloat(document.getElementById('m-preco').value),
+                tipo: document.getElementById('m-tipo').value,
+                tag: document.getElementById('m-tag').value,
+                suites: parseInt(document.getElementById('m-suites').value) || 0,
+                area: parseInt(document.getElementById('m-area').value) || 0,
+                vagas: parseInt(document.getElementById('m-vagas').value) || 0,
+                desc: document.getElementById('m-desc').value,
+                imagens: document.getElementById('m-imagens').value.split('\n').filter(s => s.trim())
+            };
+            await authFetch(`${API}/imoveis${id ? '/'+id : ''}`, { method: id ? 'PUT' : 'POST', body: JSON.stringify(data) });
+            closeModalImovel();
+            fetchAll();
+        };
+
+        document.getElementById('form-settings').onsubmit = async (e) => {
+            e.preventDefault();
+            await authFetch(`${API}/settings`, { method: 'POST', body: JSON.stringify({
+                siteName: document.getElementById('s-name').value,
+                siteSubtitle: document.getElementById('s-subtitle').value,
+                logoUrl: document.getElementById('s-logo').value,
+                whatsapp: document.getElementById('s-whatsapp').value,
+                email: document.getElementById('s-email').value
+            })});
+            alert("✅ Configurações salvas com sucesso!");
+        };
+
+        document.getElementById('form-new-user').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await authFetch(`${API}/users`, { method: 'POST', body: JSON.stringify({
+                nome: document.getElementById('nu-nome').value,
+                email: document.getElementById('nu-email').value,
+                senha: document.getElementById('nu-senha').value,
+                role: document.getElementById('nu-role').value
+            })});
+            const data = await res.json();
+            if (res.ok) { e.target.reset(); fetchAll(); alert(`✅ Usuário ${data.nome} criado com sucesso.`); }
+            else alert(`Erro: ${data.error}`);
+        };
+
+        async function deleteUser(id) {
+            if (!confirm("Remover acesso deste usuário?")) return;
+            await authFetch(`${API}/users/${id}`, { method: 'DELETE' });
+            fetchAll();
+        }
+
+        // CRM
+        function openModalLead(id) {
+            activeLeadId = id;
+            const l = allLeads.find(x => x.id === id);
+            document.getElementById('lead-nome').innerText = l.nome;
+            document.getElementById('lead-contact').innerText = `${l.email} • ${l.telefone}`;
+            document.getElementById('lead-status-sel').value = l.status || 'Novo';
+            renderFollowups(l.followups || []);
+            document.getElementById('modal-lead').classList.remove('hidden');
+        }
+
+        function renderFollowups(notes) {
+            const c = document.getElementById('followups-list');
+            if (!notes.length) { c.innerHTML = '<p class="text-center text-gray-600 py-6 text-sm">Sem histórico ainda.</p>'; return; }
+            c.innerHTML = [...notes].reverse().map(n => `<div class="bg-[#0a0a0a] p-4 rounded-xl border border-white/10">
+                <p class="text-[10px] text-gray-500 font-bold mb-1">${new Date(n.data).toLocaleString()}</p>
+                <p class="text-sm text-gray-200">${n.nota}</p>
+            </div>`).join('');
+        }
+
+        async function updateLeadStatus() {
+            const status = document.getElementById('lead-status-sel').value;
+            await authFetch(`${API}/leads/${activeLeadId}`, { method: 'PUT', body: JSON.stringify({ status }) });
+            fetchAll();
+        }
+
+        async function addFollowup() {
+            const nota = document.getElementById('followup-input').value;
+            if (!nota.trim()) return;
+            await authFetch(`${API}/leads/${activeLeadId}/followup`, { method: 'POST', body: JSON.stringify({ nota }) });
+            document.getElementById('followup-input').value = '';
+            const r = await authFetch(`${API}/leads`);
+            allLeads = await r.json();
+            const updated = allLeads.find(x => x.id === activeLeadId);
+            renderFollowups(updated.followups || []);
+            renderLeads();
+        }
+
+        // Chart
+        function initChart() {
+            const novo = allLeads.filter(l=>l.status==='Novo').length;
+            const visita = allLeads.filter(l=>l.status==='Visita').length;
+            const nego = allLeads.filter(l=>l.status==='Negociacao').length;
+            const fechado = allLeads.filter(l=>l.status==='Fechado').length;
+            if (chart) chart.destroy();
+            chart = new Chart(document.getElementById('dashChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Novo', 'Visita', 'Negociação', 'Fechado'],
+                    datasets: [{ data: [novo, visita, nego, fechado], backgroundColor: ['#bae6fd','#fef08a','#e9d5ff','#bbf7d0'], borderRadius: 12, borderSkipped: false }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+            });
+        }
+
+        // UI helpers
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('hidden');
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            const btn = [...document.querySelectorAll('.sidebar-link')].find(el => el.getAttribute('onclick').includes(id));
+            if (btn) btn.classList.add('active');
+            const titles = { dashboard:'Dashboard', imoveis:'Gestão de Ativos', crm:'CRM / Leads', chat:'Chat ao Vivo', users:'Controle de Usuários', settings:'Configurações' };
+            document.getElementById('tab-title').innerText = titles[id] || id;
+            if (id === 'dashboard') initChart();
+        }
+
+        function openModalImovel() {
+            document.getElementById('m-id').value = '';
+            document.getElementById('form-imovel').reset();
+            document.getElementById('modal-imovel-title').innerText = "Novo Ativo";
+            document.getElementById('modal-imovel').classList.remove('hidden');
+        }
+        function closeModalImovel() { document.getElementById('modal-imovel').classList.add('hidden'); }
+        function closeModalLead() { document.getElementById('modal-lead').classList.add('hidden'); }
+
+        // ===== LIVE CHAT ADMIN =====
+        let activeChatId = null;
+        let allChats = [];
+
+        async function fetchChats() {
+            const res = await authFetch(`${API}/chats`);
+            allChats = await res.json();
+            renderChatList();
+            updateChatBadge();
+            if (activeChatId) {
+                const current = allChats.find(c => c.id === activeChatId);
+                if (current) renderPanelMessages(current);
+            }
+        }
+
+        function renderChatList() {
+            const list = document.getElementById('chats-list');
+            document.getElementById('chats-total').innerText = `${allChats.filter(c=>c.status==='ativo').length} ativas`;
+            list.innerHTML = allChats.map(c => `
+                <div onclick="selectChat('${c.id}')" class="p-4 cursor-pointer hover:bg-[#0a0a0a] transition ${activeChatId===c.id?'bg-[#D4E64A]/10':''}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-[#D4E64A]/10 flex items-center justify-center font-black text-[#D4E64A] text-sm flex-shrink-0">${c.visitante.nome[0]}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <p class="font-bold text-gray-100 text-sm truncate">${c.visitante.nome}</p>
+                                <span class="text-[9px] text-gray-500">${new Date(c.ultimaAtividade).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+                            </div>
+                            <p class="text-xs text-gray-500">${c.visitante.telefone}</p>
+                        </div>
+                        ${c.naoLidas > 0 && c.status==='ativo' ? `<span class="bg-red-500/100 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">${c.naoLidas}</span>` : ''}
+                        ${c.status==='encerrado' ? '<span class="text-[9px] text-gray-600 font-bold uppercase">Enc.</span>' : ''}
+                    </div>
+                </div>`).join('') || '<p class="text-center text-gray-600 p-8 text-sm">Nenhuma conversa ainda.</p>';
+        }
+
+        function selectChat(id) {
+            activeChatId = id;
+            const chat = allChats.find(c => c.id === id);
+            document.getElementById('chat-visitor-info').innerHTML = `
+                <p class="font-bold text-gray-100 text-sm">${chat.visitante.nome}</p>
+                <p class="text-xs text-gray-500">${chat.visitante.telefone}</p>`;
+            document.getElementById('btn-encerrar').classList.toggle('hidden', chat.status === 'encerrado');
+            renderPanelMessages(chat);
+            renderChatList();
+        }
+
+        function renderPanelMessages(chat) {
+            const c = document.getElementById('panel-messages');
+            if (!chat || !chat.mensagens.length) { c.innerHTML = '<p class="text-center text-gray-600 py-12 text-sm">Sem mensagens.</p>'; return; }
+            c.innerHTML = chat.mensagens.map(m => {
+                const a = m.autor === 'atendente';
+                return `<div class="flex gap-3 ${a?'flex-row-reverse':''}">
+                    <div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black ${a?'bg-amber-400 text-white':'bg-slate-200 text-gray-300'}">${a?(m.nomeAtendente||'A')[0]:chat.visitante.nome[0]}</div>
+                    <div class="max-w-[70%] ${a?'bg-[#D4E64A]/10 border border-[#D4E64A]/20':'bg-[#141414] border border-white/10'} rounded-2xl p-3">
+                        <p class="text-gray-100 text-sm">${m.texto}</p>
+                        <p class="text-[9px] text-gray-500 mt-1">${new Date(m.hora).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</p>
+                    </div></div>`;
+            }).join('');
+            c.scrollTop = c.scrollHeight;
+        }
+
+        async function sendPanelReply() {
+            if (!activeChatId) return;
+            const input = document.getElementById('panel-input');
+            const txt = input.value.trim();
+            if (!txt) return;
+            input.value = '';
+            await authFetch(`${API}/chat/${activeChatId}/resposta`, { method: 'POST', body: JSON.stringify({ texto: txt }) });
+            fetchChats();
+        }
+
+        async function encerrarChat() {
+            if (!activeChatId || !confirm('Encerrar esta conversa?')) return;
+            await authFetch(`${API}/chat/${activeChatId}/encerrar`, { method: 'PUT', body: JSON.stringify({}) });
+            fetchChats();
+        }
+
+        function updateChatBadge() {
+            const total = allChats.reduce((s, c) => s + (c.status==='ativo' ? (c.naoLidas||0) : 0), 0);
+            const badge = document.getElementById('chat-badge');
+            if (total > 0) { badge.textContent = total; badge.classList.remove('hidden'); }
+            else badge.classList.add('hidden');
+        }
+
+        setInterval(fetchChats, 4000);
+
+        async function doLogout() {
+            await authFetch(`${API}/logout`, { method: 'POST' });
+            localStorage.removeItem('rima_token');
+            localStorage.removeItem('rima_user');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

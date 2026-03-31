@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposta Comercial | Magister Tech</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-blue: #0A2540; /* Deep premium blue */
+            --accent-blue: #0077FF; /* vibrant interaction blue */
+            --light-blue: #EBF4FF; /* soft background blue */
+            --white: #FFFFFF;
+            --text-dark: #1A1F36;
+            --text-muted: #4F566B;
+            --gradient-accent: linear-gradient(135deg, #0077FF 0%, #0044B2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --shadow-sm: 0 4px 6px rgba(10, 37, 64, 0.05);
+            --shadow-md: 0 10px 20px rgba(10, 37, 64, 0.08);
+            --shadow-lg: 0 20px 40px rgba(10, 37, 64, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--white);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-up {
+            animation: fadeUp 0.8s ease forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+
+        /* --- Header / Hero --- */
+        header {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 2rem 5%;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Ambient glow effect */
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -10%;
+            width: 50%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 119, 255, 0.15) 0%, rgba(10, 37, 64, 0) 70%);
+            z-index: 0;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(4px);
+            color: #A3CFFE;
+        }
+
+        .hero-h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .hero-p {
+            font-size: 1.25rem;
+            color: #A3CFFE;
+            max-width: 700px;
+            margin: 0 auto 3rem auto;
+            font-weight: 300;
+        }
+
+        /* --- Intro Section --- */
+        .intro-section {
+            background-color: var(--light-blue);
+            padding: 5rem 5%;
+            text-align: center;
+        }
+        
+        .intro-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .intro-h2 {
+            font-size: 2.2rem;
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+        }
+
+        .intro-p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        /* --- Pricing Section --- */
+        .pricing-section {
+            padding: 8rem 5%;
+            background: var(--white);
+            position: relative;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .pricing-h2 {
+            font-size: 2.8rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            border: 1px solid #E5E9F2;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            z-index: 1;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent-blue);
+        }
+
+        .card-popular {
+            background: var(--primary-blue);
+            color: var(--white);
+            transform: scale(1.05);
+            border: none;
+            box-shadow: 0 25px 50px rgba(10, 37, 64, 0.2);
+            z-index: 2;
+        }
+
+        .card-popular:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient-accent);
+            color: var(--white);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0, 119, 255, 0.3);
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-blue);
+        }
+        .card-popular .plan-name { color: var(--white); }
+
+        .plan-price {
+            font-size: 3.5rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.2rem;
+        }
+
+        .plan-price span {
+            font-size: 1.2rem;
+            margin-top: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .card-popular .plan-price span { color: #A3CFFE; }
+
+        .plan-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            min-height: 45px;
+        }
+        .card-popular .plan-desc { color: #A3CFFE; }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 3rem;
+        }
+
+        .feature-list li {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+        }
+        .feature-list li i {
+            color: var(--accent-blue);
+            margin-top: 0.3rem;
+            font-size: 0.9rem;
+        }
+        .card-popular .feature-list li i { color: #A3CFFE; }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(10, 37, 64, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--gradient-accent);
+            color: var(--white);
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 119, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(0, 119, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .card-popular .btn-outline {
+            background: var(--white);
+            color: var(--primary-blue);
+            border: none;
+        }
+        .card-popular .btn-outline:hover {
+            background: #F0F4F8;
+            transform: translateY(-2px);
+        }
+
+        /* --- Footer --- */
+        footer {
+            background: var(--primary-blue);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 4rem 5%;
+            font-size: 0.9rem;
+        }
+
+        footer p {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+            .card-popular {
+                transform: scale(1);
+            }
+            .card-popular:hover {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <header>
+        <div class="hero-container animate-fade-up">
+            <div class="badge">NEXUS MAGISTER TECH</div>
+            <h1 class="hero-h1">Inteligência Estratégica para Escala Local.</h1>
+            <p class="hero-p">Não vendemos serviços soltos. Nós acoplamos o motor de Inteligência Artificial e Tráfego Direto que vai puxar os leads que seu negócio precisa todo dia.</p>
+        </div>
+    </header>
+
+    <!-- METODOLOGIA -->
+    <section class="intro-section">
+        <div class="intro-container animate-fade-up delay-1">
+            <h2 class="intro-h2">Modelo Híbrido: Agilidade e Conversão</h2>
+            <p class="intro-p">
+                Esqueça o modelo antigo e caro de agências. Na Magister, 80% do trabalho massante (testes, textos magnéticos e rastreio multicanal) 
+                é executado por nossa <strong>Infraestrutura JARVIS</strong>. Isso significa que você paga apenas pelo que gera resultado real.
+            </p>
+        </div>
+    </section>
+
+    <!-- PREÇOS -->
+    <section class="pricing-section">
+        <div class="pricing-header animate-fade-up delay-2">
+            <h2 class="pricing-h2">Escolha seu Motor de Vendas</h2>
+            <p style="color:var(--text-muted); font-size:1.1rem;">Sem taxas surpresas. Planos claros, diretos e com foco em aquisição rápida de clientes para Pequenos e Médios Empresários.</p>
+        </div>
+
+        <div class="pricing-grid">
+            
+            <!-- PLANO 1 -->
+            <div class="card animate-fade-up delay-3">
+                <h3 class="plan-name">JARVIS START</h3>
+                <p class="plan-desc">A máquina inicial para quem tem verba reduzida, mas precisa de leads qualificados urgentes.</p>
+                <div class="plan-price"><span>R$</span>690<span>/mês</span></div>
+                
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-check"></i> Setup de Meta/Google Ads</li>
+                    <li><i class="fa-solid fa-check"></i> Copys de Alta Conversão (IA)</li>
+                    <li><i class="fa-solid fa-check"></i> Estratégia de Captação Direta</li>
+                    <li><i class="fa-solid fa-check"></i> Relatório de Performance (WhatsApp)</li>
+                </ul>
+                <a href="https://wa.me/5541987225702?text=Oi%20Ester!%20Gostaria%20de%20iniciar%20com%20o%20Plano%20JARVIS%20START%20de%20R$%20690." target="_blank" class="btn btn-outline" onclick="trackLead('start')">Começar Agora</a>
+            </div>
+
+            <!-- PLANO 2 (POPULAR) -->
+            <div class="card card-popular animate-fade-up delay-3">
+                <div class="popular-badge">Mais Escolhido</div>
+                <h3 class="plan-name">DOMINAÇÃO LOCAL</h3>
+                <p class="plan-desc">O ecossistema completo para dominar sua região. Landing Page inclusa para captar e filtrar orçamentos.</p>
+                <div class="plan-price"><span>R$</span>1.490<span>/mês</span></div>
+                
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-check"></i> <strong>Tudo do plano Start</strong></li>
+                    <li><i class="fa-solid fa-check"></i> Landing Page Inclusa (Foco em Conversão)</li>
+                    <li><i class="fa-solid fa-check"></i> Mix de Tráfego: Meta + Google</li>
+                    <li><i class="fa-solid fa-check"></i> Tracking Avançado (CAPI/Pixel)</li>
+                    <li><i class="fa-solid fa-check"></i> Rastreio Dinâmico de Leads Quentes</li>
+                </ul>
+                <a href="https://wa.me/5541987225702?text=Oi%20Ester!%20Gostaria%20de%20fechar%20o%20Plano%20DOMINA%C3%87%C3%83O%20LOCAL%20de%20R$%201.490." target="_blank" class="btn btn-outline" onclick="trackLead('local')">Impulsionar Meu Negócio</a>
+            </div>
+
+            <!-- PLANO 3 -->
+            <div class="card animate-fade-up delay-3">
+                <h3 class="plan-name">ACELERADOR MAGISTER</h3>
+                <p class="plan-desc">Para empresas em rápida expansão que precisam de qualidade visual extrema e gestão multicanal.</p>
+                <div class="plan-price"><span>R$</span>2.500<span>/mês</span></div>
+                
+                <ul class="feature-list">
+                    <li><i class="fa-solid fa-check"></i> <strong>Tudo do Dominação Local</strong></li>
+                    <li><i class="fa-solid fa-check"></i> Design Híbrido Premium (Human-AI)</li>
+                    <li><i class="fa-solid fa-check"></i> Múltiplos Funis Simultâneos</li>
+                    <li><i class="fa-solid fa-check"></i> Reunião Mensal de Aceleração</li>
+                    <li><i class="fa-solid fa-check"></i> Dashboard Executivo Dinâmico</li>
+                </ul>
+                <a href="https://wa.me/5541987225702?text=Oi%20Ester!%20Tenho%20interesse%20no%20Plano%20ACELERADOR%20MAGISTER%20de%20R$%202.500." target="_blank" class="btn btn-primary" onclick="trackLead('acelerador')">Ativar Skala Máxima</a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>Valores referentes apenas ao fee da agência e licenciamento de infraestrutura de inteligência. Mídia paga (budget) não incluso.</p>
+        <p style="margin-top: 2rem;">&copy; 2026 Magister Tech • CNPJ: Operando na Transformação Digital</p>
+    </footer>
+
+    <script>
+        // Interseção para animar os cards quando entrarem na tela (smooth vibe)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.animate-fade-up').forEach((el) => {
+            observer.observe(el);
+        });
+
+        // Script para monitorar cliques (Tracking Nativo Simples JARVIS)
+        function trackLead(planName) {
+            console.log(`[JARVIS Watchdog] Novo clique para envio WhatsApp - Plano: ${planName}`);
+            // Aqui futuramente entra um Ping pro JARVIS DB que registra lead gerado na hora
+        }
+    </script>
+</body>
+</html>

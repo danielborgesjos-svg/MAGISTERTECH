@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposta Executiva - Magister Tech para Luxon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            /* Paleta Premium High-Ticket */
+            --bg-dark: #050505;
+            --bg-card: #111111;
+            --bg-glass: rgba(17, 17, 17, 0.7);
+            
+            --accent: #E2B75F; /* Champagne Gold / Luxo */
+            --accent-dark: #A68032;
+            
+            --text-main: #FFFFFF;
+            --text-muted: #888888;
+            --text-light: #A1A1AA;
+            
+            --border: #2A2A2A;
+            --border-glow: rgba(226, 183, 95, 0.3);
+            
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: var(--text-main); 
+            line-height: 1.7; 
+            background-image: radial-gradient(circle at 15% 50%, rgba(226, 183, 95, 0.03), transparent 25%),
+                              radial-gradient(circle at 85% 30%, rgba(226, 183, 95, 0.04), transparent 25%);
+            background-attachment: fixed;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 40px 100px 40px; }
+
+        /* Typography */
+        h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.5px; }
+        .gold-text { background: linear-gradient(135deg, #FFF, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* HERO SECTION */
+        .hero { 
+            text-align: center; padding: 100px 0 80px 0; border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+        .hero-badge { 
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px; border-radius: 30px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03); color: var(--text-muted); font-size: 13px; font-weight: 500;
+            margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase;
+        }
+        .hero-badge i { color: var(--accent); font-size: 16px; }
+        .hero h1 { font-size: 52px; font-weight: 800; margin-bottom: 20px; line-height: 1.1; }
+        .hero p { font-size: 18px; color: var(--text-light); max-width: 600px; margin: 0 auto; }
+
+        /* HEADER FIXO */
+        .nav { 
+            position: sticky; top: 0; z-index: 100;
+            background: var(--bg-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); padding: 20px 0;
+        }
+        .nav-inner { 
+            max-width: 1000px; margin: 0 auto; padding: 0 40px; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-brand { font-weight: 800; font-size: 16px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+        .nav-brand span { color: var(--accent); }
+
+        /* SECTIONS */
+        .section { margin-top: 80px; }
+        .section-header { margin-bottom: 40px; }
+        .section-header h2 { font-size: 32px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .section-header h2 i { color: var(--accent); font-weight: 300;}
+        .section-header p { color: var(--text-muted); font-size: 16px; max-width: 700px; }
+
+        /* GRIDS & CARDS */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+        .card { 
+            background: var(--bg-card); padding: 40px 30px; border-radius: var(--radius-lg); 
+            border: 1px solid var(--border); transition: all 0.4s ease;
+            position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0; transition: 0.4s;
+        }
+        .card:hover { transform: translateY(-5px); border-color: rgba(226, 183, 95, 0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .card:hover::before { opacity: 1; }
+        
+        .card-icon { 
+            width: 50px; height: 50px; border-radius: 12px; background: rgba(226, 183, 95, 0.1);
+            color: var(--accent); display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-bottom: 24px; border: 1px solid rgba(226, 183, 95, 0.2);
+        }
+        .card h3 { font-size: 18px; margin-bottom: 12px; color: #FFF; }
+        .card p { font-size: 14px; color: var(--text-light); }
+
+        /* STEPPER (ESTRATÉGIA) */
+        .stepper { display: flex; flex-direction: column; gap: 30px; }
+        .step { display: flex; gap: 30px; background: var(--bg-card); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+        .step-number { 
+            font-size: 48px; font-weight: 800; color: transparent; 
+            -webkit-text-stroke: 1px var(--border); line-height: 1; 
+            min-width: 60px;
+        }
+        .step:hover .step-number { -webkit-text-stroke: 1px var(--accent); color: rgba(226, 183, 95, 0.1); transition: 0.3s; }
+        .step-content h3 { font-size: 22px; margin-bottom: 10px; color: #FFF; }
+        .step-content p { color: var(--text-light); font-size: 15px; }
+
+        /* PRICING */
+        .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
+        .pricing-card { 
+            background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border);
+            padding: 50px 40px; text-align: left; position: relative;
+        }
+        .pricing-card.premium { border-color: var(--accent); box-shadow: 0 0 30px rgba(226, 183, 95, 0.1); }
+        .pricing-tag { 
+            position: absolute; top: -12px; right: 40px; background: var(--accent); color: var(--bg-dark);
+            padding: 4px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; border-radius: 20px; letter-spacing: 1px;
+        }
+        .pricing-title { font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 20px; }
+        .pricing-price { font-size: 42px; font-weight: 800; color: #FFF; margin-bottom: 10px; display: flex; align-items: baseline; gap: 8px; }
+        .pricing-price span { font-size: 16px; color: var(--text-muted); font-weight: 400; }
+        .pricing-desc { color: var(--text-light); font-size: 14px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 30px; }
+        .pricing-list { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+        .pricing-list li { display: flex; align-items: start; gap: 12px; font-size: 14px; color: #CCC; }
+        .pricing-list i { color: var(--accent); font-size: 18px; margin-top: 2px; }
+
+        /* CTA */
+        .cta-section { margin-top: 100px; text-align: center; padding: 80px 40px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .cta-section::before { content:''; position: absolute; width: 300px; height: 300px; background: var(--accent); filter: blur(150px); opacity: 0.1; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .btn { 
+            display: inline-flex; align-items: center; gap: 10px; padding: 18px 40px; 
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark)); 
+            color: var(--bg-dark); font-weight: 700; font-size: 15px; text-decoration: none; 
+            border-radius: 8px; margin-top: 40px; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            position: relative; z-index: 2;
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -10px rgba(226, 183, 95, 0.5); }
+        .btn-outline {
+            background: transparent; border: 1px solid var(--border); color: #FFF;
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); box-shadow: none; border-color: #666; }
+
+        footer { text-align: center; padding: 40px 0; margin-top: 40px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 13px; font-weight: 500;}
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-brand">Magister <span>Tech</span></div>
+        <div style="color: var(--text-muted); font-size: 13px; font-weight: 500;">Proposta Executiva Confidencial</div>
+    </div>
+</nav>
+
+<div class="container">
+    
+    <!-- HEADER -->
+    <header class="hero">
+        <div class="hero-badge"><i class="ph-fill ph-check-circle"></i> Documento Oficial de Planejamento</div>
+        <h1>Projeto de Tração e <br><span class="gold-text">Escala Digital</span></h1>
+        <p style="margin-top: 24px;">Plano estratégico desenvolvido exclusivamente para a diretoria da <strong>Luxon</strong>, focado na aquisição acelerada de clientes via Tráfego Pago Militar.</p>
+    </header>
+
+    <!-- ANÁLISE -->
+    <section class="section">
+        <div class="section-header">
+            <h2><i class="ph-light ph-map-pin-line"></i> Análise de Inteligência de Praça</h2>
+            <p>Avaliamos o comportamento de busca e concorrência na Região Metropolitana de Curitiba, mapeando o caminho mais eficiente para a aquisição de leads da Luxon.</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-icon"><i class="ph-fill ph-buildings"></i></div>
+                <h3>Curitiba (Capital)</h3>
+                <p>O maior volume e a maior disputa do sul. O foco em Curitiba será o <strong style="color:white">Fundo de Funil (Google Ads)</strong>. Em vez de disputar atenção, interceptaremos quem pesquisa ativamente pelos serviços "Luxon", dominando as 3 primeiras posições com páginas de altíssima conversão.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon"><i class="ph-fill ph-factory"></i></div>
+                <h3>São José dos Pinhais</h3>
+                <p>Oceano Azul. Possui crescimento expressivo em capacidade financeira e um CPL (Custo Por Lead) até <strong style="color:white">25% mais barato</strong> que a capital. Empregaremos campanhas agressivas de Geração de Demanda (Instagram/Facebook) segmentadas apenas para bairros nobres e IPs empresariais de SJP.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRÁFEGO PAGO -->
+    <section class="section">
+        <div class="section-header">
+            <h2><i class="ph-light ph-funnel"></i> Por que o Tráfego Pago?</h2>
+            <p>O boca a boca não é previsível. O tráfego pago é a ferramenta de engenharia de vendas que permite comprar dados e ditar a escala do seu negócio.</p>
+        </div>
+
+        <div class="grid-3">
+            <div class="card" style="padding: 30px 20px;">
+                <h3 style="margin-bottom: 8px; font-size: 16px;">Previsibilidade de Caixa</h3>
+                <p style="font-size: 13px;">Saber exatamente que R$ 1.000 investidos retornam em volume de conversas X com o time comercial.</p>
+            </div>
+            <div class="card" style="padding: 30px 20px;">
+                <h3 style="margin-bottom: 8px; font-size: 16px;">Exclusividade de Alvo</h3>
+                <p style="font-size: 13px;">Eliminamos curiosos. Os anúncios aparecem estritamente para perfis demográficos com capacidade de compra qualificada.</p>
+            </div>
+            <div class="card" style="padding: 30px 20px;">
+                <h3 style="margin-bottom: 8px; font-size: 16px;">Remarketing Ativo</h3>
+                <p style="font-size: 13px;">O lead que visitar a Luxon será impactado por 15 dias em todos os sites e apps que utilizar, forçando a lembrança e contato.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ESTRATÉGIA -->
+    <section class="section">
+        <div class="section-header">
+            <h2><i class="ph-light ph-strategy"></i> Engenharia da Execução</h2>
+            <p>Como a Magister Tech executará a operação tática de Growth para a Luxon nos próximos trimestres.</p>
+        </div>
+
+        <div class="stepper">
+            <div class="step">
+                <div class="step-number">01</div>
+                <div class="step-content">
+                    <h3>Ativação do Fundo de Funil (Google Ads)</h3>
+                    <p>Mapearemos todas as palavras-chave com real intenção de compra ligadas à Luxon em CWB / SJP. Criaremos anúncios com Copywriting persuasivo para garantir a posição no topo das pesquisas, atraindo o lead "pronto para comprar".</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">02</div>
+                <div class="step-content">
+                    <h3>Volume e Escala (Meta Ads)</h3>
+                    <p>Criação de anúncios em Vídeo e Design estático focados na Dor do cliente e no Desejo que a Luxon atende. Campanhas no Instagram exclusivas para raio de atuação, disparando mensagens de leads altamente nutridos diretamente para o WhatsApp comercial da empresa.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">03</div>
+                <div class="step-content">
+                    <h3>Rastreamento, BI e Otimização Diária</h3>
+                    <p>Implementação do Pixel do Facebook e Google Tag Manager (GTM). Monitoramos em milissegundos o que cada usuário faz, cortando a verba de anúncios ruins (CPA Alto) e dobrando as injeções naqueles que geram vendas efetivas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INVESTIMENTO -->
+    <section class="section">
+        <div class="section-header">
+            <h2><i class="ph-light ph-currency-dollar"></i> Investimento e Honorários</h2>
+            <p>Delineamento completo dos investimentos necessários para estruturação e gestão da conta de alta performance.</p>
+        </div>
+
+        <div class="pricing-grid">
+            
+            <div class="pricing-card">
+                <div class="pricing-title">Setup e Estruturação</div>
+                <div class="pricing-price">R$ 1.500<span> Taxa Única</span></div>
+                <div class="pricing-desc">Construção da arquitetura digital e trackeamento antes dos anúncios rodarem.</div>
+                <ul class="pricing-list">
+                    <li><i class="ph-bold ph-check"></i> Criação Business Manager (Meta)</li>
+                    <li><i class="ph-bold ph-check"></i> Configuração Avançada de Pixel</li>
+                    <li><i class="ph-bold ph-check"></i> Criação e Linkagem do Google Ads</li>
+                    <li><i class="ph-bold ph-check"></i> Mapeamento de Público e Palavras</li>
+                    <li><i class="ph-bold ph-check"></i> Criação das Primeiras Campanhas</li>
+                </ul>
+            </div>
+
+            <div class="pricing-card premium">
+                <div class="pricing-tag">Core Service</div>
+                <div class="pricing-title">Gestão Premium Mensal</div>
+                <div class="pricing-price">R$ 2.000<span> / mês</span></div>
+                <div class="pricing-desc">Acompanhamento executivo, otimização de conversão e relatórios de resultados.</div>
+                <ul class="pricing-list">
+                    <li><i class="ph-bold ph-check"></i> Otimização Diária de Verba e CPA</li>
+                    <li><i class="ph-bold ph-check"></i> Testes A/B (Público, Copy, Imagens)</li>
+                    <li><i class="ph-bold ph-check"></i> Criação e Setup de Novas Campanhas</li>
+                    <li><i class="ph-bold ph-check"></i> Reunião Executiva de Alinhamento</li>
+                    <li><i class="ph-bold ph-check"></i> Gestão Ilimitada de Orçamento (Ad Spend)</li>
+                </ul>
+            </div>
+            
+        </div>
+
+        <div style="margin-top: 40px; background: rgba(226, 183, 95, 0.05); border: 1px dashed var(--accent); padding: 30px; border-radius: var(--radius-md); text-align: center;">
+            <p style="font-size: 14px; color: #CCC; margin-bottom: 5px;"><strong>Nota sobre Orçamento nas Plataformas (Tráfego):</strong></p>
+            <p style="font-size: 13px; color: var(--text-muted); max-width: 700px; margin: 0 auto;">Todo valor injetado nos anúncios (Para o Google e Meta) é pago diretamente pelas empresas vias créditos, boleto ou cartão. Recomendamos a entrada com verba de validação e escala fixada entre <strong>R$ 1.500 a R$ 3.000 Iniciais</strong> para a validação geográfica e algorítmica.</p>
+        </div>
+
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-section">
+        <h2 style="font-size: 38px; margin-bottom: 20px;">Dominância Digital com Metodologia.</h2>
+        <p style="font-size: 16px; color: var(--text-muted); max-width: 600px; margin: 0 auto; margin-bottom: 20px;">Estamos preparados para plugar a estrutura da Magister Tech e acelerar o fluxo comercial da Luxon.</p>
+        
+        <div style="display:flex; justify-content:center; gap: 20px;">
+            <a href="#" class="btn">Aprovar Proposta <i class="ph-bold ph-arrow-right"></i></a>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>MAGISTER TECH</strong> &copy; 2026</p>
+        <p style="margin-top: 8px; font-size: 12px; color: #555;">Documento gerado e validado pelo protocolo executivo JARVIS C-Level.</p>
+    </footer>
+
+</div>
+
+</body>
+</html>
