@@ -12,17 +12,17 @@
         :root { --gold: #D4E64A; --bg: #0a0a0a; --surface: #141414; --text: #f3f4f6; --muted: #9ca3af; --border: rgba(255,255,255,0.1); }
         body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); }
         .sidebar { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
-        .sidebar-link.active { background: #fef9e7; color: #856404; font-weight: 700; }
+        .sidebar-link.active { background: rgba(212,230,74,0.1); color: #D4E64A; font-weight: 700; border-right: 3px solid #D4E64A; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .card { background: white; border: 1px solid var(--border); border-radius: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.2s; }
-        .btn-gold { background: var(--gold); color: white; transition: all 0.3s; }
-        .btn-gold:hover { background: #A2B52A; box-shadow: 0 4px 16px rgba(212,175,55,0.3); }
-        .badge-novo { background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd; }
-        .badge-visita { background:#fefce8; color:#a16207; border:1px solid #fef08a; }
-        .badge-negociacao { background:#faf5ff; color:#7e22ce; border:1px solid #e9d5ff; }
-        .badge-fechado { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
-        .badge-perdido { background:#fff1f2; color:#be123c; border:1px solid #fecdd3; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: all 0.2s; }
+        .btn-gold { background: var(--gold); color: #000; transition: all 0.3s; }
+        .btn-gold:hover { background: #E2F065; box-shadow: 0 4px 16px rgba(212,230,74,0.3); }
+        .badge-novo { background: rgba(3,105,161,0.2); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); }
+        .badge-visita { background: rgba(161,98,7,0.2); color:#facc15; border:1px solid rgba(250,204,21,0.3); }
+        .badge-negociacao { background: rgba(126,34,206,0.2); color:#c084fc; border:1px solid rgba(192,132,252,0.3); }
+        .badge-fechado { background: rgba(21,128,61,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.3); }
+        .badge-perdido { background: rgba(190,18,60,0.2); color:#fb7185; border:1px solid rgba(251,113,133,0.3); }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
         @media(max-width:1024px) { .sidebar { position:fixed; transform:translateX(-100%); z-index:50; height:100vh; } .sidebar.open { transform:translateX(0); } }
