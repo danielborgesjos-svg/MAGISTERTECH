@@ -1,5 +1,87 @@
 {
-  "transacoes": [],
-  "vendas": [],
-  "agenda": []
+  "transacoes": [
+    {
+      "id": "t1774979198000",
+      "tipo": "entrada",
+      "categoria": "Venda Geral",
+      "valor": 1000,
+      "descricao": "Entrada inicial: Cliente Teste (Produto Teste)",
+      "data": "31/03/2026",
+      "criadoEm": "2026-03-31T17:46:38.000Z"
+    },
+    {
+      "id": "t1774983102926",
+      "tipo": "entrada",
+      "categoria": "Venda Geral",
+      "valor": 7500,
+      "descricao": "Entrada inicial: Lucas Larroa (Produto Teste)",
+      "data": "31/03/2026",
+      "criadoEm": "2026-03-31T18:51:42.926Z"
+    }
+  ],
+  "vendas": [
+    {
+      "id": "v1774979198000",
+      "produto": "Venda Loja",
+      "nomePeca": "Produto Teste",
+      "nomeCliente": "Cliente Teste",
+      "valor": 1000,
+      "custo": 500,
+      "pendente": 0,
+      "data": "31/03/2026",
+      "parcelas": 1,
+      "parcelasPagas": [],
+      "lucroBruto": 500,
+      "dizimo": 50,
+      "lucroLiquido": 450,
+      "status": "Pago",
+      "criadoEm": "2026-03-31T17:46:38.000Z"
+    },
+    {
+      "id": "v1774983102926",
+      "produto": "Venda Loja",
+      "nomePeca": "Produto Teste",
+      "nomeCliente": "Lucas Larroa",
+      "valor": 10000,
+      "custo": 5000,
+      "pendente": 2500,
+      "data": "31/03/2026",
+      "parcelas": 2,
+      "parcelasPagas": [],
+      "lucroBruto": 5000,
+      "dizimo": 500,
+      "lucroLiquido": 4500,
+      "status": "Pendente",
+      "criadoEm": "2026-03-31T18:51:42.926Z"
+    }
+  ],
+  "agenda": [
+    {
+      "id": "a1774981318787",
+      "titulo": "MEDIDO",
+      "data": "2024-04-01",
+      "hora": "14:02",
+      "criadoEm": "2026-03-31T18:21:58.787Z"
+    }
+  ],
+  "config": {
+    "dizimo_percent": 0.1
+  },
+  "contas_fixas": [
+    {
+      "id": "cf1774977951198",
+      "nome": "Aluguel",
+      "valor": 2000,
+      "vencimento": 1010,
+      "criadoEm": "2026-03-31T17:25:51.198Z"
+    },
+    {
+      "id": "cf1774981623680",
+      "nome": "Internet",
+      "valor": 100,
+      "vencimento": 15,
+      "criadoEm": "2026-03-31T18:27:03.680Z"
+    }
+  ],
+  "pagamentos_contas": []
 }

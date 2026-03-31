@@ -15,7 +15,7 @@ module.exports = {
       TEAM_CODE: 'JARVIS-001'
     }
   }, {
-    name: 'jarvis-financeiro',
+    name: 'gestor-financeiro',
     script: 'server.js',
     instances: 1,
     autorestart: true,

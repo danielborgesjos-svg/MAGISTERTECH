@@ -30,15 +30,26 @@ const initDB = () => {
     if (!fs.existsSync(DB_DIR)) {
         fs.mkdirSync(DB_DIR);
     }
-    // Financeiro
     if (!fs.existsSync(DB_PATH)) {
         const initialState = { 
             vendas: [], 
             transacoes: [], 
             agenda: [],
+            contas_fixas: [],
+            pagamentos_contas: [],
             config: { dizimo_percent: 0.10 }
         };
         fs.writeFileSync(DB_PATH, JSON.stringify(initialState, null, 2));
+    } else {
+        // Garantir que todos os campos existam para migração
+        const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+        let changed = false;
+        if (!db.transacoes) { db.transacoes = []; changed = true; }
+        if (!db.agenda) { db.agenda = []; changed = true; }
+        if (!db.contas_fixas) { db.contas_fixas = []; changed = true; }
+        if (!db.pagamentos_contas) { db.pagamentos_contas = []; changed = true; }
+        if (!db.config) { db.config = { dizimo_percent: 0.10 }; changed = true; }
+        if (changed) fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
     }
     // Rima
     if (!fs.existsSync(DB_PATH_RIMA)) {
@@ -121,15 +132,85 @@ app.get('/api/vendas', (req, res) => {
 app.post('/api/vendas', (req, res) => {
     try {
         const db = readDB();
-        const { produto, nomePeca, nomeCliente, valor, custo, pendente, data, parcelas } = req.body;
+        const { produto, nomePeca, nomeCliente, valor, custo, pendente, data, parcelas, parcelasPagas } = req.body;
         const lucroBruto = valor - custo;
         const dizimo = lucroBruto * db.config.dizimo_percent;
         const lucroLiquido = lucroBruto - dizimo;
-        const novaVenda = { id: 'v' + Date.now(), produto, nomePeca, nomeCliente, valor, custo, pendente, data, parcelas, lucroBruto, dizimo, lucroLiquido, status: pendente > 0 ? 'Pendente' : 'Pago', criadoEm: new Date().toISOString() };
+        const novaVenda = { 
+            id: 'v' + Date.now(), 
+            produto, 
+            nomePeca, 
+            nomeCliente, 
+            valor, 
+            custo, 
+            pendente, 
+            data, 
+            parcelas: parcelas || 1, 
+            parcelasPagas: parcelasPagas || [], 
+            lucroBruto, 
+            dizimo, 
+            lucroLiquido, 
+            status: pendente > 0 ? 'Pendente' : 'Pago', 
+            criadoEm: new Date().toISOString() 
+        };
         db.vendas.push(novaVenda);
+
+        // Se houver pagamento inicial (valor > pendente), gerar transação de entrada
+        const valorPagoInicial = valor - pendente;
+        if (valorPagoInicial > 0) {
+            const transacao = {
+                id: 't' + Date.now(),
+                tipo: 'entrada',
+                categoria: 'Venda Geral',
+                valor: valorPagoInicial,
+                descricao: `Entrada inicial: ${nomeCliente} (${nomePeca})`,
+                data: data || new Date().toLocaleDateString('pt-BR'),
+                criadoEm: new Date().toISOString()
+            };
+            db.transacoes.push(transacao);
+        }
+
         writeDB(db);
         res.status(201).json(novaVenda);
     } catch (e) { res.status(500).json({ error: "Erro ao salvar venda" }); }
+});
+
+// Registrar pagamento de parcela individual
+app.post('/api/vendas/:id/parcela', (req, res) => {
+    try {
+        const db = readDB();
+        const index = db.vendas.findIndex(v => v.id === req.params.id);
+        if (index === -1) return res.status(404).json({ error: "Venda não encontrada" });
+
+        const { indiceParcela, valorParcela, dataPagamento } = req.body;
+        const venda = db.vendas[index];
+
+        if (!venda.parcelasPagas) venda.parcelasPagas = [];
+        
+        if (!venda.parcelasPagas.includes(indiceParcela)) {
+            venda.parcelasPagas.push(indiceParcela);
+            venda.pendente = Math.max(0, venda.pendente - valorParcela);
+            
+            // Gerar transação automática de entrada
+            const transacao = {
+                id: 't' + Date.now(),
+                tipo: 'entrada',
+                categoria: 'Recebimento Parcela',
+                valor: valorParcela,
+                descricao: `Parcela ${indiceParcela} de ${venda.nomeCliente} (${venda.nomePeca})`,
+                data: dataPagamento || new Date().toLocaleDateString('pt-BR'),
+                criadoEm: new Date().toISOString()
+            };
+            db.transacoes.push(transacao);
+            
+            if (venda.pendente <= 0) venda.status = 'Pago';
+            
+            writeDB(db);
+            res.json({ success: true, venda, transacao });
+        } else {
+            res.status(400).json({ error: 'Parcela já paga' });
+        }
+    } catch (e) { res.status(500).json({ error: "Erro no processamento da parcela" }); }
 });
 
 app.put('/api/vendas/:id', (req, res) => {
@@ -155,6 +236,175 @@ app.delete('/api/vendas/:id', (req, res) => {
         writeDB(db);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: "Erro ao excluir venda" }); }
+});
+
+// --- TRANSAÇÕES ---
+app.get('/api/transacoes', (req, res) => {
+    try { const db = readDB(); res.json(db.transacoes); } catch (e) { res.status(500).json({ error: "Erro ao ler transações" }); }
+});
+
+app.post('/api/transacoes', (req, res) => {
+    try {
+        const db = readDB();
+        const nova = { id: 't' + Date.now(), ...req.body, criadoEm: new Date().toISOString() };
+        db.transacoes.push(nova);
+        writeDB(db);
+        res.status(201).json(nova);
+    } catch (e) { res.status(500).json({ error: "Erro ao salvar transação" }); }
+});
+
+// --- AGENDA ---
+app.get('/api/agenda', (req, res) => {
+    try { const db = readDB(); res.json(db.agenda); } catch (e) { res.status(500).json({ error: "Erro ao ler agenda" }); }
+});
+
+app.post('/api/agenda', (req, res) => {
+    try {
+        const db = readDB();
+        const novoItem = { id: 'a' + Date.now(), ...req.body, criadoEm: new Date().toISOString() };
+        db.agenda.push(novoItem);
+        writeDB(db);
+        res.status(201).json(novoItem);
+    } catch (e) { res.status(500).json({ error: "Erro ao salvar item na agenda" }); }
+});
+
+app.delete('/api/agenda/:id', (req, res) => {
+    try {
+        const db = readDB();
+        db.agenda = db.agenda.filter(a => a.id !== req.params.id);
+        writeDB(db);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Erro ao excluir item da agenda" }); }
+});
+
+// --- FUNÇÃO AUXILIAR PARA CICLO DE CONTAS (Reseta dia 30) ---
+function getReferenciaMesAno() {
+    let d = new Date();
+    let mes = d.getMonth() + 1;
+    let ano = d.getFullYear();
+    if (d.getDate() >= 30) {
+        mes += 1;
+        if (mes > 12) { mes = 1; ano += 1; }
+    }
+    return { mes, ano };
+}
+
+// --- CONTAS FIXAS ---
+app.get('/api/contas', (req, res) => {
+    try {
+        const db = readDB();
+        const { mes, ano } = getReferenciaMesAno();
+        
+        // Mapear contas fixas e ver se já foram pagas neste ciclo
+        const contas = db.contas_fixas.map(c => {
+            const pagamento = db.pagamentos_contas.find(p => p.id_conta === c.id && p.mes === mes && p.ano === ano);
+            return { ...c, pagoNoMes: !!pagamento, dataPagamento: pagamento ? pagamento.data : null };
+        });
+        res.json(contas);
+    } catch (e) { res.status(500).json({ error: "Erro ao ler contas fixas" }); }
+});
+
+app.post('/api/contas', (req, res) => {
+    try {
+        const db = readDB();
+        const nova = { id: 'cf' + Date.now(), ...req.body, criadoEm: new Date().toISOString() };
+        db.contas_fixas.push(nova);
+        writeDB(db);
+        res.status(201).json(nova);
+    } catch (e) { res.status(500).json({ error: "Erro ao criar conta fixa" }); }
+});
+
+app.post('/api/contas/:id/pagar', (req, res) => {
+    try {
+        const db = readDB();
+        const conta = db.contas_fixas.find(c => c.id === req.params.id);
+        if (!conta) return res.status(404).json({ error: "Conta não encontrada" });
+
+        const { mes, ano } = getReferenciaMesAno();
+        
+        const jaPago = db.pagamentos_contas.find(p => p.id_conta === conta.id && p.mes === mes && p.ano === ano);
+        if (jaPago) return res.status(400).json({ error: "Conta já paga neste ciclo" });
+
+        const novoPagamento = {
+            id: 'p' + Date.now(),
+            id_conta: conta.id,
+            nome: conta.nome,
+            valor: conta.valor,
+            mes,
+            ano,
+            data: new Date().toLocaleDateString('pt-BR'),
+            criadoEm: new Date().toISOString()
+        };
+        db.pagamentos_contas.push(novoPagamento);
+        
+        // Gerar transação de saída automática
+        const transacao = {
+            id: 't' + Date.now(),
+            tipo: 'saida',
+            categoria: conta.categoria || 'Custos Fixos',
+            valor: conta.valor,
+            descricao: `Pagamento mensal: ${conta.nome} (Ciclo ${mes}/${ano})`,
+            data: new Date().toLocaleDateString('pt-BR'),
+            criadoEm: new Date().toISOString()
+        };
+        db.transacoes.push(transacao);
+
+        writeDB(db);
+        res.status(201).json({ success: true, pagamento: novoPagamento, transacao });
+    } catch (e) { res.status(500).json({ error: "Erro ao registrar pagamento" }); }
+});
+
+app.post('/api/contas/:id/desfazer', (req, res) => {
+    try {
+        const db = readDB();
+        const conta = db.contas_fixas.find(c => c.id === req.params.id);
+        if (!conta) return res.status(404).json({ error: "Conta não encontrada" });
+
+        const { mes, ano } = getReferenciaMesAno();
+        
+        const jaPagoIndex = db.pagamentos_contas.findIndex(p => p.id_conta === conta.id && p.mes === mes && p.ano === ano);
+        if (jaPagoIndex === -1) return res.status(400).json({ error: "Conta não está paga neste mês" });
+
+        db.pagamentos_contas.splice(jaPagoIndex, 1);
+
+        // Remover transação de saída se houver (por descrição exata gerada no pagar)
+        const descMatch = `Pagamento mensal: ${conta.nome} (${mes}/${ano})`;
+        const tIndex = db.transacoes.findIndex(t => t.descricao === descMatch);
+        if (tIndex !== -1) {
+            db.transacoes.splice(tIndex, 1);
+        }
+
+        writeDB(db);
+        res.status(200).json({ success: true, message: "Pagamento revertido com sucesso" });
+    } catch (e) { res.status(500).json({ error: "Erro ao desfazer pagamento" }); }
+});
+
+app.delete('/api/contas/:id', (req, res) => {
+    try {
+        const db = readDB();
+        db.contas_fixas = db.contas_fixas.filter(c => c.id !== req.params.id);
+        writeDB(db);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Erro ao excluir conta fixa" }); }
+});
+
+// --- EXTRATO CONSOLIDADO ---
+app.get('/api/extrato', (req, res) => {
+    try {
+        const db = readDB();
+        // Mapear transações com ícones e cores para o frontend
+        const timeline = db.transacoes.map(t => ({
+            ...t,
+            displayTipo: t.tipo === 'entrada' ? 'Receita' : 'Despesa',
+            icon: t.tipo === 'entrada' ? 'fa-arrow-up' : 'fa-arrow-down',
+            color: t.tipo === 'entrada' ? 'emerald' : 'rose'
+        }));
+
+        // Ordenar cronologicamente decrescente
+        timeline.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+        
+        res.json(timeline);
+    } catch (e) { res.status(500).json({ error: "Erro ao gerar extrato" }); }
 });
 
 // --- ROTAS RIMA IMÓVEIS (OPERATIONAL 4.1) ---
@@ -445,5 +695,5 @@ app.put('/api/rima/chat/:id/encerrar', authMiddleware, (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`[JARVIS 4.1] Servidor Rima Operacional em http://localhost:${PORT}`);
+    console.log(`[JARVIS 4.1] Gestor Financeiro Operacional em http://localhost:${PORT}`);
 });
