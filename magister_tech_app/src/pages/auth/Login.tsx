@@ -21,20 +21,27 @@ const Login = () => {
     setError('');
 
     try {
+      const inputEmail = email.trim().toLowerCase();
+      
+      // ✅ Super Admin Bypass: Sempre funciona, sem depender do database (localStorage)
+      if (inputEmail === 'admin@magistertech.com.br' && password === 'admin123') {
+        login(DEMO_TOKEN, DEMO_USER);
+        navigate('/admin/dashboard');
+        return;
+      }
+
       // Offline fallback: varrer usuários cadastrados
       const teamRaw = localStorage.getItem('mstr_team');
       let team = [];
       if (teamRaw) {
         team = JSON.parse(teamRaw);
       } else {
-        // Se a base esvaziou globalmente, insere o mestre admin
         team = [DEMO_USER];
       }
 
-      // Senha padrao "magister123" para usuários recém-criados ou "admin123" pra conta admin
-      const member = team.find((m: any) => m.email === email);
-      
-      const validPasswords = ['admin123', 'magister123', '123456']; // Senhas aceitas em ambiente demo/offline
+      // Busca por outro colaborador
+      const member = team.find((m: any) => m.email?.toLowerCase() === inputEmail);
+      const validPasswords = ['admin123', 'magister123', '123456'];
       
       if (member && validPasswords.includes(password)) {
         login(DEMO_TOKEN, {
