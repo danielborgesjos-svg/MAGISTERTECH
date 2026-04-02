@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
   Plus, X, Briefcase, Users, Calendar, ChevronRight, Zap, Building2,
-  Mail, Phone, Target, FileText, Edit, Trash2, Activity, TrendingUp, StopCircle,
-  CheckCircle, PauseCircle
+  Mail, Phone, Target, FileText, Edit, Trash2, Activity, TrendingUp, TrendingDown, StopCircle,
+  CheckCircle, PauseCircle, ArrowRight
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Project, Meeting } from '../contexts/DataContext';
