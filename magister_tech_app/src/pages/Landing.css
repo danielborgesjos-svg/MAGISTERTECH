@@ -199,8 +199,12 @@
 }
 
 .lp-logo img {
-  height: 48px;
+  height: 60px;
   width: auto;
+  transition: transform 0.3s ease;
+}
+.lp-logo img:hover {
+  transform: scale(1.02);
 }
 
 .lp-nav {
@@ -252,23 +256,25 @@
   pointer-events: none;
 }
 
-/* Glow sutis ao fundo (não polutos, como pedido) */
+/* Elementos de Vibe de IA - Super Glows radiais agressivos e vibrantes mas mantendo o fundo claro */
 .lp-hero-glow-1 {
   position: absolute;
-  top: -10%;
-  right: -5%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  top: -15%;
+  right: -10%;
+  width: 900px;
+  height: 900px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 65%);
+  filter: blur(40px);
 }
 
 .lp-hero-glow-2 {
   position: absolute;
   bottom: -20%;
-  left: -10%;
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 70%);
+  left: -15%;
+  width: 1000px;
+  height: 1000px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 65%);
+  filter: blur(40px);
 }
 
 .lp-hero-content {
@@ -624,18 +630,70 @@
   flex-wrap: wrap;
 }
 
-/* ─── FOOTER ─────────────────────────────────────────────────────────────── */
-.lp-footer {
+/* ─── CLIENTES ───────────────────────────────────────────────────────────── */
+.lp-clients {
+  padding: 80px 0;
   background: var(--lp-bg);
-  padding: 80px 0 40px;
   border-top: 1px solid var(--lp-border);
+}
+
+.lp-clients-track {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lp-client-badge {
+  padding: 12px 24px;
+  background: var(--lp-bg-alt);
+  border: 1px solid var(--lp-border);
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--lp-text);
+  box-shadow: var(--lp-shadow-sm);
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.lp-client-badge:hover {
+  background: #FFFFFF;
+  border-color: var(--lp-indigo);
+  transform: translateY(-2px);
+  color: var(--lp-indigo);
+}
+
+/* ─── FOOTER BEM BONITO ─────────────────────────────────────────────────── */
+.lp-footer {
+  background: #0F172A; /* Um toque super premium pro final da página (rodape bem corporativo escuro para o usuário não sentir falta do painel escuro) */
+  color: #FFFFFF;
+  padding: 100px 0 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* AI Glow no Footer também */
+.lp-footer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;
+  height: 80vw;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .lp-footer-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 40px;
+  gap: 60px;
   margin-bottom: 60px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 768px) {
@@ -645,21 +703,24 @@
 }
 
 .lp-footer-logo img {
-  height: 40px;
-  margin-bottom: 16px;
+  height: 60px;
+  margin-bottom: 24px;
 }
 
 .lp-footer-desc {
-  color: var(--lp-text-sec);
-  line-height: 1.6;
-  max-width: 300px;
+  color: #94A3B8;
+  line-height: 1.8;
+  max-width: 380px;
+  font-size: 16px;
 }
 
 .lp-footer h5 {
   font-size: 16px;
   font-weight: 700;
-  color: var(--lp-text);
+  color: #FFFFFF;
   margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .lp-footer ul {
@@ -669,15 +730,22 @@
 }
 
 .lp-footer li {
-  margin-bottom: 12px;
-  color: var(--lp-text-sec);
+  margin-bottom: 16px;
+  color: #94A3B8;
   font-size: 15px;
+  transition: color 0.2s;
+}
+
+.lp-footer li a:hover {
+  color: var(--lp-indigo);
 }
 
 .lp-footer-bottom {
   text-align: center;
   padding-top: 32px;
-  border-top: 1px solid var(--lp-border);
-  color: var(--lp-text-sec);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: #64748B;
   font-size: 14px;
+  position: relative;
+  z-index: 1;
 }
