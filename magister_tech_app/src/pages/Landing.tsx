@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   Code, Zap, Globe, TrendingUp, 
-  Target, Star, Brain, CheckCircle2, ShieldCheck, Server, Headset
+  Target, Star, Brain, ShieldCheck, Server, Headset
 } from 'lucide-react';
 import { DataContext } from '../contexts/DataContext';
 import './Landing.css';
@@ -332,6 +332,20 @@ const Landing = () => {
               );
             })}
           </motion.div>
+        </div>
+      </section>
+
+      {/* ─── INSTAGRAM ─────────────────────────────────────────────────────── */}
+      <section style={{ padding: '60px 0', background: 'var(--lp-bg-alt)' }}>
+        <div className="lp-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: 24, boxShadow: '0 10px 25px rgba(220, 39, 67, 0.3)' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          </div>
+          <h2 className="lp-h2" style={{ fontSize: 32, marginBottom: 16 }}>Acompanhe nossa evolução</h2>
+          <p className="lp-p" style={{ maxWidth: 600, marginBottom: 32 }}>Siga o nosso Instagram para acompanhar os bastidores, dicas de tecnologia e os novos lançamentos corporativos da Magister Tech.</p>
+          <a href="https://instagram.com/magister_tech" target="_blank" rel="noreferrer" className="lp-btn lp-btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: 10, borderRadius: 100, padding: '12px 32px' }}>
+            @magister_tech <TrendingUp size={16} />
+          </a>
         </div>
       </section>
 
