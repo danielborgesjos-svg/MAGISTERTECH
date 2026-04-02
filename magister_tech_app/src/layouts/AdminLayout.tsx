@@ -108,32 +108,35 @@ const AdminLayout = () => {
           )}
         </div>
 
-        {/* Nav */}
         <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
-          {navGroups.map(group => (
-            <div key={group.label}>
-              {!collapsed && <div className="nav-group-label">{group.label}</div>}
-              {group.items.filter(item => canViewModule(item.module)).map(item => (
-                collapsed ? (
-                  <div key={item.to} className="tooltip-wrap" style={{ marginBottom: 2 }}>
-                    <NavLink to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                      style={{ justifyContent: 'center', padding: '10px' }}>
-                      <item.icon size={20} />
+          {navGroups.map(group => {
+            const visibleItems = group.items.filter(item => canViewModule(item.module));
+            if (visibleItems.length === 0) return null;
+            return (
+              <div key={group.label}>
+                {!collapsed && <div className="nav-group-label">{group.label}</div>}
+                {visibleItems.map(item => (
+                  collapsed ? (
+                    <div key={item.to} className="tooltip-wrap" style={{ marginBottom: 2 }}>
+                      <NavLink to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                        style={{ justifyContent: 'center', padding: '10px' }}>
+                        <item.icon size={20} />
+                      </NavLink>
+                      <div className="tooltip">{item.label}</div>
+                    </div>
+                  ) : (
+                    <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                      <item.icon size={18} />
+                      <span style={{ flex: 1 }}>{item.label}</span>
+                      {item.module === 'dashboard' && alertCount > 0 && (
+                        <span className="badge badge-danger" style={{ padding: '1px 6px', fontSize: 10 }}>{alertCount}</span>
+                      )}
                     </NavLink>
-                    <div className="tooltip">{item.label}</div>
-                  </div>
-                ) : (
-                  <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-                    <item.icon size={18} />
-                    <span style={{ flex: 1 }}>{item.label}</span>
-                    {item.module === 'dashboard' && alertCount > 0 && (
-                      <span className="badge badge-danger" style={{ padding: '1px 6px', fontSize: 10 }}>{alertCount}</span>
-                    )}
-                  </NavLink>
-                )
-              ))}
-            </div>
-          ))}
+                  )
+                ))}
+              </div>
+            );
+          })}
         </nav>
 
         {/* User Card */}

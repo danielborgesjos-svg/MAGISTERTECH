@@ -22,19 +22,19 @@ export const usePermission = () => {
         return true; // todos veem a agenda
 
       case 'pipeline':
-        return ['CTO', 'COMERCIAL', 'GESTOR_PROJETOS', 'FINANCEIRO'].includes(role);
+        return ['CTO', 'COMERCIAL', 'GESTOR_PROJETOS', 'PROJETO', 'FINANCEIRO'].includes(role);
 
       case 'crm':
-        return ['CTO', 'COMERCIAL', 'GESTOR_PROJETOS', 'FINANCEIRO'].includes(role);
+        return ['CTO', 'COMERCIAL', 'GESTOR_PROJETOS', 'PROJETO', 'FINANCEIRO'].includes(role);
 
       case 'contratos':
         return ['CTO', 'COMERCIAL', 'FINANCEIRO'].includes(role);
 
       case 'projetos':
-        return ['CTO', 'GESTOR_PROJETOS', 'COMERCIAL', 'DESIGNER', 'COLABORADOR'].includes(role);
+        return ['CTO', 'GESTOR_PROJETOS', 'PROJETO', 'COMERCIAL', 'DESIGNER', 'COLABORADOR'].includes(role);
 
       case 'conteudo':
-        return ['CTO', 'DESIGNER', 'SOCIAL_MEDIA', 'GESTOR_PROJETOS', 'COMERCIAL'].includes(role);
+        return ['CTO', 'DESIGNER', 'PROJETO', 'SOCIAL_MEDIA', 'GESTOR_PROJETOS', 'COMERCIAL'].includes(role);
 
       case 'financeiro':
         return ['CTO', 'FINANCEIRO', 'COMERCIAL'].includes(role);
