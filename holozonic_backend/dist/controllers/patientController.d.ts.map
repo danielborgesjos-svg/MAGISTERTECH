@@ -1,0 +1,1 @@
+{"version":3,"file":"patientController.d.ts","sourceRoot":"","sources":["../../src/controllers/patientController.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAG5C,cAAM,iBAAiB;IACf,KAAK,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;IASjC,IAAI,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;IAWhC,MAAM,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;CASzC;;AAED,wBAAuC"}

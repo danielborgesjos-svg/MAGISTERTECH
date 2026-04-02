@@ -29,5 +29,22 @@ module.exports = {
       NODE_ENV: 'production',
       PORT: 3000
     }
+  }, {
+    name: 'holozonic-backend',
+    cwd: './holozonic_backend',
+    script: 'pm2-start.js',
+    max_memory_restart: '800M',
+    env: {
+      NODE_ENV: 'development',
+      PORT: 3333
+    }
+  }, {
+    name: 'holozonic-admin',
+    cwd: './holozonic_admin',
+    script: 'npm.cmd',
+    args: 'run dev -- --port 5173',
+    env: {
+      NODE_ENV: 'development'
+    }
   }]
 };

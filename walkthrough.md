@@ -1,45 +1,28 @@
-# Walkthrough: Ecossistema Rima Imóveis (JARVIS 4.1)
+# Integração Completa: Holozonic Digital Clinic
 
-O projeto **Rima Imóveis** foi transformado de uma landing page estática em uma plataforma imobiliária completa e profissional, focada em alta conversão e gestão intuitiva.
+## O que foi realizado
 
-## Alterações Realizadas
+A migração da nova Landing Page (Front-End estático HTML) para o React foi um sucesso. As conexões de banco de dados foram atualizadas.
 
-### 1. Infraestrutura de Dados (Backend)
-- **Banco de Dados Local:** Criado `data/rima_db.json` para persistência de propriedades, leads e comunicações.
-- **API Rest:** Implementadas rotas no `server.js` para CRUD completo de imóveis e captura de leads.
-- **Simulação de Marketing:** Endpoint para disparo em massa (ready for API integration).
+### 1. Novo Schema Prisma e Backend (API Pública)
+- Adicionado campo `meetLink` no objeto `Appointment` do Prisma Validator.
+- Criado o controlador `publicController.ts` que escuta e gerencia conexões desprotegidas de ponta a ponta para a landing page:
+  - Criação rápida de Paciente (via CPF ou Email).
+  - Captura das queixas principais do paciente na `Pré-Anamnese`. 
+  - Geração de Agendamentos sob demanda com retenção de PIX (Status PENDING).
+  - Verificação de Autenticação/Status de Cpf na Área do Paciente.
 
-### 2. Painel Administrativo Pro (Dashboard)
-- **Design Glassmorphism:** Interface de alto padrão em Dark Mode com desfoque de fundo e detalhes em dourado (#d4af37).
-- **Tabs Operacionais:**
-    - **Dashboard:** Visão geral de métricas.
-    - **Inventário:** Gestão completa do catálogo de imóveis.
-    - **CRM / Leads:** Controle de pipeline e follow-up de clientes interessados.
-    - **Marketing:** Ferramenta de segmentação e disparo de mensagens em massa.
+### 2. Painel Médico Ativo (Dashboard)
+- O `Dashboard.tsx` deixou de usar dados mockados em tela. Ele agora realiza solicitações GET na camada de agendamentos protegidos (`/api/appointments`).
+- Adicionado a leitura detalhada da Pré-anamnese efetuada pelo paciente no momento da triagem do site.
+- **Auto Gerador Meet**: Inserido um botão dinâmico *"Gerar Reunião Meet"*, que injeta a URL customizada de Teleconsulta direto na tabela, ativando imediatamente no perfil e avisando o paciente em tempo real na aba do lado de fora.
 
-### 3. Website Dinâmico (Frontend)
-- **Website Público ("Ultra-Lux"):** [index.html](file:///c:/Users/Danie/OneDrive/Desktop/JARVIS-WORKSPACE/rima_imoveis/index.html)
-    - **Estética Superior:** Mural cinemático com zoom dinâmico, tipografia serifada de luxo (*Playfair Display*) e paleta *Charcoal & Gold*.
-    - **Interações Cinematográficas:** Efeito de revelação gradual (*Bloom & Slide*) ao rolar a página.
-    - **Pill Search:** Sistema de busca em vidro fosco totalmente redesenhado.
-    - **Portal de Detalhes:** Modais de alta fidelidade com foco em conversão e experiência de concierge.
-- **Painel Administrativo ("Premium Light"):** [painel.html](file:///c:/Users/Danie/OneDrive/Desktop/JARVIS-WORKSPACE/rima_imoveis/painel.html)
-    - Interface profissional em modo claro com foco em produtividade mobile.
-    - Gestão completa de inventário, leads e automação de marketing.
-- **Captura de Leads:** Novo formulário profissional integrado ao CRM, capturando nome, e-mail, telefone e interesse específico.
-- **Micro-animações:** Manutenção da fluidez e sofisticação visual com Lucide Icons e transições suaves.
+### 3. Área do Paciente & Landing
+- O novo template de Landing Page, mais agressivo e luxuoso, foi perfeitamente acomodado em React utilizando Modais controlados por *State* para capturar dados fase-a-fase.
+- **Login Instantâneo pelo CPF**: A área do paciente responde mediante a inserção do número cadastrado, varrendo todos os *Appointments* atrelados e devolvendo em formato de mini-dash. Se a sala do Meet já foi autorizada pelo médico no Dashboard, o botão de acesso "Entrar na Sala" já fica disponível.
 
-## Validação e Testes
+## Próximos Passos
+> [!NOTE]  
+> Você deve inicializar e popular seu banco de dados local da maneira habitual (iniciando o Postgres) e se certificar de rodar o comando `npx prisma db push` dentro da pasta `holozonic_backend` para instanciar a nova coluna de "MeetLink".
 
-O sistema foi submetido a um teste de ponta a ponta (E2E) via Browser Agent:
-1.  **Adição de Imóvel:** Criado "Mansao Teste JARVIS" no painel.
-2.  **Verificação na Home:** O imóvel apareceu corretamente na grid pública.
-3.  **Captação de Lead:** Preenchimento do formulário de contato.
-4.  **Confirmado no CRM:** O lead foi registrado e exibido na aba de CRM do painel em tempo real.
-
----
-**Status Final:** 🟢 Operacional & Persistente via PM2.
-
-> [!TIP]
-> Para acessar o painel administrativo, utilize: `http://localhost:3000/rima_imoveis/painel.html`
-> Para a área pública: `http://localhost:3000/rima_imoveis/index.html`
+A operação do Painel agora é **Data-Driven**. O médico entra, analisa as queixas prévias, com um clique abre a sala de chamada, e inicia a consulta integrativa. O paciente usa apenas o CPF para entrar na própria sala virtual com 0% de atrito no acesso.

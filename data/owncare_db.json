@@ -1,0 +1,79 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "nome": "Atendente Master",
+      "email": "admin@owncare.com",
+      "senha": "657f35388fc15fa8a2342de114a6e28e025e3769506d0b2a58bf374deb1090ff",
+      "role": "atendente",
+      "criadoEm": "2026-03-31T21:43:58.587Z"
+    },
+    {
+      "id": "u2",
+      "nome": "Médico",
+      "email": "demo@owncare.com",
+      "senha": "657f35388fc15fa8a2342de114a6e28e025e3769506d0b2a58bf374deb1090ff",
+      "role": "medico",
+      "criadoEm": "2026-03-31T21:43:58.589Z"
+    }
+  ],
+  "pacientes": [
+    {
+      "id": "p1",
+      "nome": "João Silva",
+      "nascimento": "1985-05-15",
+      "cpf": "123.456.789-00",
+      "convenio": "Unimed Saúde Premium",
+      "emgNome": "Maria Silva",
+      "emgTel": "(11) 98765-4321",
+      "emgParent": "Esposa",
+      "vitais": {
+        "blood": "O+",
+        "allergies": "Amendoim",
+        "conditions": "Asma leve",
+        "meds": "Bombinha"
+      }
+    }
+  ],
+  "agendamentos": [
+    {
+      "id": "ag1",
+      "pacienteId": "p1",
+      "data": "2026-03-31",
+      "hora": "14:30",
+      "status": "Confirmado",
+      "tipo": "Teleconsulta",
+      "linkLink": "https://meet.google.com/abc-drfc-ghj",
+      "origem": "Cecília (Agente IA)"
+    }
+  ],
+  "prontuarios": [
+    {
+      "id": "pr1",
+      "pacienteId": "p1",
+      "agendamentoId": "ag1",
+      "data": "2026-03-31T21:43:58.589Z",
+      "anamnese": "Paciente relata dores leves na lombar. Histórico prévio de asma. Coletado por Inez.",
+      "origemAnamnese": "Inez (Agente de Triagem)",
+      "diagnostico": "",
+      "evolucao": ""
+    }
+  ],
+  "receituarios": [],
+  "bot_logs": [
+    {
+      "id": "bl1",
+      "agente": "Cecília",
+      "acao": "Agendamento Confirmado",
+      "detalhes": "Paciente solicitou horário terça-feira à tarde via WhatsApp. Link de teleconsulta gerado.",
+      "data": "2026-03-31T21:43:58.589Z"
+    },
+    {
+      "id": "bl2",
+      "agente": "Inez",
+      "acao": "Triagem / Pré-Anamnese Concluída",
+      "detalhes": "Paciente relatou sintomas via fluxo guiado. Score de gravidade definido como Baixo.",
+      "data": "2026-03-31T21:43:58.589Z"
+    }
+  ]
+}

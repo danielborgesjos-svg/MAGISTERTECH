@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, X, Trash2, ChevronLeft, ChevronRight, Activity, MapPin, Link as LinkIcon, Calendar } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { CalendarEvent } from '../contexts/DataContext';
 
@@ -63,30 +63,37 @@ export default function Agenda() {
   const getProject = (id?: string) => projects.find(p => p.id === id);
 
   return (
-    <div className="animate-in">
-      <div className="page-header">
+    <div className="animate-in" style={{ paddingBottom: 40 }}>
+      {/* ─── HEADER COCKPIT ────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
         <div>
-          <h1 className="page-title">Agenda Corporativa</h1>
-          <p className="page-subtitle">Compromissos, reuniões, entregas e eventos</p>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 100, fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <Activity size={12} color="var(--primary)" /> Calendário · Agenda & Compromissos
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--text-main)', margin: 0, lineHeight: 1.1 }}>Agenda Corporativa</h1>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>Compromissos, reuniões, entregas e eventos da equipe.</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div className="tab-list" style={{ width: 'auto' }}>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div className="tab-list">
             {(['dia', 'semana', 'mes'] as const).map(v => (
-              <button key={v} className={`tab-btn ${view === v ? 'active' : ''}`} onClick={() => setView(v)} style={{ flex: 'unset', padding: '7px 14px', textTransform: 'capitalize' }}>{v === 'mes' ? 'Mês' : v.charAt(0).toUpperCase() + v.slice(1)}</button>
+              <button key={v} className={`tab-btn ${view === v ? 'active' : ''}`} onClick={() => setView(v)} style={{ textTransform: 'capitalize' }}>{v === 'mes' ? 'Mês' : v.charAt(0).toUpperCase() + v.slice(1)}</button>
             ))}
           </div>
-          <button className="btn btn-primary" onClick={() => setShowForm(true)}><Plus size={16} /> Novo Evento</button>
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}><Plus size={16} /> Marcar Evento</button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
+      {/* ─── KPI STRIP ─────────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 28 }}>
         {Object.entries(EVENT_COLORS).map(([type, color]) => {
           const count = events.filter(e => e.type === type).length;
+          const upcoming = events.filter(e => e.type === type && e.date >= today).length;
           return (
-            <div key={type} className="card" style={{ padding: '12px 16px', borderLeft: `4px solid ${color}`, cursor: 'pointer' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'capitalize', color: 'var(--text-muted)', marginBottom: 4 }}>{type}</p>
-              <p style={{ fontSize: 20, fontWeight: 800, color }}>{count}</p>
+            <div key={type} className="card" style={{ padding: '20px', borderTop: `3px solid ${color}`, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: -30, right: -30, width: 80, height: 80, background: `${color}20`, filter: 'blur(20px)', borderRadius: '50%', pointerEvents: 'none' }} />
+              <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-sec)', letterSpacing: '0.05em', marginBottom: 10, position: 'relative', zIndex: 1 }}>{type}</p>
+              <p style={{ fontSize: 28, fontWeight: 900, color, letterSpacing: '-0.02em', position: 'relative', zIndex: 1 }}>{count}</p>
+              {upcoming > 0 && <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, marginTop: 4 }}>{upcoming} próximos</p>}
             </div>
           );
         })}
@@ -150,44 +157,49 @@ export default function Agenda() {
           </div>
 
           {/* Day Detail Panel */}
-          <div className="card" style={{ height: 'fit-content', position: 'sticky', top: 80 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700 }}>
-                {new Date(selectedDay + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
-              </h3>
-              <button className="btn btn-ghost btn-sm" onClick={() => { setForm(p => ({ ...p, date: selectedDay })); setShowForm(true); }}>
-                <Plus size={13} />
+          <div className="card" style={{ height: 'fit-content', position: 'sticky', top: 80, padding: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '20px', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Agenda do Dia</p>
+                <h3 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-main)' }}>
+                  {new Date(selectedDay + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
+                </h3>
+              </div>
+              <button className="btn btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => { setForm(p => ({ ...p, date: selectedDay })); setShowForm(true); }}>
+                <Plus size={14} /> Evento
               </button>
             </div>
-            {selectedEvents.length === 0 ? (
-              <div className="empty-state" style={{ padding: '20px 0' }}>
-                <p style={{ fontSize: 13 }}>Sem eventos neste dia</p>
-                <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(true)}>Criar evento</button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {selectedEvents.map(ev => {
-                  const client = getClient(ev.clientId);
-                  const project = getProject(ev.projectId);
-                  return (
-                    <div key={ev.id} style={{
-                      padding: '12px 14px', borderRadius: 8, borderLeft: `4px solid ${ev.color}`,
-                      background: `${ev.color}08`, border: `1px solid ${ev.color}20`, borderLeftWidth: 4
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-main)' }}>{ev.title}</span>
-                        <button onClick={() => deleteEvent(ev.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}><Trash2 size={13} /></button>
+            <div style={{ padding: '16px' }}>
+              {selectedEvents.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                  <Calendar size={32} color="var(--text-muted)" style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 12 }}>Sem compromissos</p>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(true)}>+ Marcar evento</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {selectedEvents.map(ev => {
+                    const client = getClient(ev.clientId);
+                    const project = getProject(ev.projectId);
+                    return (
+                      <div key={ev.id} style={{ padding: '14px 16px', borderRadius: 12, borderLeft: `4px solid ${ev.color}`, background: `${ev.color}08`, border: `1px solid ${ev.color}20`, borderLeftWidth: 4 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-main)' }}>{ev.title}</span>
+                          <button onClick={() => deleteEvent(ev.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}><Trash2 size={14} /></button>
+                        </div>
+                        <div style={{ fontSize: 13, color: ev.color, fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Calendar size={14} /> {ev.time}h
+                        </div>
+                        {ev.location && <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12}/> {ev.location}</p>}
+                        {client && <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>🏢 {client.company}</p>}
+                        {project && <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>📁 {project.name}</p>}
+                        <span className="badge" style={{ background: `${ev.color}15`, color: ev.color, border: `1px solid ${ev.color}30`, fontWeight: 800, marginTop: 8, textTransform: 'uppercase', fontSize: 10 }}>{ev.type}</span>
                       </div>
-                      <div style={{ fontSize: 12, color: ev.color, fontWeight: 700, marginBottom: 4 }}>{ev.time}</div>
-                      {ev.location && <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>📍 {ev.location}</p>}
-                      {client && <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>👤 {client.company}</p>}
-                      {project && <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>📁 {project.name}</p>}
-                      <span className="badge" style={{ background: `${ev.color}15`, color: ev.color, marginTop: 6 }}>{ev.type}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -284,57 +296,69 @@ export default function Agenda() {
         </div>
       )}
 
-      {/* ─── ADD EVENT MODAL ─────────────────────────────────── */}
+      {/* ─── ADD EVENT MODAL PREMIUM ─────────────────────────────────── */}
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 style={{ fontSize: 16, fontWeight: 700 }}>Novo Evento</h2>
-              <button className="btn-icon" onClick={() => setShowForm(false)}><X size={18} /></button>
-            </div>
-            <div className="modal-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <div style={{ gridColumn: '1/-1' }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Título *</label>
-                  <input className="input" placeholder="Ex: Reunião Kickoff Cinepasse" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+          <div className="modal" style={{ maxWidth: 640, padding: 0 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ padding: '24px 32px', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Calendar size={24} color="var(--primary)"/>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Data *</label>
+                  <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>Marcar Compromisso</h2>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>Registre reunião, entrega ou evento na linha do tempo.</p>
+                </div>
+              </div>
+              <button className="btn-icon" style={{ background: 'var(--bg-card)' }} onClick={() => setShowForm(false)}><X size={18} /></button>
+            </div>
+            <div className="modal-body" style={{ padding: 32 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label className="form-label" style={{ fontWeight: 800 }}>Título do Compromisso *</label>
+                  <input className="input" style={{ fontSize: 16, fontWeight: 700 }} placeholder="Ex: Reunião Kickoff — Cliente Magister" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="form-label"><Calendar size={13} style={{ display: 'inline', marginBottom: -2 }}/> Data *</label>
                   <input className="input" type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Horário</label>
+                  <label className="form-label">Horário (Fuso de Brasília)</label>
                   <input className="input" type="time" value={form.time} onChange={e => setForm(p => ({ ...p, time: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Tipo</label>
+                  <label className="form-label">Categoria / Tipo</label>
                   <select className="input" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value as CalendarEvent['type'] }))}>
-                    {Object.keys(EVENT_COLORS).map(t => <option key={t} value={t} style={{ textTransform: 'capitalize' }}>{t}</option>)}
+                    {Object.keys(EVENT_COLORS).map(t => <option key={t} value={t} style={{ textTransform: 'capitalize' }}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Local</label>
-                  <input className="input" placeholder="Ex: Google Meet, Presencial..." value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} />
+                  <label className="form-label"><MapPin size={13} style={{ display: 'inline', marginBottom: -2 }}/> Local / Plataforma</label>
+                  <input className="input" placeholder="Ex: Google Meet, Presencial, Zoom..." value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Vincular Cliente</label>
+                  <label className="form-label"><LinkIcon size={13} style={{ display: 'inline', marginBottom: -2 }}/> Vincular Cliente</label>
                   <select className="input" value={form.clientId} onChange={e => setForm(p => ({ ...p, clientId: e.target.value }))}>
-                    <option value="">Nenhum</option>
+                    <option value="">Nenhum cliente</option>
                     {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>Vincular Projeto</label>
+                  <label className="form-label"><LinkIcon size={13} style={{ display: 'inline', marginBottom: -2 }}/> Vincular Projeto</label>
                   <select className="input" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))}>
-                    <option value="">Nenhum</option>
+                    <option value="">Nenhum projeto</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={handleAdd} disabled={!form.title || !form.date}><Plus size={14} /> Agendar</button>
+            <div className="modal-footer" style={{ padding: '24px 32px', background: 'var(--bg-card)', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancelar</button>
+                <button className="btn btn-primary" onClick={handleAdd} disabled={!form.title || !form.date} style={{ padding: '10px 24px' }}>
+                  <Calendar size={16} /> Confirmar Agendamento
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -41,19 +41,28 @@ const Login = () => {
 
       // Busca por outro colaborador
       const member = team.find((m: any) => m.email?.toLowerCase() === inputEmail);
-      const validPasswords = ['admin123', 'magister123', '123456'];
       
-      if (member && validPasswords.includes(password)) {
-        login(DEMO_TOKEN, {
-          id: member.id,
-          name: member.name,
-          email: member.email,
-          role: member.role,
-          avatar: null
-        });
-        navigate('/admin/dashboard');
+      if (member) {
+        // Se ele testou uma master password global ou a senha exata criada pelo admin pra ele.
+        const validPasswords = ['admin123', 'magister123', '123456'];
+        const isValid = (member.password && member.password === password) || (!member.password && validPasswords.includes(password));
+        
+        if (isValid) {
+          login(DEMO_TOKEN, {
+            id: member.id,
+            name: member.name,
+            email: member.email,
+            role: member.role,
+            avatar: null,
+            accessLevel: member.accessLevel || 'VIEWER',
+            permissions: member.permissions || []
+          });
+          navigate('/admin/dashboard');
+        } else {
+          setError('Senha incorreta.');
+        }
       } else {
-        setError('Colaborador não encontrado ou senha incorreta.');
+        setError('Colaborador não encontrado.');
       }
     } finally {
       setLoading(false);

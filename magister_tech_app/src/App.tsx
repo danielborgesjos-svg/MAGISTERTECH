@@ -14,7 +14,7 @@ import Financeiro from './pages/Financeiro';
 import Agenda from './pages/Agenda';
 import Conteudo from './pages/Conteudo';
 import Equipe from './pages/Equipe';
-import ChatGlobal from './pages/ChatGlobal';
+import Feed from './pages/Feed';
 import Configuracoes from './pages/Configuracoes';
 
 function App() {
@@ -38,7 +38,7 @@ function App() {
               <Route path="conteudo" element={<Conteudo />} />
               <Route path="financeiro" element={<Financeiro />} />
               <Route path="equipe" element={<Equipe />} />
-              <Route path="chat" element={<ChatGlobal />} />
+              <Route path="feed" element={<Feed />} />
               <Route path="config" element={<Configuracoes />} />
             </Route>
           </Routes>

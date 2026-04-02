@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetPerfect | Conforto para o Pet, Estilo para a Casa</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="ph-fill ph-paw-print"></i>
+                PetPerfect
+            </div>
+            <div class="nav-actions">
+                <div class="nav-links">
+                    <a href="#beneficios">Diferenciais</a>
+                    <a href="#produto">A Peça</a>
+                    <a href="#faq">Dúvidas</a>
+                </div>
+                <div class="nav-buttons">
+                    <a href="#pre-venda" class="btn btn-primary">Entrar na Pré-venda</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="startup-badge">
+                    <span class="pulse-dot"></span> Primeiro Lote Limitado
+                </div>
+                <h1>Um espaço bonito para você. <span class="highlight">Perfeito para o seu pet.</span></h1>
+                <p>Casinhas e móveis pensados para saúde, conforto e estilo no dia a dia. Chega de peças que destoam da sua decoração.</p>
+                
+                <div class="hero-ctas">
+                    <a href="#pre-venda" class="btn btn-primary btn-large cta-pulse">Quero Participar da Pré-venda</a>
+                </div>
+                <div class="hero-trust">
+                    <span><i class="ph-fill ph-star"></i> Padrão Premium</span>
+                    <span class="dot">•</span>
+                    <span><i class="ph-fill ph-plant"></i> Madeira Sustentável</span>
+                </div>
+            </div>
+            
+            <div class="hero-visual">
+                <div class="hero-image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Pet em móvel bonito" class="main-photo">
+                    
+                    <!-- Floating UI Widgets -->
+                    <div class="ui-widget widget-1 floating">
+                        <i class="ph-fill ph-house-line"></i>
+                        <div class="widget-text">
+                            <strong>Design que Combina</strong>
+                            <span>Para interiores modernos</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-widget widget-2 floating delay-1">
+                        <div class="icon-circle">
+                            <i class="ph-fill ph-cat"></i>
+                        </div>
+                        <div class="widget-text">
+                            <strong>100% Aprovado</strong>
+                            <span class="text-success">Por cães e gatos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- PROPOSTA DE VALOR (3 CARDS) -->
+    <section class="section value-section" id="beneficios">
+        <div class="container center-text">
+            <h2 class="section-title">Por que a PetPerfect é especial?</h2>
+            <p class="section-subtitle">Não fazemos apenas móveis. Criamos espaços de acolhimento.</p>
+            
+            <div class="value-grid">
+                <div class="value-card">
+                    <div class="icon-box"><i class="ph-fill ph-armchair"></i></div>
+                    <h3>Conforto de Verdade</h3>
+                    <p>Espuma de alta densidade e tecidos respiráveis mantêm seu pet confortável e acolhido o ano todo.</p>
+                </div>
+                <div class="value-card">
+                    <div class="icon-box"><i class="ph-fill ph-paint-brush"></i></div>
+                    <h3>Design que Combina</h3>
+                    <p>Linhas orgânicas e cores neutras que se integram à sala de estar sem parecer um puxadinho.</p>
+                </div>
+                <div class="value-card">
+                    <div class="icon-box"><i class="ph-fill ph-dog"></i></div>
+                    <h3>Para Cães e Gatos</h3>
+                    <p>Dimensões planejadas para respeitar o comportamento das espécies, seja para esconderijo ou descanso.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SEÇÃO EMOCIONAL -->
+    <section class="section emotional-section">
+        <div class="container container-narrow center-text">
+            <h2>Seu pet sente a casa.</h2>
+            <p>Eles percebem quando têm um lugar oficial na rotina da família. A PetPerfect cria espaços que não apenas abrigam, mas acolhem, protegem e fazem parte da memória afetiva do seu lar.</p>
+            <i class="ph-fill ph-heart decoration-icon"></i>
+        </div>
+    </section>
+
+    <!-- GATINHOS E CACHORRINHOS -->
+    <section class="section species-section bg-light" id="animais">
+        <div class="container">
+            <div class="species-grid">
+                <!-- Para Gatinhos -->
+                <div class="species-card cat-card">
+                    <div class="species-img" style="background-image: url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');"></div>
+                    <div class="species-content">
+                        <i class="ph-fill ph-cat icon-badge"></i>
+                        <h3>Para Gatinhos</h3>
+                        <ul class="clean-list">
+                            <li><i class="ph-fill ph-check-circle"></i> Texturas que estimulam</li>
+                            <li><i class="ph-fill ph-check-circle"></i> Refúgio para observação alta</li>
+                            <li><i class="ph-fill ph-check-circle"></i> Sensação de segurança isolada</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Para Cachorrinhos -->
+                <div class="species-card dog-card">
+                    <div class="species-img" style="background-image: url('https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');"></div>
+                    <div class="species-content">
+                        <i class="ph-fill ph-dog icon-badge"></i>
+                        <h3>Para Cachorrinhos</h3>
+                        <ul class="clean-list">
+                            <li><i class="ph-fill ph-check-circle"></i> Acolhimento pós-passeio</li>
+                            <li><i class="ph-fill ph-check-circle"></i> Fácil acesso e conforto articular</li>
+                            <li><i class="ph-fill ph-check-circle"></i> Cantinho próprio na roda social</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- APRESENTAÇÃO DO PRODUTO -->
+    <section class="section product-section" id="produto">
+        <div class="container product-grid">
+            <div class="product-visual">
+                <img src="https://images.unsplash.com/photo-1615367677840-7987eef9f9cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Móvel PetPerfect">
+            </div>
+            <div class="product-info">
+                <span class="pre-title">O LANÇAMENTO</span>
+                <h2>Beleza e funcionalidade em cada milímetro.</h2>
+                <p>Nossa peça pioneira foi desenhada junto a arquitetos e médicos veterinários para ser incrivelmente estética e funcional.</p>
+                
+                <div class="benefit-list">
+                    <div class="b-item">
+                        <i class="ph-fill ph-tree"></i>
+                        <div>
+                            <strong>Estrutura em Madeira Natural</strong>
+                            <span>Resistente, não tóxica e com acabamento verniz à base de água.</span>
+                        </div>
+                    </div>
+                    <div class="b-item">
+                        <i class="ph-fill ph-wind"></i>
+                        <div>
+                            <strong>Design para Ventilação</strong>
+                            <span>Arestas laterais garantem frescor mesmo no verão.</span>
+                        </div>
+                    </div>
+                    <div class="b-item">
+                        <i class="ph-fill ph-drop"></i>
+                        <div>
+                            <strong>Almofada Impermeável</strong>
+                            <span>Capa lavável com zíper e proteção contra pequenos acidentes.</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ficha Resumida -->
+                <div class="specs-box">
+                    <strong>Ficha Técnica Resumida:</strong>
+                    Suporta cães curtos e gatos até 15kg. Peça em tom amadeirado Oak. Almofada na cor off-white ou areia.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROVA SOCIAL E PRE-VENDA -->
+    <section class="section pre-sale-section bg-secondary" id="pre-venda">
+        <div class="container container-narrow center-text">
+            <span class="pre-title text-orange">EXCLUSIVIDADE EM PRIMEIRA MÃO</span>
+            <h2>O Primeiro Lote é Limitado.</h2>
+            <p>Os primeiros clientes terão acesso a uma condição especial de lançamento e prioridade absoluta no envio (previsão para Outubro/2026). Por nossa produção ser artesanal, as vagas acabam rápido.</p>
+            
+            <div class="social-proof">
+                <div class="sp-avatars">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&w=100&q=80">
+                    <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&w=100&q=80">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&w=100&q=80">
+                </div>
+                <span>Mais de <strong>200 tutores</strong> já estão na lista de espera VIP.</span>
+            </div>
+
+            <!-- FORMULÁRIO -->
+            <div class="form-container">
+                <h3>Entre para a lista prioritária</h3>
+                <p>E receba o aviso de abertura horas antes do público geral.</p>
+                
+                <form action="#" class="presale-form">
+                    <div class="form-group">
+                        <i class="ph ph-user"></i>
+                        <input type="text" placeholder="Seu nome" required>
+                    </div>
+                    <div class="form-group">
+                        <i class="ph ph-envelope"></i>
+                        <input type="email" placeholder="Seu melhor e-mail" required>
+                    </div>
+                    <div class="form-group">
+                        <i class="ph ph-whatsapp-logo"></i>
+                        <input type="tel" placeholder="WhatsApp com DDD" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-xl cta-pulse form-btn">Quero meu Acesso VIP</button>
+                    <span class="form-microcopy"><i class="ph-fill ph-lock-key"></i> Prometemos zero spam. Apenas avisos importantes.</span>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq-section" id="faq">
+        <div class="container container-narrow">
+            <h2 class="section-title center-text">Ficou alguma dúvida?</h2>
+            
+            <div class="faq-accordion">
+                <div class="faq-item">
+                    <div class="faq-question">Quando a pré-venda começa? <i class="ph ph-caret-down"></i></div>
+                    <div class="faq-answer">As vendas do primeiro lote abrem oficialmente na segunda semana de outubro. Quem está na lista VIP receberá o link de compra com 4 horas de antecedência.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Serve para gatos e cachorros? <i class="ph ph-caret-down"></i></div>
+                    <div class="faq-answer">Sim! A PetPerfect foi dimensionada para agradar gatos de todos os tamanhos e cães de porte pequeno a médio (até 15kg em média).</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Entregam para todo o Brasil? <i class="ph ph-caret-down"></i></div>
+                    <div class="faq-answer">Sim, trabalhamos com transportadoras parceiras para garantir a entrega segura em todas as regiões do Brasil. O valor do frete é calculado na tela de compra.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Tem personalização com o nome do pet? <i class="ph ph-caret-down"></i></div>
+                    <div class="faq-answer">Para o primeiro lote, teremos algumas peças disponíveis com gravação a laser com o nome do pet (vagas de personalização ultra limitadas). Entre na lista para garantir.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="section super-cta final-cta">
+        <div class="container center-text cta-inner">
+            <i class="ph-fill ph-paw-print cta-icon text-orange"></i>
+            <h2>Um carinho que faz parte da casa.</h2>
+            <p>Entre para a lista e acompanhe o lançamento em primeira mão.</p>
+            <a href="#pre-venda" class="btn btn-primary btn-xl cta-pulse">Participar da Pré-venda</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-layout">
+                <div class="footer-brand">
+                    <div class="logo white">
+                        <i class="ph-fill ph-paw-print"></i> PetPerfect.
+                    </div>
+                    <p>O conforto que eles merecem. O design que você ama.</p>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="ph-fill ph-instagram-logo"></i> Instagram</a>
+                    <a href="#"><i class="ph-fill ph-whatsapp-logo"></i> Suporte</a>
+                    <a href="#"><i class="ph-fill ph-envelope"></i> Contato Oficial</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 PetPerfect Design. Todos os direitos reservados. CNPJ: 00.000.000/0001-00.
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS PARA ANIMAÇÕES E FAQ -->
+    <script>
+        // Animação de Scroll
+        const observerOptions = { threshold: 0.1, rootMargin: "0px" };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.value-card, .species-card, .product-info, .emotional-section h2, .form-container').forEach(el => {
+            el.classList.add('reveal-up');
+            observer.observe(el);
+        });
+
+        // Controle do FAQ (Accordion)
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling;
+                const icon = question.querySelector('i');
+                const isOpen = answer.style.display === 'block';
+
+                // Fecha todos os abertos (Opcional)
+                document.querySelectorAll('.faq-answer').forEach(a => a.style.display = 'none');
+                document.querySelectorAll('.faq-question i').forEach(i => i.style.transform = 'rotate(0deg)');
+
+                if (!isOpen) {
+                    answer.style.display = 'block';
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

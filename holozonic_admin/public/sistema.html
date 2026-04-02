@@ -1,0 +1,651 @@
+﻿<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Holozonic Care — Painel Clínico</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root{
+  --bg:#0b0f19;--surface:#131929;--surface2:#1a2235;--surface3:#1e2a42;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --mint:#31A77F;--mint2:#4DBE94;--mint3:#7DE6BE;
+  --blue:#3b82f6;--purple:#8b5cf6;--red:#ef4444;--orange:#f59e0b;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+  --glass:rgba(255,255,255,.04);--glassBorder:rgba(255,255,255,.08);
+  --radius:14px;--shadow:0 8px 32px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
+body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:grid;grid-template-columns:260px 1fr;grid-template-rows:1fr}
+/* AUTH */
+#authScreen{position:fixed;inset:0;background:radial-gradient(ellipse at 30% 50%,#1a2235,#0b0f19);display:flex;align-items:center;justify-content:center;z-index:9999}
+.auth-card{background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:2.5rem;width:440px;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:2rem}
+.auth-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--mint),var(--mint2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.auth-logo h1{font-size:1.4rem;font-weight:800;color:var(--text)}
+.auth-logo span{font-size:11px;color:var(--mint);font-weight:700;letter-spacing:.1em;display:block}
+.auth-field{margin-bottom:1rem}
+.auth-field label{font-size:12px;font-weight:700;color:var(--muted2);letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:6px}
+.auth-field input,.auth-field select{width:100%;background:var(--surface2);border:1.5px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;outline:none;transition:.2s}
+.auth-field input:focus,.auth-field select:focus{border-color:var(--mint)}
+.auth-btn{width:100%;background:linear-gradient(135deg,var(--mint),#2e9470);color:#fff;border:none;borderRadius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:1rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s;border-radius:12px}
+.auth-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.auth-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:1rem}
+/* SIDEBAR */
+aside{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;display:flex;flex-direction:column;overflow-y:auto;position:relative}
+.brand{display:flex;align-items:center;gap:12px;padding-bottom:1.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.brand-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--mint),var(--mint2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.brand h2{font-size:1.1rem;font-weight:800;color:var(--text)}
+.brand span{font-size:10px;color:var(--mint);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.nav-section{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:1.2rem 0 .5rem;padding:0 .5rem}
+.nav-btn{display:flex;align-items:center;gap:10px;background:transparent;border:none;color:var(--muted2);padding:10px 12px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;text-align:left;width:100%;transition:.15s;margin-bottom:2px;position:relative}
+.nav-btn i{width:18px;text-align:center;font-size:15px;flex-shrink:0}
+.nav-btn:hover{background:var(--glass);color:var(--text)}
+.nav-btn.active{background:linear-gradient(90deg,rgba(49,167,127,.18),rgba(49,167,127,.06));color:var(--mint2);border-left:3px solid var(--mint)}
+.nav-btn .badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px}
+.nav-btn .badge.green{background:var(--mint)}
+.user-profile{margin-top:auto;padding:1rem;background:var(--glass);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px}
+.user-avatar{width:36px;height:36px;border-radius:999px;background:linear-gradient(135deg,var(--mint),var(--mint2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+.user-info .name{font-size:13px;font-weight:700;color:var(--text)}
+.user-info .role{font-size:11px;color:var(--mint);font-weight:600}
+.logout-btn{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;transition:.2s}
+.logout-btn:hover{color:var(--red)}
+/* MAIN */
+main{display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-shrink:0}
+.topbar h1{font-size:1.25rem;font-weight:800;color:var(--text)}
+.topbar p{font-size:12px;color:var(--muted2);margin-top:2px}
+.content{flex:1;overflow-y:auto;padding:2rem}
+/* VIEWS */
+.view{display:none;animation:fadeSlide .25s ease}
+.view.active{display:block}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;margin-bottom:2rem}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:.2s}
+.kpi-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.kpi-label{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.kpi-value{font-size:2.2rem;font-weight:800;color:var(--mint2)}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:4px}
+/* CARDS */
+.panel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.5rem}
+.panel-card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.panel-card-header h3{font-size:1rem;font-weight:700;color:var(--text)}
+.panel-card-body{padding:1.5rem}
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;background:var(--surface2)}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--glass)}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.badge-green{background:rgba(49,167,127,.15);color:var(--mint2)}
+.badge-yellow{background:rgba(245,158,11,.15);color:#f59e0b}
+.badge-red{background:rgba(239,68,68,.15);color:#ef4444}
+.badge-blue{background:rgba(59,130,246,.15);color:var(--blue)}
+.badge-purple{background:rgba(139,92,246,.15);color:var(--purple)}
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-mint{background:linear-gradient(135deg,var(--mint),#2e9470);color:#fff}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#fff}
+.btn-purple{background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff}
+.btn-danger{background:linear-gradient(135deg,var(--red),#b91c1c);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--muted2)}
+.btn-outline:hover{border-color:var(--mint);color:var(--mint);background:rgba(49,167,127,.06)}
+.btn-sm{padding:6px 12px;font-size:12px}
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em}
+.form-control{background:var(--surface2);border:1.5px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;transition:.2s}
+.form-control:focus{border-color:var(--mint)}
+/* SALA DO PACIENTE */
+.sala-grid{display:grid;grid-template-columns:340px 1fr;gap:1.5rem;height:calc(100vh - 160px)}
+.sala-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden}
+.sala-list-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sala-list-header h3{font-size:14px;font-weight:700;color:var(--text)}
+.sala-item{padding:1rem 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s;display:flex;align-items:center;gap:12px}
+.sala-item:hover{background:var(--glass)}
+.sala-item.active{background:rgba(49,167,127,.08);border-left:3px solid var(--mint)}
+.sala-avatar{width:40px;height:40px;border-radius:999px;background:linear-gradient(135deg,var(--mint),var(--mint2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+.sala-name{font-size:14px;font-weight:700;color:var(--text)}
+.sala-sub{font-size:12px;color:var(--muted2);margin-top:2px}
+.sala-pulse{width:10px;height:10px;border-radius:50%;background:var(--mint);margin-left:auto;flex-shrink:0;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.chat-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden}
+.chat-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.chat-header h3{font-size:15px;font-weight:700;color:var(--text)}
+.chat-messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:12px}
+.chat-msg-wrap{display:flex;flex-direction:column;max-width:75%}
+.chat-msg-wrap.from-patient{align-self:flex-start}
+.chat-msg-wrap.from-doctor{align-self:flex-end}
+.chat-msg-wrap.from-system{align-self:center;max-width:90%}
+.chat-bubble2{padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.5}
+.from-patient .chat-bubble2{background:var(--surface3);color:var(--text);border-bottom-left-radius:4px}
+.from-doctor .chat-bubble2{background:linear-gradient(135deg,rgba(49,167,127,.25),rgba(49,167,127,.15));color:var(--text);border-bottom-right-radius:4px;border:1px solid rgba(49,167,127,.2)}
+.from-system .chat-bubble2{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2);text-align:center;font-size:12px}
+.chat-sender{font-size:11px;color:var(--muted2);font-weight:700;margin-bottom:4px}
+.chat-input-area{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end}
+.chat-input{flex:1;background:var(--surface2);border:1.5px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;resize:none;max-height:100px;transition:.2s;font-family:inherit}
+.chat-input:focus{border-color:var(--mint)}
+.chat-send-btn{background:linear-gradient(135deg,var(--mint),#2e9470);border:none;color:#fff;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:16px;transition:.2s}
+.chat-send-btn:hover{filter:brightness(1.1)}
+.sala-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:16px;color:var(--muted);padding:3rem}
+.sala-empty i{font-size:3rem;opacity:.3}
+.sala-info-panel{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* TOAST */
+.toast-container{position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-left:4px solid var(--mint);padding:14px 18px;border-radius:12px;box-shadow:var(--shadow);min-width:300px;transform:translateX(120%);opacity:0;transition:all .35s cubic-bezier(.68,-.55,.265,1.55)}
+.toast.show{transform:translateX(0);opacity:1}
+.toast h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
+.toast p{font-size:12px;color:var(--muted2)}
+.toast.t-red{border-color:var(--red)}
+.toast.t-blue{border-color:var(--blue)}
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:5000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:.25s}
+.modal-backdrop.open{opacity:1;visibility:visible}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:2rem;max-width:600px;width:90%;max-height:88vh;overflow-y:auto;transform:scale(.9);transition:.25s;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+.modal-backdrop.open .modal-box{transform:scale(1)}
+.modal-title{font-size:1.15rem;font-weight:800;color:var(--text);margin-bottom:1.5rem;display:flex;align-items:center;gap:10px}
+.modal-close-btn{margin-left:auto;background:none;border:none;color:var(--muted2);font-size:18px;cursor:pointer;transition:.2s}
+.modal-close-btn:hover{color:var(--red)}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+</style></head><body>
+<div class="toast-container" id="toastContainer"></div>
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🏥</div>
+      <div><h1>Holozonic Care</h1><span>Sistema Clínico Premium</span></div>
+    </div>
+    <div class="auth-field"><label>Nível de Acesso</label>
+      <select id="loginRole"><option value="admin">Administrador Master</option><option value="medico">Médico / Especialista</option><option value="recepcao">Recepção / Atendente</option></select>
+    </div>
+    <div class="auth-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="admin, clinico, recepcao..." value="admin"></div>
+    <div class="auth-field"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••" value="1234"></div>
+    <button class="auth-btn" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> Autenticar Sessão</button>
+    <p class="auth-hint">Acesso restrito. Todas as ações são registradas.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<aside id="sidebarEl" style="display:none">
+  <div class="brand">
+    <div class="brand-icon">🏥</div>
+    <div><h2>Holozonic</h2><span>Medical Care System</span></div>
+  </div>
+  <nav id="navMenu"></nav>
+  <div class="user-profile">
+    <div class="user-avatar" id="lblAvatar">A</div>
+    <div class="user-info"><div class="name" id="lblUserName">Admin</div><div class="role" id="lblUserRole">Admin</div></div>
+    <button class="logout-btn" onclick="logout()" title="Sair"><i class="fa-solid fa-power-off"></i></button>
+  </div>
+</aside>
+
+<main id="mainEl" style="display:none">
+  <div class="topbar">
+    <div><h1 id="topbarTitle">Dashboard</h1><p id="topbarSub">Visão global da clínica</p></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-mint btn-sm" onclick="openModal('novoAgendModal')"><i class="fa-solid fa-plus"></i> Novo Agendamento</button>
+      <button class="btn btn-outline btn-sm" onclick="window.location.href='/'"><i class="fa-solid fa-arrow-left"></i> Site</button>
+    </div>
+  </div>
+  <div class="content" id="contentArea">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="kpi-grid" id="dashKpis">
+        <div class="kpi-card"><div class="kpi-label">Salas Ativas</div><div class="kpi-value" id="kpiSalas">0</div><div class="kpi-sub">pacientes em espera</div></div>
+        <div class="kpi-card"><div class="kpi-label">Agendamentos Hoje</div><div class="kpi-value" id="kpiAgend" style="color:var(--blue)">0</div><div class="kpi-sub">consultas marcadas</div></div>
+        <div class="kpi-card"><div class="kpi-label">Teleconsultas</div><div class="kpi-value" id="kpiTele" style="color:var(--purple)">0</div><div class="kpi-sub">links pendentes</div></div>
+        <div class="kpi-card"><div class="kpi-label">Pacientes Cadastrados</div><div class="kpi-value" id="kpiPacs" style="color:var(--orange)">0</div><div class="kpi-sub">no sistema</div></div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-card-header"><h3>🟢 Salas de Atendimento em Tempo Real</h3><button class="btn btn-outline btn-sm" onclick="switchView('view-salas')">Ver todas</button></div>
+        <div class="panel-card-body">
+          <table><thead><tr><th>Paciente</th><th>Procedimento</th><th>Aguardando há</th><th>Status</th><th>Ação</th></tr></thead>
+          <tbody id="dashSalasTable"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Nenhuma sala ativa</td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-card-header"><h3>📅 Agendamentos Recentes</h3><button class="btn btn-mint btn-sm" onclick="openModal('novoAgendModal')"><i class="fa-solid fa-plus"></i> Agendar</button></div>
+        <div class="panel-card-body">
+          <table><thead><tr><th>Paciente</th><th>Procedimento</th><th>Tipo</th><th>Data/Hora</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="dashAgendTable"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Sem agendamentos</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SALAS -->
+    <div id="view-salas" class="view">
+      <div class="sala-grid">
+        <div class="sala-list">
+          <div class="sala-list-header"><h3>Salas Ativas</h3><button class="btn btn-outline btn-sm" onclick="loadSalas()"><i class="fa-solid fa-rotate"></i></button></div>
+          <div id="salaListContainer" style="flex:1;overflow-y:auto">
+            <div style="padding:2rem;text-align:center;color:var(--muted)"><i class="fa-solid fa-door-open" style="font-size:2rem;opacity:.3;display:block;margin-bottom:1rem"></i>Nenhuma sala ativa</div>
+          </div>
+        </div>
+        <div class="chat-area" id="chatAreaEl">
+          <div class="sala-empty"><i class="fa-solid fa-comments"></i><p>Selecione uma sala para iniciar o atendimento</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PACIENTES -->
+    <div id="view-pacientes" class="view">
+      <div class="panel-card">
+        <div class="panel-card-header"><h3>👥 Pacientes Cadastrados</h3><button class="btn btn-mint btn-sm" onclick="openModal('novoPacModal')"><i class="fa-solid fa-user-plus"></i> Novo Paciente</button></div>
+        <div class="panel-card-body">
+          <table><thead><tr><th>Nome</th><th>CPF</th><th>WhatsApp</th><th>Último Atendimento</th><th>Ações</th></tr></thead>
+          <tbody id="pacientesTable"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Nenhum paciente</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENDA -->
+    <div id="view-agenda" class="view">
+      <div class="panel-card">
+        <div class="panel-card-header"><h3>📅 Agenda Médica</h3><button class="btn btn-mint btn-sm" onclick="openModal('novoAgendModal')"><i class="fa-solid fa-plus"></i> Novo Agendamento</button></div>
+        <div class="panel-card-body">
+          <table><thead><tr><th>Data/Hora</th><th>Paciente</th><th>Procedimento</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="agendaTable"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Nenhum agendamento</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRONTUARIO -->
+    <div id="view-prontuario" class="view">
+      <div class="panel-card">
+        <div class="panel-card-header"><h3>📋 Prontuário Eletrônico</h3>
+          <select id="prontuarioSelect" class="form-control" style="max-width:260px" onchange="loadProntuario(this.value)">
+            <option value="">— Selecione o Paciente —</option>
+          </select>
+        </div>
+        <div class="panel-card-body" id="prontuarioContent">
+          <div style="text-align:center;color:var(--muted);padding:3rem">Selecione um paciente para visualizar o prontuário</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELEMED -->
+    <div id="view-telemed" class="view">
+      <div class="panel-card">
+        <div class="panel-card-header"><h3>📹 Teleconsultas Pendentes</h3></div>
+        <div class="panel-card-body">
+          <table><thead><tr><th>Paciente</th><th>Procedimento</th><th>Sala</th><th>Status</th><th>Ação</th></tr></thead>
+          <tbody id="telemedTable"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Nenhuma teleconsulta pendente</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL NOVO AGENDAMENTO -->
+<div class="modal-backdrop" id="novoAgendModal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="fa-solid fa-calendar-plus" style="color:var(--mint)"></i> Novo Agendamento<button class="modal-close-btn" onclick="closeModal('novoAgendModal')"><i class="fa-solid fa-times"></i></button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nome do Paciente</label><input type="text" id="agNome" class="form-control" placeholder="Nome completo"></div>
+      <div class="form-group"><label>CPF</label><input type="text" id="agCpf" class="form-control" placeholder="000.000.000-00"></div>
+      <div class="form-group"><label>WhatsApp</label><input type="text" id="agTel" class="form-control" placeholder="(00) 00000-0000"></div>
+      <div class="form-group"><label>E-mail</label><input type="email" id="agEmail" class="form-control" placeholder="email@exemplo.com"></div>
+      <div class="form-group"><label>Procedimento</label>
+        <select id="agProc" class="form-control">
+          <option>Consulta Integrada MIB</option><option>Consulta do Sono</option><option>Polissonografia Domiciliar</option><option>Sessão de Ozonioterapia</option><option>Protocolo para Feridas</option><option>Hospedagem Integrativa</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="agTipo" class="form-control"><option value="presencial">Presencial</option><option value="teleconsulta">Teleconsulta</option></select>
+      </div>
+      <div class="form-group"><label>Data e Hora</label><input type="datetime-local" id="agData" class="form-control"></div>
+      <div class="form-group"><label>Observações</label><input type="text" id="agObs" class="form-control" placeholder="Informações adicionais..."></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-outline" onclick="closeModal('novoAgendModal')">Cancelar</button>
+      <button class="btn btn-mint" onclick="salvarAgend()"><i class="fa-solid fa-check"></i> Salvar Agendamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO PACIENTE -->
+<div class="modal-backdrop" id="novoPacModal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="fa-solid fa-user-plus" style="color:var(--mint)"></i> Novo Paciente<button class="modal-close-btn" onclick="closeModal('novoPacModal')"><i class="fa-solid fa-times"></i></button></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nome Completo</label><input type="text" id="npNome" class="form-control"></div>
+      <div class="form-group"><label>CPF</label><input type="text" id="npCpf" class="form-control" placeholder="000.000.000-00"></div>
+      <div class="form-group"><label>WhatsApp</label><input type="text" id="npTel" class="form-control"></div>
+      <div class="form-group"><label>E-mail</label><input type="email" id="npEmail" class="form-control"></div>
+      <div class="form-group"><label>Data de Nascimento</label><input type="date" id="npNasc" class="form-control"></div>
+      <div class="form-group"><label>Convênio</label><select id="npConvenio" class="form-control"><option>Particular</option><option>Unimed</option><option>SulAmérica</option><option>Bradesco Saúde</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem"><label>Observações / Anamnese Inicial</label><textarea id="npObs" class="form-control" rows="3" placeholder="Queixa principal, histórico..."></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('novoPacModal')">Cancelar</button>
+      <button class="btn btn-mint" onclick="salvarPaciente()"><i class="fa-solid fa-check"></i> Cadastrar Paciente</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ==================== STATE ==================== */
+const SALA_KEY='holo_salas',CHAT_KEY='holo_chat_',AGEND_KEY='holo_agend',PAC_KEY='holo_pac';
+let currentUser=null,activeSalaId=null,chatPollInterval=null;
+
+function getSalas(){return JSON.parse(localStorage.getItem(SALA_KEY)||'[]')}
+function setSalas(s){localStorage.setItem(SALA_KEY,JSON.stringify(s))}
+function getChat(id){return JSON.parse(localStorage.getItem(CHAT_KEY+id)||'[]')}
+function setChat(id,msgs){localStorage.setItem(CHAT_KEY+id,JSON.stringify(msgs))}
+function getAgend(){return JSON.parse(localStorage.getItem(AGEND_KEY)||'[]')}
+function setAgend(a){localStorage.setItem(AGEND_KEY,JSON.stringify(a))}
+function getPacientes(){return JSON.parse(localStorage.getItem(PAC_KEY)||'[]')}
+function setPacientes(p){localStorage.setItem(PAC_KEY,JSON.stringify(p))}
+
+/* ==================== TOAST ==================== */
+function toast(title,msg,type='mint'){
+  const c=document.getElementById('toastContainer');const t=document.createElement('div');
+  const colors={mint:'var(--mint)',blue:'var(--blue)',red:'var(--red)',purple:'var(--purple)'};
+  t.className=`toast t-${type}`;t.style.borderLeftColor=colors[type]||'var(--mint)';
+  t.innerHTML=`<h4>${title}</h4><p>${msg}</p>`;
+  c.appendChild(t);setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400)},4000);
+}
+
+/* ==================== AUTH ==================== */
+const USERS={admin:{pw:'1234',role:'Administrador',name:'Dr. Admin'},clinico:{pw:'1234',role:'Médico',name:'Dr. Clinico'},recepcao:{pw:'1234',role:'Recepção',name:'Recepção'}};
+function doLogin(){
+  const user=document.getElementById('loginUser').value.toLowerCase().trim();
+  const pass=document.getElementById('loginPass').value;
+  const role=document.getElementById('loginRole').value;
+  if(!USERS[user]||USERS[user].pw!==pass){toast('Acesso Negado','Usuário ou senha incorretos.','red');return}
+  currentUser={user,role,name:USERS[user].name,roleName:USERS[user].role};
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('sidebarEl').style.display='flex';
+  document.getElementById('mainEl').style.display='flex';
+  document.getElementById('sidebarEl').style.flexDirection='column';
+  document.getElementById('lblAvatar').textContent=user.charAt(0).toUpperCase();
+  document.getElementById('lblUserName').textContent=currentUser.name;
+  document.getElementById('lblUserRole').textContent=currentUser.roleName;
+  buildNav();switchView('view-dashboard');refreshAll();
+  toast('Sessão Iniciada','Bem-vindo(a), '+currentUser.name+'!');
+}
+function logout(){currentUser=null;if(chatPollInterval)clearInterval(chatPollInterval);document.getElementById('authScreen').style.display='flex';document.getElementById('sidebarEl').style.display='none';document.getElementById('mainEl').style.display='none';}
+
+/* ==================== NAV ==================== */
+const NAV=[
+  {id:'view-dashboard',label:'Dashboard',icon:'fa-gauge-high',roles:['admin','medico','recepcao']},
+  {id:'view-salas',label:'Salas de Atendimento',icon:'fa-door-open',roles:['admin','medico','recepcao'],badgeKey:'salas'},
+  {id:'view-agenda',label:'Agenda Médica',icon:'fa-calendar-days',roles:['admin','medico','recepcao']},
+  {id:'view-pacientes',label:'Pacientes',icon:'fa-users',roles:['admin','medico','recepcao']},
+  {id:'view-prontuario',label:'Prontuário (PEP)',icon:'fa-file-medical',roles:['admin','medico']},
+  {id:'view-telemed',label:'Teleconsultas',icon:'fa-video',roles:['admin','medico'],badgeKey:'tele'},
+];
+const VIEW_TITLES={'view-dashboard':['Dashboard','Visão global da clínica'],'view-salas':['Salas de Atendimento','Pacientes aguardando'],'view-agenda':['Agenda Médica','Consultas agendadas'],'view-pacientes':['Pacientes','Cadastros e histórico'],'view-prontuario':['Prontuário Eletrônico','PEP completo'],'view-telemed':['Teleconsultas','Links e reuniões Meet']};
+
+function buildNav(){
+  const menu=document.getElementById('navMenu');menu.innerHTML='';
+  NAV.forEach(n=>{
+    const btn=document.createElement('button');btn.className='nav-btn';btn.dataset.view=n.id;
+    const salas=getSalas().filter(s=>s.status!=='encerrada');
+    const tele=getAgend().filter(a=>a.tipo==='teleconsulta'&&!a.meetLink);
+    let badgeHtml='';
+    if(n.badgeKey==='salas'&&salas.length>0)badgeHtml=`<span class="badge green">${salas.length}</span>`;
+    if(n.badgeKey==='tele'&&tele.length>0)badgeHtml=`<span class="badge">${tele.length}</span>`;
+    btn.innerHTML=`<i class="fa-solid ${n.icon}"></i>${n.label}${badgeHtml}`;
+    btn.onclick=()=>switchView(n.id);menu.appendChild(btn);
+  });
+}
+
+function switchView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.toggle('active',b.dataset.view===id)});
+  const v=document.getElementById(id);if(v)v.classList.add('active');
+  const t=VIEW_TITLES[id]||['Painel',''];
+  document.getElementById('topbarTitle').textContent=t[0];
+  document.getElementById('topbarSub').textContent=t[1];
+  if(id==='view-salas')loadSalas();
+  if(id==='view-pacientes')loadPacientes();
+  if(id==='view-agenda')loadAgenda();
+  if(id==='view-telemed')loadTelemed();
+  if(id==='view-prontuario')loadProntuarioSelect();
+}
+
+/* ==================== MODAL ==================== */
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-backdrop.open').forEach(m=>m.classList.remove('open'))});
+document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+
+/* ==================== REFRESH ==================== */
+function refreshAll(){
+  const salas=getSalas().filter(s=>s.status!=='encerrada');
+  const agend=getAgend();const pacs=getPacientes();
+  const tele=agend.filter(a=>a.tipo==='teleconsulta'&&!a.meetLink);
+  document.getElementById('kpiSalas').textContent=salas.length;
+  document.getElementById('kpiAgend').textContent=agend.length;
+  document.getElementById('kpiTele').textContent=tele.length;
+  document.getElementById('kpiPacs').textContent=pacs.length;
+  // Dashboard salas table
+  const dt=document.getElementById('dashSalasTable');
+  if(salas.length===0){dt.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Nenhuma sala ativa</td></tr>'}
+  else dt.innerHTML=salas.map(s=>{
+    const ago=Math.round((Date.now()-new Date(s.criadaEm).getTime())/60000);
+    return`<tr><td><strong>${s.nome}</strong><div style="font-size:11px;color:var(--muted2)">${s.cpf}</div></td><td>${s.procedimento||'—'}</td><td>${ago}min</td><td><span class="badge ${s.status==='aguardando'?'badge-yellow':'badge-green'}">${s.status==='aguardando'?'⏳ Aguardando':'🟢 Em Atendimento'}</span></td><td><button class="btn btn-mint btn-sm" onclick="switchView('view-salas');setTimeout(()=>abrirSalaChat('${s.id}'),200)"><i class="fa-solid fa-door-open"></i> Entrar</button></td></tr>`;
+  }).join('');
+  // Dashboard agenda table
+  const at=document.getElementById('dashAgendTable');
+  if(agend.length===0){at.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Sem agendamentos</td></tr>'}
+  else at.innerHTML=agend.slice(-10).reverse().map(a=>{
+    const meetBtn=a.tipo==='teleconsulta'?`<button class="btn btn-purple btn-sm" onclick="gerarMeet('${a.id}')"><i class="fa-brands fa-google"></i> Meet</button>`:'';
+    return`<tr><td><strong>${a.nome}</strong></td><td>${a.procedimento}</td><td><span class="badge ${a.tipo==='teleconsulta'?'badge-purple':'badge-green'}">${a.tipo==='teleconsulta'?'📹 Tele':'🏥 Presencial'}</span></td><td style="font-size:12px">${a.dataHora||'—'}</td><td><span class="badge badge-blue">${a.meetLink?'✅ Link enviado':'⏳ Pendente'}</span></td><td style="display:flex;gap:6px">${meetBtn}</td></tr>`;
+  }).join('');
+  buildNav();
+}
+
+/* ==================== AGENDAMENTO ==================== */
+function salvarAgend(){
+  const nome=document.getElementById('agNome').value.trim();
+  const cpf=document.getElementById('agCpf').value.trim();
+  if(!nome||!cpf){toast('Atenção','Nome e CPF são obrigatórios.','red');return}
+  const agend=getAgend();
+  const novo={id:'ag_'+Date.now(),nome,cpf,tel:document.getElementById('agTel').value,email:document.getElementById('agEmail').value,procedimento:document.getElementById('agProc').value,tipo:document.getElementById('agTipo').value,dataHora:document.getElementById('agData').value,obs:document.getElementById('agObs').value,meetLink:null,criadoEm:new Date().toISOString()};
+  agend.push(novo);setAgend(agend);
+  // Se tele, cria sala automaticamente
+  if(novo.tipo==='teleconsulta'){criarSalaAdmin({cpf:cpf.replace(/\D/g,''),nome,tel:novo.tel,procedimento:novo.procedimento,agendId:novo.id})}
+  closeModal('novoAgendModal');refreshAll();
+  toast('Agendamento Criado',`${nome} - ${novo.procedimento}`);
+  ['agNome','agCpf','agTel','agEmail','agData','agObs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+}
+
+/* ==================== PACIENTES ==================== */
+function salvarPaciente(){
+  const nome=document.getElementById('npNome').value.trim();
+  const cpf=document.getElementById('npCpf').value.trim();
+  if(!nome||!cpf){toast('Atenção','Nome e CPF são obrigatórios.','red');return}
+  const pacs=getPacientes();
+  pacs.push({id:'pac_'+Date.now(),nome,cpf,tel:document.getElementById('npTel').value,email:document.getElementById('npEmail').value,nasc:document.getElementById('npNasc').value,convenio:document.getElementById('npConvenio').value,obs:document.getElementById('npObs').value,timeline:[],criadoEm:new Date().toISOString()});
+  setPacientes(pacs);closeModal('novoPacModal');loadPacientes();refreshAll();
+  toast('Paciente Cadastrado',nome);
+}
+function loadPacientes(){
+  const pacs=getPacientes();const tb=document.getElementById('pacientesTable');
+  if(!tb)return;
+  if(pacs.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Nenhum paciente cadastrado</td></tr>';return}
+  tb.innerHTML=pacs.map(p=>`<tr><td><strong>${p.nome}</strong></td><td style="font-family:monospace;font-size:12px">${p.cpf}</td><td>${p.tel||'—'}</td><td style="font-size:12px;color:var(--muted2)">${new Date(p.criadoEm).toLocaleDateString('pt-BR')}</td><td><button class="btn btn-outline btn-sm" onclick="verProntuario('${p.id}')"><i class="fa-solid fa-file-medical"></i> PEP</button></td></tr>`).join('');
+}
+function verProntuario(id){switchView('view-prontuario');setTimeout(()=>{document.getElementById('prontuarioSelect').value=id;loadProntuario(id)},100)}
+function loadProntuarioSelect(){
+  const sel=document.getElementById('prontuarioSelect');if(!sel)return;
+  const pacs=getPacientes();sel.innerHTML='<option value="">— Selecione —</option>'+pacs.map(p=>`<option value="${p.id}">${p.nome} (${p.cpf})</option>`).join('');
+}
+function loadProntuario(id){
+  const area=document.getElementById('prontuarioContent');if(!area||!id)return;
+  const pacs=getPacientes();const p=pacs.find(x=>x.id===id);
+  if(!p){area.innerHTML='<div style="color:var(--muted);padding:2rem;text-align:center">Paciente não encontrado</div>';return}
+  const agend=getAgend().filter(a=>a.cpf===p.cpf.replace(/\D/g,''));
+  area.innerHTML=`<div class="form-grid">
+    <div class="form-group"><label>Nome</label><input class="form-control" value="${p.nome}" readonly></div>
+    <div class="form-group"><label>CPF</label><input class="form-control" value="${p.cpf}" readonly></div>
+    <div class="form-group"><label>WhatsApp</label><input class="form-control" value="${p.tel||'—'}" readonly></div>
+    <div class="form-group"><label>Convênio</label><input class="form-control" value="${p.convenio||'Particular'}" readonly></div>
+  </div>
+  <div style="margin-top:1.5rem"><h4 style="font-size:14px;font-weight:700;color:var(--muted2);margin-bottom:1rem">HISTÓRICO DE CONSULTAS</h4>
+  ${agend.length===0?'<p style="color:var(--muted)">Nenhuma consulta registrada</p>':agend.map(a=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center"><strong>${a.procedimento}</strong><span class="badge ${a.tipo==='teleconsulta'?'badge-purple':'badge-green'}">${a.tipo}</span></div><p style="font-size:12px;color:var(--muted2);margin-top:4px">${a.dataHora||'Sem data'}</p></div>`).join('')}
+  </div>`;
+}
+
+/* ==================== AGENDA ==================== */
+function loadAgenda(){
+  const agend=getAgend();const tb=document.getElementById('agendaTable');if(!tb)return;
+  if(agend.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Sem agendamentos</td></tr>';return}
+  tb.innerHTML=agend.map(a=>{
+    const meetBtn=a.tipo==='teleconsulta'?`<button class="btn btn-purple btn-sm" onclick="gerarMeet('${a.id}')"><i class="fa-brands fa-google"></i>${a.meetLink?'Meet ✓':'Gerar Meet'}</button>`:'';
+    return`<tr><td style="font-size:12px">${a.dataHora||'—'}</td><td><strong>${a.nome}</strong><div style="font-size:11px;color:var(--muted2)">${a.cpf}</div></td><td>${a.procedimento}</td><td><span class="badge ${a.tipo==='teleconsulta'?'badge-purple':'badge-green'}">${a.tipo}</span></td><td><span class="badge badge-blue">${a.meetLink?'✅ Enviado':'⏳ Pendente'}</span></td><td style="display:flex;gap:6px">${meetBtn}<button class="btn btn-danger btn-sm" onclick="deletarAgend('${a.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+  }).join('');
+}
+function deletarAgend(id){const agend=getAgend().filter(a=>a.id!==id);setAgend(agend);loadAgenda();refreshAll();toast('Removido','Agendamento excluído.','red')}
+
+/* ==================== TELEMED ==================== */
+function loadTelemed(){
+  const agend=getAgend().filter(a=>a.tipo==='teleconsulta');const tb=document.getElementById('telemedTable');if(!tb)return;
+  if(agend.length===0){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Nenhuma teleconsulta</td></tr>';return}
+  const salas=getSalas();
+  tb.innerHTML=agend.map(a=>{
+    const sala=salas.find(s=>s.cpf===a.cpf.replace(/\D/g,'')&&s.status!=='encerrada');
+    return`<tr><td><strong>${a.nome}</strong><div style="font-size:11px;color:var(--muted2)">${a.cpf}</div></td><td>${a.procedimento}</td><td>${sala?`<span class="badge badge-green">🟢 Na sala</span>`:'<span class="badge badge-yellow">⏳ Não entrou</span>'}</td><td><span class="badge ${a.meetLink?'badge-green':'badge-yellow'}">${a.meetLink?'✅ Link enviado':'⏳ Sem link'}</span></td><td><button class="btn btn-purple btn-sm" onclick="gerarMeet('${a.id}')"><i class="fa-brands fa-google"></i>${a.meetLink?'Ver Meet':'Gerar Meet'}</button>${sala?`<button class="btn btn-mint btn-sm" style="margin-left:6px" onclick="switchView('view-salas');setTimeout(()=>abrirSalaChat('${sala.id}'),200)"><i class="fa-solid fa-door-open"></i> Sala</button>`:''}</td></tr>`;
+  }).join('');
+}
+
+/* ==================== MEET ==================== */
+function gerarMeet(agendId){
+  const agend=getAgend();const idx=agend.findIndex(a=>a.id===agendId);if(idx<0)return;
+  const link='https://meet.google.com/'+Math.random().toString(36).slice(2,5)+'-'+Math.random().toString(36).slice(2,5)+'-'+Math.random().toString(36).slice(2,5);
+  agend[idx].meetLink=link;setAgend(agend);
+  // Notify patient sala
+  const cpf=agend[idx].cpf.replace(/\D/g,'');
+  const salas=getSalas();const salaIdx=salas.findIndex(s=>s.cpf===cpf&&s.status!=='encerrada');
+  if(salaIdx>=0){
+    salas[salaIdx].meetLink=link;setSalas(salas);
+    const msgs=getChat(salas[salaIdx].id);
+    msgs.push({de:'medico',msg:'🎥 Sua teleconsulta está pronta! Clique no link: '+link,hora:new Date().toLocaleTimeString('pt-BR')});
+    setChat(salas[salaIdx].id,msgs);
+  }
+  refreshAll();loadAgenda();loadTelemed();
+  toast('Meet Gerado','Link enviado para o paciente!','blue');
+  window.open(link,'_blank');
+}
+
+/* ==================== SALAS ==================== */
+function criarSalaAdmin(pac){
+  const salas=getSalas();
+  const exist=salas.find(s=>s.cpf===pac.cpf&&s.status!=='encerrada');if(exist)return exist;
+  const id='sala_'+pac.cpf+'_'+Date.now();
+  const nova={id,cpf:pac.cpf,nome:pac.nome,tel:pac.tel||'',procedimento:pac.procedimento||'',status:'aguardando',criadaEm:new Date().toISOString(),meetLink:null,agendId:pac.agendId||null};
+  salas.push(nova);setSalas(salas);
+  setChat(id,[{de:'sistema',msg:'Sala criada para '+pac.nome+'. Aguardando entrada do paciente.',hora:new Date().toLocaleTimeString('pt-BR')}]);
+  return nova;
+}
+
+function loadSalas(){
+  const salas=getSalas().filter(s=>s.status!=='encerrada');
+  const cont=document.getElementById('salaListContainer');if(!cont)return;
+  if(salas.length===0){cont.innerHTML='<div style="padding:2rem;text-align:center;color:var(--muted)"><i class="fa-solid fa-door-open" style="font-size:2rem;opacity:.3;display:block;margin-bottom:1rem"></i>Nenhuma sala ativa</div>';return}
+  cont.innerHTML=salas.map(s=>{
+    const ago=Math.round((Date.now()-new Date(s.criadaEm).getTime())/60000);
+    const msgs=getChat(s.id);const lastMsg=msgs[msgs.length-1];
+    return`<div class="sala-item ${activeSalaId===s.id?'active':''}" onclick="abrirSalaChat('${s.id}')">
+      <div class="sala-avatar">${s.nome.charAt(0)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sala-name">${s.nome}</div>
+        <div class="sala-sub">${s.procedimento||'Sem procedimento'} · ${ago}min</div>
+        ${lastMsg?`<div style="font-size:11px;color:var(--muted2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lastMsg.msg.slice(0,40)}...</div>`:''}
+      </div>
+      <span class="sala-pulse"></span>
+    </div>`;
+  }).join('');
+}
+
+function abrirSalaChat(salaId){
+  activeSalaId=salaId;
+  loadSalas();
+  const salas=getSalas();const sala=salas.find(s=>s.id===salaId);if(!sala)return;
+  const chatArea=document.getElementById('chatAreaEl');
+  chatArea.innerHTML=`
+    <div class="chat-header">
+      <div>
+        <h3>${sala.nome}</h3>
+        <div style="font-size:12px;color:var(--muted2)">${sala.procedimento||'N/A'} · CPF: ${sala.cpf} · <span class="badge badge-green" style="font-size:10px">🟢 ATIVO</span></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${sala.procedimento&&sala.procedimento.toLowerCase().includes('tele')?`<button class="btn btn-purple btn-sm" onclick="gerarMeetPorSala('${sala.id}')"><i class="fa-brands fa-google"></i> Gerar Meet</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="encerrarSala('${sala.id}')"><i class="fa-solid fa-door-closed"></i> Encerrar</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMsgsEl"></div>
+    <div class="sala-info-panel">
+      <span style="font-size:12px;color:var(--muted2)">CPF: ${sala.cpf}</span>
+      <span style="font-size:12px;color:var(--muted2)">·</span>
+      <span style="font-size:12px;color:var(--muted2)">Tel: ${sala.tel||'N/A'}</span>
+      ${sala.meetLink?`<a href="${sala.meetLink}" target="_blank" class="btn btn-purple btn-sm" style="margin-left:auto"><i class="fa-solid fa-video"></i> Entrar no Meet</a>`:''}
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="docMsgInput" placeholder="Escreva uma mensagem para o paciente..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMsgMedico()}"></textarea>
+      <button class="chat-send-btn" onclick="enviarMsgMedico()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>`;
+  renderChatMedico(salaId);
+  if(chatPollInterval)clearInterval(chatPollInterval);
+  chatPollInterval=setInterval(()=>{if(activeSalaId)renderChatMedico(activeSalaId)},1500);
+}
+
+function renderChatMedico(salaId){
+  const msgs=getChat(salaId);const box=document.getElementById('chatMsgsEl');if(!box)return;
+  box.innerHTML=msgs.map(m=>{
+    const isDoc=m.de==='medico';const isSys=m.de==='sistema';
+    const cls=isDoc?'from-doctor':isSys?'from-system':'from-patient';
+    const sender=isDoc?'Médico (você)':isSys?'Sistema':'Paciente';
+    return`<div class="chat-msg-wrap ${cls}"><div class="chat-sender">${sender} · ${m.hora}</div><div class="chat-bubble2">${m.msg}</div></div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+function enviarMsgMedico(){
+  if(!activeSalaId)return;
+  const input=document.getElementById('docMsgInput');const msg=input.value.trim();if(!msg)return;
+  const msgs=getChat(activeSalaId);
+  msgs.push({de:'medico',msg,hora:new Date().toLocaleTimeString('pt-BR')});
+  setChat(activeSalaId,msgs);input.value='';renderChatMedico(activeSalaId);
+}
+
+function gerarMeetPorSala(salaId){
+  const salas=getSalas();const sala=salas.find(s=>s.id===salaId);if(!sala)return;
+  const agend=getAgend();const ag=agend.find(a=>a.cpf===sala.cpf&&a.tipo==='teleconsulta');
+  if(ag){gerarMeet(ag.id)}else{
+    const link='https://meet.google.com/'+Math.random().toString(36).slice(2,5)+'-'+Math.random().toString(36).slice(2,5)+'-'+Math.random().toString(36).slice(2,5);
+    const idx=salas.findIndex(s=>s.id===salaId);
+    salas[idx].meetLink=link;setSalas(salas);
+    const msgs=getChat(salaId);msgs.push({de:'medico',msg:'🎥 Link da teleconsulta gerado: '+link,hora:new Date().toLocaleTimeString('pt-BR')});
+    setChat(salaId,msgs);renderChatMedico(salaId);
+    window.open(link,'_blank');toast('Meet Gerado','Link enviado para o paciente!','blue');
+    abrirSalaChat(salaId);
+  }
+}
+
+function encerrarSala(salaId){
+  if(!confirm('Encerrar esta sala?'))return;
+  const salas=getSalas();const idx=salas.findIndex(s=>s.id===salaId);
+  if(idx>=0){salas[idx].status='encerrada';setSalas(salas)}
+  if(chatPollInterval)clearInterval(chatPollInterval);
+  activeSalaId=null;
+  document.getElementById('chatAreaEl').innerHTML='<div class="sala-empty"><i class="fa-solid fa-comments"></i><p>Selecione uma sala para iniciar o atendimento</p></div>';
+  loadSalas();refreshAll();toast('Sala Encerrada','Atendimento finalizado.','red');
+}
+
+/* INIT */
+setInterval(()=>{if(currentUser)buildNav()},3000);
+</script></body></html>
+

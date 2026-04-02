@@ -1,6 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import axios from 'axios';
 
 interface User {
   id: string;
@@ -8,6 +7,8 @@ interface User {
   email: string;
   role: string;
   avatar: string | null;
+  accessLevel?: 'VIEWER' | 'EDITOR' | 'ADMIN';
+  permissions?: string[];
 }
 
 interface AuthContextType {
@@ -25,9 +26,11 @@ export const AuthContext = createContext<AuthContextType>({
 const DEMO_USER: User = {
   id: 'demo-1',
   name: 'Daniel Borges',
-  email: 'daniel@magister.tech',
-  role: 'admin',
+  email: 'admin@magistertech.com.br',
+  role: 'CEO',
   avatar: null,
+  accessLevel: 'ADMIN',
+  permissions: ['dashboard', 'crm', 'pipeline', 'contratos', 'projetos', 'financeiro', 'agenda', 'conteudo', 'equipe', 'chat', 'config']
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -53,7 +56,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const team = JSON.parse(teamRaw);
           const stillExists = team.find((m: any) => m.email === parsedUser.email);
           if (stillExists) {
-            setUser({ ...parsedUser, role: stillExists.role, name: stillExists.name }); // Atualiza role caso tenha mudado
+            setUser({ 
+              ...parsedUser, role: stillExists.role, name: stillExists.name,
+              accessLevel: stillExists.accessLevel || 'VIEWER',
+              permissions: stillExists.permissions || [] 
+            }); 
           } else {
             logout(); // Se foi deletado da equipe, cai o login
           }

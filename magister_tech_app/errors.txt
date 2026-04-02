@@ -1,0 +1,16 @@
+﻿src/pages/Configuracoes.tsx(2,43): error TS6133: 'Save' is declared but its value is never read.
+src/pages/Configuracoes.tsx(2,49): error TS6133: 'Moon' is declared but its value is never read.
+src/pages/Configuracoes.tsx(2,55): error TS6133: 'Sun' is declared but its value is never read.
+src/pages/Configuracoes.tsx(2,60): error TS6133: 'Monitor' is declared but its value is never read.
+src/pages/Configuracoes.tsx(9,9): error TS6133: 'team' is declared but its value is never read.
+src/pages/Conteudo.tsx(2,37): error TS6133: 'Copy' is declared but its value is never read.
+src/pages/Conteudo.tsx(45,9): error TS6133: 'upcomingPosts' is declared but its value is never read.
+src/pages/Dashboard.tsx(16,35): error TS6133: 'transactions' is declared but its value is never read.
+src/pages/Dashboard.tsx(16,49): error TS6133: 'events' is declared but its value is never read.
+src/pages/Equipe.tsx(5,3): error TS2305: Module '"lucide-react"' has no exported member 'Instagram'.
+src/pages/Equipe.tsx(5,33): error TS6133: 'Camera' is declared but its value is never read.
+src/pages/Equipe.tsx(231,88): error TS2339: Property 'photoUrl' does not exist on type '{ name: string; initials: string; role: string; sector: string; email: string; phone: string; whatsapp: string; instagram: string; linkedin: string; bio: string; profileColor: string; }'.
+src/pages/Equipe.tsx(231,146): error TS2353: Object literal may only specify known properties, and 'photoUrl' does not exist in type 'SetStateAction<{ name: string; initials: string; role: string; sector: string; email: string; phone: string; whatsapp: string; instagram: string; linkedin: string; bio: string; profileColor: string; }>'.
+src/pages/Landing.tsx(5,47): error TS6133: 'Brain' is declared but its value is never read.
+src/pages/Landing.tsx(6,11): error TS6133: 'Headset' is declared but its value is never read.
+src/pages/Landing.tsx(7,3): error TS2305: Module '"lucide-react"' has no exported member 'Instagram'.

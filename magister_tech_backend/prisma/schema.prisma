@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// AUTH & USERS
+// ============================================================
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  password     String
+  role         String    @default("COLABORADOR")
+  sector       String?
+  phone        String?
+  avatar       String?
+  isActive     Boolean   @default(true)
+  tasks        Task[]    @relation("TaskAssignee")
+  events       Event[]
+  contents     Content[]
+  comments     Comment[]
+  interactions Interaction[]
+  notifications Notification[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============================================================
+// CLIENTS (CRM)
+// ============================================================
+model Client {
+  id           String    @id @default(uuid())
+  name         String
+  company      String?
+  email        String?
+  phone        String?
+  cnpj         String?
+  status       String    @default("ATIVO")
+  briefing     String?
+  scope        String?
+  strategies   String?
+  observations String?
+  segment      String?
+  responsible  String?
+  projects     Project[]
+  contracts    Contract[]
+  contents     Content[]
+  events       Event[]
+  transactions Transaction[]
+  interactions Interaction[]
+  tasks        Task[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============================================================
+// PROJECTS
+// ============================================================
+model Project {
+  id           String    @id @default(uuid())
+  name         String
+  type         String    @default("marketing")
+  status       String    @default("EM_ANDAMENTO")
+  startDate    DateTime
+  endDate      DateTime?
+  description  String?
+  deliverables String?
+  observations String?
+  clientId     String
+  client       Client    @relation(fields: [clientId], references: [id])
+  tasks        Task[]
+  contents     Content[]
+  events       Event[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============================================================
+// TASKS & KANBAN
+// ============================================================
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  status      String    @default("BACKLOG")
+  priority    String    @default("MEDIA")
+  deadline    DateTime?
+  checklist   String?   // JSON string
+  tags        String?
+  order       Int       @default(0)
+  assigneeId  String?
+  assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id])
+  clientId    String?
+  client      Client?   @relation(fields: [clientId], references: [id])
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ============================================================
+// EVENTS / AGENDA
+// ============================================================
+model Event {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  type        String    @default("INTERNO")
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean   @default(false)
+  location    String?
+  color       String?
+  clientId    String?
+  client      Client?   @relation(fields: [clientId], references: [id])
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================================
+// CONTENT CALENDAR (Editorial)
+// ============================================================
+model Content {
+  id          String    @id @default(uuid())
+  title       String
+  caption     String?
+  platform    String    @default("instagram")
+  status      String    @default("IDEIA")
+  publishAt   DateTime?
+  campaign    String?
+  fileUrl     String?
+  observations String?
+  clientId    String
+  client      Client    @relation(fields: [clientId], references: [id])
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================================
+// CONTRACTS
+// ============================================================
+model Contract {
+  id          String    @id @default(uuid())
+  title       String
+  type        String    @default("servicos")
+  value       Float
+  recurrence  String?
+  startDate   DateTime
+  endDate     DateTime?
+  status      String    @default("VIGENTE")
+  renewal     Boolean   @default(false)
+  observations String?
+  fileUrl     String?
+  clientId    String
+  client      Client    @relation(fields: [clientId], references: [id])
+  transactions Transaction[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================================
+// FINANCIAL
+// ============================================================
+model Transaction {
+  id          String    @id @default(uuid())
+  description String
+  type        String    // RECEITA | DESPESA
+  amount      Float
+  dueDate     DateTime
+  paidAt      DateTime?
+  status      String    @default("PENDENTE")
+  category    String?
+  costCenter  String?
+  recurrence  Boolean   @default(false)
+  observations String?
+  clientId    String?
+  client      Client?   @relation(fields: [clientId], references: [id])
+  contractId  String?
+  contract    Contract? @relation(fields: [contractId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================================
+// INTERACTIONS (CRM History)
+// ============================================================
+model Interaction {
+  id          String   @id @default(uuid())
+  type        String   // reuniao, email, ligacao, feedback, visita
+  description String
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  link      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}

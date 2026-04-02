@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useContext } from 'react';
-import { Send, X, Hash, Volume2 } from 'lucide-react';
+import { Send, X, Hash } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -48,7 +48,7 @@ export default function ChatGlobal({ compact = false, onClose }: Props) {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', overflow: 'hidden', height: 'calc(100vh - 200px)', boxShadow: 'var(--shadow)' }}>
           <ChatSidebar chat={chat} activeChannel={activeChannel} setActiveChannel={setActiveChannel} />
-          <ChatMain messages={messages} text={text} setText={setText} handleSend={handleSend} handleKey={handleKey} userInitials={userInitials} userName={userName} getInitialsColor={getInitialsColor} messagesEndRef={messagesEndRef} channel={channel} />
+          <ChatMain messages={messages} text={text} setText={setText} handleSend={handleSend} handleKey={handleKey} userInitials={userInitials} getInitialsColor={getInitialsColor} messagesEndRef={messagesEndRef} channel={channel} />
         </div>
       </div>
     );
@@ -149,7 +149,7 @@ function ChatSidebar({ chat, activeChannel, setActiveChannel }: any) {
   );
 }
 
-function ChatMain({ messages, text, setText, handleSend, handleKey, userInitials, userName, getInitialsColor, messagesEndRef, channel }: any) {
+function ChatMain({ messages, text, setText, handleSend, handleKey, userInitials, getInitialsColor, messagesEndRef, channel }: any) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Channel Header */}

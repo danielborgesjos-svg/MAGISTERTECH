@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, CheckCircle, Eye, Copy } from 'lucide-react';
+import { Plus, X, CheckCircle, Eye } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { ContentPost } from '../contexts/DataContext';
 
@@ -42,7 +42,6 @@ export default function Conteudo() {
 
   const getClient = (id: string) => clients.find(c => c.id === id);
 
-  const upcomingPosts = [...content].sort((a, b) => a.date.localeCompare(b.date));
   const totalApproved = content.filter(c => c.status === 'aprovado' || c.status === 'publicado').length;
 
   return (

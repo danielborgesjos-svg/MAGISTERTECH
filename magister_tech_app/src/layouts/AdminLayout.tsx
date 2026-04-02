@@ -4,20 +4,18 @@ import {
   LayoutDashboard, KanbanSquare, Users, FileText,
   LogOut, Terminal, Calendar, PenTool,
   Briefcase, Landmark, Moon, Sun, Target, UserCircle,
-  MessageSquare, Bell, Search, ChevronRight, Zap, Settings, X
+  Bell, Search, ChevronRight, Settings, X, Rss
 } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 import { usePermission } from '../hooks/usePermission';
 import { useData } from '../contexts/DataContext';
-import ChatGlobal from '../pages/ChatGlobal';
 
 const AdminLayout = () => {
   const { user, loading, logout } = useContext(AuthContext);
   const { canViewModule } = usePermission();
-  const { alerts } = useData();
+  const { alerts, feed } = useData();
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('mstr_dark') === '1');
-  const [chatOpen, setChatOpen] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -41,7 +39,6 @@ const AdminLayout = () => {
     localStorage.setItem('mstr_dark', next ? '1' : '0');
   };
 
-  // Apply dark mode on mount
   if (darkMode && !document.body.classList.contains('dark-mode')) {
     document.body.classList.add('dark-mode');
   }
@@ -51,6 +48,9 @@ const AdminLayout = () => {
   const warningAlerts = alerts.filter(a => a.type === 'warning');
   const otherAlerts = alerts.filter(a => a.type !== 'danger' && a.type !== 'warning');
 
+  // Unread feed posts count (posts newer than last visit — simplified: all pinned + last 3)
+  const unreadFeed = feed.filter(p => p.pinned).length;
+
   const navGroups = [
     {
       label: 'Visão Geral',
@@ -58,6 +58,7 @@ const AdminLayout = () => {
         { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Cockpit', module: 'dashboard' },
         { to: '/admin/kanban', icon: KanbanSquare, label: 'Kanban', module: 'kanban' },
         { to: '/admin/agenda', icon: Calendar, label: 'Agenda', module: 'agenda' },
+        { to: '/admin/feed', icon: Rss, label: 'Mural', module: 'feed', badge: unreadFeed },
       ]
     },
     {
@@ -128,6 +129,11 @@ const AdminLayout = () => {
                     <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                       <item.icon size={18} />
                       <span style={{ flex: 1 }}>{item.label}</span>
+                      {(item as any).badge > 0 && (
+                        <span className="badge badge-danger" style={{ padding: '1px 6px', fontSize: 10 }}>
+                          {(item as any).badge}
+                        </span>
+                      )}
                       {item.module === 'dashboard' && alertCount > 0 && (
                         <span className="badge badge-danger" style={{ padding: '1px 6px', fontSize: 10 }}>{alertCount}</span>
                       )}
@@ -193,12 +199,7 @@ const AdminLayout = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Quick actions */}
-            <button className="btn btn-primary btn-sm" onClick={() => navigate('/admin/crm')} style={{ gap: 6 }}>
-              <Zap size={13} /> Ação Rápida
-            </button>
-
-            {/* Alerts */}
+            {/* Alerts Bell */}
             <div style={{ position: 'relative' }}>
               <button className="btn-icon" onClick={() => setAlertsOpen(!alertsOpen)} style={{ position: 'relative' }}>
                 <Bell size={16} />
@@ -209,7 +210,6 @@ const AdminLayout = () => {
                 )}
               </button>
 
-              {/* Alerts Dropdown */}
               {alertsOpen && (
                 <div style={{
                   position: 'absolute', top: '100%', right: 0, marginTop: 8,
@@ -227,27 +227,9 @@ const AdminLayout = () => {
                   </div>
                   <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {alerts.length === 0 && <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>Nenhum alerta ativo</p>}
-                    {dangerAlerts.map(a => (
-                      <div key={a.id} className="alert-item danger">
-                        <div className="status-dot danger" style={{ marginTop: 3 }} />
-                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 500 }}>{a.message}</p>
-                          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.createdAt}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {warningAlerts.map(a => (
-                      <div key={a.id} className="alert-item warning">
-                        <div className="status-dot warning" style={{ marginTop: 3 }} />
-                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 500 }}>{a.message}</p>
-                          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.createdAt}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {otherAlerts.map(a => (
+                    {[...dangerAlerts, ...warningAlerts, ...otherAlerts].map(a => (
                       <div key={a.id} className={`alert-item ${a.type}`}>
-                        <div className="status-dot" style={{ marginTop: 3, background: a.type === 'purple' ? 'var(--purple)' : 'var(--primary)' }} />
+                        <div className="status-dot" style={{ marginTop: 3, background: a.type === 'danger' ? 'var(--danger)' : a.type === 'warning' ? 'var(--warning)' : a.type === 'purple' ? 'var(--purple)' : 'var(--primary)' }} />
                         <div>
                           <p style={{ fontSize: 13, fontWeight: 500 }}>{a.message}</p>
                           <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.createdAt}</p>
@@ -259,8 +241,9 @@ const AdminLayout = () => {
               )}
             </div>
 
-            {/* User avatar */}
-            <div className="avatar avatar-sm" style={{ background: 'var(--primary)', cursor: 'pointer' }} title={user.name}>
+            {/* User avatar → go to config */}
+            <div className="avatar avatar-sm" style={{ background: 'var(--primary)', cursor: 'pointer' }}
+              title={user.name} onClick={() => navigate('/admin/config')}>
               {user.name.substring(0, 2).toUpperCase()}
             </div>
           </div>
@@ -271,35 +254,6 @@ const AdminLayout = () => {
           <Outlet />
         </section>
       </main>
-
-      {/* ─── FLOATING CHAT BUTTON ─────────────────────────── */}
-      <div style={{ position: 'relative' }}>
-        <button className="chat-fab" onClick={() => setChatOpen(!chatOpen)} title="Chat Interno">
-          {chatOpen ? <X size={22} /> : <MessageSquare size={22} />}
-        </button>
-      </div>
-
-      {/* ─── CHAT DRAWER ──────────────────────────────────── */}
-      {chatOpen && (
-        <div style={{
-          position: 'fixed',
-          bottom: 92,
-          right: 20,
-          width: 380,
-          height: 520,
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
-          zIndex: 299,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          animation: 'slideUp 0.25s ease',
-        }}>
-          <ChatGlobal compact onClose={() => setChatOpen(false)} />
-        </div>
-      )}
     </div>
   );
 };
