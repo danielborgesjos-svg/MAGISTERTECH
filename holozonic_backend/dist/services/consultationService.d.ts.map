@@ -1,1 +1,0 @@
-{"version":3,"file":"consultationService.d.ts","sourceRoot":"","sources":["../../src/services/consultationService.ts"],"names":[],"mappings":"AAEA,UAAU,gBAAgB;IACxB,aAAa,EAAE,MAAM,CAAC;IACtB,SAAS,EAAE,MAAM,CAAC;IAClB,iBAAiB,EAAE,GAAG,EAAE,CAAC;CAC1B;AAED,cAAM,mBAAmB;IACjB,QAAQ,CAAC,IAAI,EAAE,gBAAgB;;;;;;;;;;;;;;;CA+BtC;;AAED,wBAAyC"}
