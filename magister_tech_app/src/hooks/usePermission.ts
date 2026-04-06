@@ -11,44 +11,63 @@ export const usePermission = () => {
     // Admin e CEO veem tudo
     if (['ADMIN', 'CEO'].includes(role)) return true;
 
+    // CLIENTE só acessa módulos explícitos para clientes
+    if (role === 'CLIENTE') {
+      return ['dashboard'].includes(module);
+    }
+
+    // Se o usuário tem uma lista explícita de permissões, usamos ela
+    if (user?.permissions && user.permissions.length > 0) {
+      return user.permissions.includes(module);
+    }
+
+    // Fallback: lógica baseada em cargos (Role-based)
     switch (module) {
       case 'dashboard':
-        return true; // todos veem o cockpit
-
       case 'kanban':
-        return true; // todos veem o kanban
-
       case 'agenda':
-        return true; // todos veem a agenda
+      case 'feed':
+      case 'chat':
+        return true;
 
       case 'pipeline':
-        return ['CTO', 'COMERCIAL', 'GESTOR_PROJETOS', 'PROJETO', 'FINANCEIRO'].includes(role);
-
       case 'crm':
-        return ['CTO', 'COMERCIAL', 'GESTOR_PROJETOS', 'PROJETO', 'FINANCEIRO'].includes(role);
+        return ['COMERCIAL', 'GESTOR_PROJETOS', 'GESTOR'].includes(role);
 
       case 'contratos':
-        return ['CTO', 'COMERCIAL', 'FINANCEIRO'].includes(role);
+        return ['FINANCEIRO', 'COMERCIAL', 'GESTOR'].includes(role);
 
       case 'projetos':
-        return ['CTO', 'GESTOR_PROJETOS', 'PROJETO', 'COMERCIAL', 'DESIGNER', 'COLABORADOR'].includes(role);
-
       case 'conteudo':
-        return ['CTO', 'DESIGNER', 'PROJETO', 'SOCIAL_MEDIA', 'GESTOR_PROJETOS', 'COMERCIAL'].includes(role);
+        return ['DESIGNER', 'PROJETO', 'SOCIAL_MEDIA', 'GESTOR_PROJETOS', 'GESTOR'].includes(role);
 
       case 'financeiro':
-        return ['CTO', 'FINANCEIRO', 'COMERCIAL'].includes(role);
+        return ['FINANCEIRO', 'GESTOR'].includes(role);
 
       case 'equipe':
-        return ['CTO', 'GESTOR_PROJETOS', 'FINANCEIRO'].includes(role);
+        return ['GESTOR_PROJETOS', 'GESTOR'].includes(role);
 
-      case 'configuracoes':
-        return false; // somente ADMIN via panel direto
+      // Kanban interno por cliente — apenas equipe interna (não CLIENTE)
+      case 'kanban-cliente':
+        return ['GESTOR', 'GESTOR_PROJETOS', 'DESIGNER', 'PROJETO', 'SOCIAL_MEDIA', 'COMERCIAL', 'FINANCEIRO', 'COLABORADOR'].includes(role);
+
+      // Hub 360 do cliente
+      case 'cliente-hub':
+        return ['GESTOR', 'GESTOR_PROJETOS', 'COMERCIAL', 'FINANCEIRO', 'COLABORADOR'].includes(role);
 
       default:
         return false;
     }
   };
 
-  return { canViewModule, role };
+  const canViewSensitiveData = (): boolean => {
+    return ['ADMIN', 'CEO', 'FINANCEIRO', 'GESTOR'].includes(role) || (user?.permissions?.includes('financeiro') ?? false);
+  };
+
+  // Verifica se o usuário é da equipe interna (não é CLIENTE)
+  const isInternalTeam = (): boolean => {
+    return !['CLIENTE'].includes(role);
+  };
+
+  return { canViewModule, canViewSensitiveData, isInternalTeam, role };
 };

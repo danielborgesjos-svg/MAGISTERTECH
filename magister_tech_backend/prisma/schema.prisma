@@ -15,6 +15,7 @@ model User {
   name         String
   email        String    @unique
   password     String
+  // Roles: ADMIN | GESTOR | COLABORADOR | CLIENTE
   role         String    @default("COLABORADOR")
   sector       String?
   phone        String?
@@ -47,6 +48,8 @@ model Client {
   observations String?
   segment      String?
   responsible  String?
+  // Health score 0-100 para medir saúde do cliente
+  healthScore  Float     @default(0)
   projects     Project[]
   contracts    Contract[]
   contents     Content[]
@@ -54,6 +57,7 @@ model Client {
   transactions Transaction[]
   interactions Interaction[]
   tasks        Task[]
+  faturas      Fatura[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -93,6 +97,8 @@ model Task {
   checklist   String?   // JSON string
   tags        String?
   order       Int       @default(0)
+  // Tipo de conteúdo: post | stories | video | trafego | tarefa
+  tipo        String    @default("tarefa")
   assigneeId  String?
   assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
   projectId   String?
@@ -150,6 +156,10 @@ model Content {
   campaign    String?
   fileUrl     String?
   observations String?
+  // versao e aprovadoEm para controle de aprovação
+  versao      Int       @default(1)
+  aprovadoEm  DateTime?
+  comentarios String?   // JSON com thread de comentários de aprovação
   clientId    String
   client      Client    @relation(fields: [clientId], references: [id])
   authorId    String
@@ -178,6 +188,26 @@ model Contract {
   clientId    String
   client      Client    @relation(fields: [clientId], references: [id])
   transactions Transaction[]
+  faturas     Fatura[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================================
+// FATURAS (Invoices vinculadas a Contratos)
+// ============================================================
+model Fatura {
+  id          String    @id @default(uuid())
+  contratoId  String
+  contrato    Contract  @relation(fields: [contratoId], references: [id])
+  clienteId   String
+  cliente     Client    @relation(fields: [clienteId], references: [id])
+  valor       Float
+  vencimento  DateTime
+  // status: PENDENTE | PAGO | VENCIDO
+  status      String    @default("PENDENTE")
+  paidAt      DateTime?
+  descricao   String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }

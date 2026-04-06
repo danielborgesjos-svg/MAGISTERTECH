@@ -33,6 +33,36 @@ const authMiddleware = (req: any, res: any, next: any) => {
 };
 
 // =====================================================
+// MIDDLEWARE RBAC — verifica roles permitidos
+// =====================================================
+// Roles: ADMIN | GESTOR | COLABORADOR | CLIENTE
+const requireRole = (...roles: string[]) => (req: any, res: any, next: any) => {
+  const userRole = (req.user?.role || '').toUpperCase();
+  const allowed = roles.map(r => r.toUpperCase());
+
+  // ADMIN e CEO têm acesso irrestrito
+  if (['ADMIN', 'CEO'].includes(userRole)) return next();
+
+  if (!allowed.includes(userRole)) {
+    return res.status(403).json({
+      error: 'Acesso negado. Você não tem permissão para esta operação.',
+      required: roles,
+      current: userRole,
+    });
+  }
+  next();
+};
+
+// CLIENTE não pode acessar rotas internas de gestão
+const blockCliente = (req: any, res: any, next: any) => {
+  const userRole = (req.user?.role || '').toUpperCase();
+  if (userRole === 'CLIENTE') {
+    return res.status(403).json({ error: 'Área restrita à equipe interna.' });
+  }
+  next();
+};
+
+// =====================================================
 // AUTH ROUTES
 // =====================================================
 app.post('/api/auth/login', async (req: any, res: any) => {
@@ -65,10 +95,7 @@ app.get('/api/auth/me', authMiddleware, async (req: any, res: any) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    
-    res.json({
-      id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar
-    });
+    res.json({ id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar });
   } catch (err) {
     res.status(500).json({ error: 'Erro interno no servidor.' });
   }
@@ -77,9 +104,11 @@ app.get('/api/auth/me', authMiddleware, async (req: any, res: any) => {
 // =====================================================
 // USERS ROUTES
 // =====================================================
-app.get('/api/users', authMiddleware, async (_req: any, res: any) => {
+app.get('/api/users', authMiddleware, blockCliente, async (_req: any, res: any) => {
   try {
-    const users = await prisma.user.findMany({ select: { id: true, name: true, email: true, role: true, sector: true, avatar: true, isActive: true }});
+    const users = await prisma.user.findMany({
+      select: { id: true, name: true, email: true, role: true, sector: true, avatar: true, isActive: true }
+    });
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar usuários.' });
@@ -87,9 +116,9 @@ app.get('/api/users', authMiddleware, async (_req: any, res: any) => {
 });
 
 // =====================================================
-// CLIENTS (CRM) ROUTES
+// CLIENTS (CRM) — CRUD COMPLETO
 // =====================================================
-app.get('/api/clients', authMiddleware, async (_req: any, res: any) => {
+app.get('/api/clients', authMiddleware, blockCliente, async (_req: any, res: any) => {
   try {
     const clients = await prisma.client.findMany({ orderBy: { createdAt: 'desc' } });
     res.json(clients);
@@ -98,15 +127,22 @@ app.get('/api/clients', authMiddleware, async (_req: any, res: any) => {
   }
 });
 
-app.get('/api/clients/:id', authMiddleware, async (req: any, res: any) => {
+app.get('/api/clients/:id', authMiddleware, blockCliente, async (req: any, res: any) => {
   try {
     const client = await prisma.client.findUnique({
       where: { id: req.params.id },
       include: {
         projects: true,
         contracts: true,
-        interactions: { orderBy: { date: 'desc' }, include: { user: { select: { name: true } } } },
-        tasks: { orderBy: { createdAt: 'desc' }, take: 10, include: { assignee: { select: { name: true } } } }
+        interactions: {
+          orderBy: { date: 'desc' },
+          include: { user: { select: { name: true } } }
+        },
+        tasks: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: { assignee: { select: { name: true, avatar: true } } }
+        }
       }
     });
     if (!client) return res.status(404).json({ error: 'Cliente não encontrado.' });
@@ -116,29 +152,208 @@ app.get('/api/clients/:id', authMiddleware, async (req: any, res: any) => {
   }
 });
 
-// =====================================================
-// PROJECTS ROUTES
-// =====================================================
-app.get('/api/projects', authMiddleware, async (_req: any, res: any) => {
+// GET /api/clients/:id/hub — visão 360 do cliente
+app.get('/api/clients/:id/hub', authMiddleware, blockCliente, async (req: any, res: any) => {
   try {
-    const projects = await prisma.project.findMany({ include: { client: { select: { name: true, company: true } } }, orderBy: { createdAt: 'desc' } });
+    const clienteId = req.params.id;
+
+    const [cliente, contratoAtivo, projetos, faturas, tarefas, conteudos] = await Promise.all([
+      prisma.client.findUnique({ where: { id: clienteId } }),
+
+      prisma.contract.findFirst({
+        where: { clientId: clienteId, status: 'VIGENTE' },
+        orderBy: { startDate: 'desc' },
+      }),
+
+      prisma.project.findMany({
+        where: { clientId: clienteId, status: { in: ['EM_ANDAMENTO', 'PLANEJAMENTO'] } },
+        orderBy: { createdAt: 'desc' },
+      }),
+
+      prisma.fatura.findMany({
+        where: { clienteId },
+        orderBy: { vencimento: 'desc' },
+        take: 6,
+      }),
+
+      prisma.task.findMany({
+        where: {
+          clientId: clienteId,
+          status: { notIn: ['ENTREGUE', 'PUBLICADO', 'APROVADO'] }
+        },
+        include: { assignee: { select: { id: true, name: true, avatar: true } } },
+        orderBy: { deadline: 'asc' },
+        take: 10,
+      }),
+
+      prisma.content.findMany({
+        where: { clientId: clienteId, status: 'AGUARDANDO_APROVACAO' },
+        include: { author: { select: { id: true, name: true } } },
+        orderBy: { updatedAt: 'desc' },
+        take: 8,
+      }),
+    ]);
+
+    if (!cliente) return res.status(404).json({ error: 'Cliente não encontrado.' });
+
+    res.json({ cliente, contratoAtivo, projetos, faturas, tarefas, conteudos });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar hub do cliente.' });
+  }
+});
+
+// GET /api/clients/:id/kanban — tarefas do kanban interno filtradas por cliente
+app.get('/api/clients/:id/kanban', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'GESTOR_PROJETOS', 'COLABORADOR'), async (req: any, res: any) => {
+  try {
+    const { assigneeId, tipo } = req.query as { assigneeId?: string; tipo?: string };
+
+    const where: any = { clientId: req.params.id };
+    if (assigneeId) where.assigneeId = assigneeId;
+    if (tipo) where.tipo = tipo;
+
+    const tasks = await prisma.task.findMany({
+      where,
+      include: {
+        assignee: { select: { id: true, name: true, avatar: true } },
+        project: { select: { id: true, name: true } },
+      },
+      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar kanban do cliente.' });
+  }
+});
+
+app.post('/api/clients', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'COMERCIAL'), async (req: any, res: any) => {
+  try {
+    const { name, company, email, phone, cnpj, status, segment, responsible, briefing, scope, healthScore } = req.body;
+    if (!name) return res.status(400).json({ error: 'Nome do cliente é obrigatório.' });
+
+    const client = await prisma.client.create({
+      data: { name, company, email, phone, cnpj, status: status || 'ATIVO', segment, responsible, briefing, scope, healthScore: healthScore || 0 }
+    });
+    res.status(201).json(client);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar cliente.' });
+  }
+});
+
+app.put('/api/clients/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'COMERCIAL'), async (req: any, res: any) => {
+  try {
+    const { name, company, email, phone, cnpj, status, segment, responsible, briefing, scope, strategies, observations, healthScore } = req.body;
+    const client = await prisma.client.update({
+      where: { id: req.params.id },
+      data: { name, company, email, phone, cnpj, status, segment, responsible, briefing, scope, strategies, observations, healthScore }
+    });
+    res.json(client);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar cliente.' });
+  }
+});
+
+app.delete('/api/clients/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
+  try {
+    await prisma.client.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir cliente.' });
+  }
+});
+
+// =====================================================
+// PROJECTS — CRUD COMPLETO
+// =====================================================
+app.get('/api/projects', authMiddleware, blockCliente, async (_req: any, res: any) => {
+  try {
+    const projects = await prisma.project.findMany({
+      include: { client: { select: { name: true, company: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
     res.json(projects);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar projetos.' });
   }
 });
 
-// =====================================================
-// TASKS & KANBAN ROUTES
-// =====================================================
-app.get('/api/tasks', authMiddleware, async (_req: any, res: any) => {
+app.get('/api/projects/:id', authMiddleware, blockCliente, async (req: any, res: any) => {
   try {
-    const tasks = await prisma.task.findMany({ 
-      include: { 
-        assignee: { select: { name: true, avatar: true } },
-        client: { select: { name: true } }
+    const project = await prisma.project.findUnique({
+      where: { id: req.params.id },
+      include: {
+        client: { select: { name: true, company: true } },
+        tasks: { include: { assignee: { select: { name: true, avatar: true } } } },
+        contents: true,
+      }
+    });
+    if (!project) return res.status(404).json({ error: 'Projeto não encontrado.' });
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar projeto.' });
+  }
+});
+
+app.post('/api/projects', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'GESTOR_PROJETOS'), async (req: any, res: any) => {
+  try {
+    const { name, type, status, startDate, endDate, description, deliverables, observations, clientId } = req.body;
+    if (!name || !clientId || !startDate) return res.status(400).json({ error: 'name, clientId e startDate são obrigatórios.' });
+
+    const project = await prisma.project.create({
+      data: { name, type: type || 'marketing', status: status || 'EM_ANDAMENTO', startDate: new Date(startDate), endDate: endDate ? new Date(endDate) : null, description, deliverables, observations, clientId }
+    });
+    res.status(201).json(project);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar projeto.' });
+  }
+});
+
+app.put('/api/projects/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'GESTOR_PROJETOS'), async (req: any, res: any) => {
+  try {
+    const { name, type, status, startDate, endDate, description, deliverables, observations } = req.body;
+    const project = await prisma.project.update({
+      where: { id: req.params.id },
+      data: {
+        name, type, status,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : null,
+        description, deliverables, observations
+      }
+    });
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar projeto.' });
+  }
+});
+
+app.delete('/api/projects/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
+  try {
+    await prisma.project.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir projeto.' });
+  }
+});
+
+// =====================================================
+// TASKS — CRUD COMPLETO
+// =====================================================
+app.get('/api/tasks', authMiddleware, blockCliente, async (req: any, res: any) => {
+  try {
+    const { clientId, status, assigneeId } = req.query as any;
+    const where: any = {};
+    if (clientId) where.clientId = clientId;
+    if (status) where.status = status;
+    if (assigneeId) where.assigneeId = assigneeId;
+
+    const tasks = await prisma.task.findMany({
+      where,
+      include: {
+        assignee: { select: { id: true, name: true, avatar: true } },
+        client: { select: { name: true } },
+        project: { select: { name: true } },
       },
-      orderBy: { order: 'asc' } 
+      orderBy: { order: 'asc' }
     });
     res.json(tasks);
   } catch (err) {
@@ -146,7 +361,47 @@ app.get('/api/tasks', authMiddleware, async (_req: any, res: any) => {
   }
 });
 
-app.put('/api/tasks/:id/status', authMiddleware, async (req: any, res: any) => {
+app.post('/api/tasks', authMiddleware, blockCliente, async (req: any, res: any) => {
+  try {
+    const { title, description, status, priority, deadline, tipo, assigneeId, projectId, clientId, tags } = req.body;
+    if (!title) return res.status(400).json({ error: 'Título é obrigatório.' });
+
+    const task = await prisma.task.create({
+      data: {
+        title, description,
+        status: status || 'BACKLOG',
+        priority: priority || 'MEDIA',
+        deadline: deadline ? new Date(deadline) : null,
+        tipo: tipo || 'tarefa',
+        assigneeId, projectId, clientId, tags
+      },
+      include: { assignee: { select: { id: true, name: true, avatar: true } } }
+    });
+    res.status(201).json(task);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar tarefa.' });
+  }
+});
+
+app.put('/api/tasks/:id', authMiddleware, blockCliente, async (req: any, res: any) => {
+  try {
+    const { title, description, status, priority, deadline, tipo, assigneeId, order } = req.body;
+    const task = await prisma.task.update({
+      where: { id: req.params.id },
+      data: {
+        title, description, status, priority,
+        deadline: deadline ? new Date(deadline) : undefined,
+        tipo, assigneeId, order
+      },
+      include: { assignee: { select: { id: true, name: true, avatar: true } } }
+    });
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar tarefa.' });
+  }
+});
+
+app.put('/api/tasks/:id/status', authMiddleware, blockCliente, async (req: any, res: any) => {
   try {
     const { status } = req.body;
     const task = await prisma.task.update({ where: { id: req.params.id }, data: { status } });
@@ -156,31 +411,156 @@ app.put('/api/tasks/:id/status', authMiddleware, async (req: any, res: any) => {
   }
 });
 
-// =====================================================
-// CONTRACTS ROUTES
-// =====================================================
-app.get('/api/contracts', authMiddleware, async (_req: any, res: any) => {
+app.delete('/api/tasks/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'GESTOR_PROJETOS'), async (req: any, res: any) => {
   try {
-    const contracts = await prisma.contract.findMany({ include: { client: { select: { name: true } } }, orderBy: { createdAt: 'desc' } });
+    await prisma.task.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir tarefa.' });
+  }
+});
+
+// =====================================================
+// CONTRACTS — CRUD COMPLETO
+// =====================================================
+app.get('/api/contracts', authMiddleware, blockCliente, async (_req: any, res: any) => {
+  try {
+    const contracts = await prisma.contract.findMany({
+      include: { client: { select: { name: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
     res.json(contracts);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar contratos.' });
   }
 });
 
+app.get('/api/contracts/:id', authMiddleware, blockCliente, async (req: any, res: any) => {
+  try {
+    const contract = await prisma.contract.findUnique({
+      where: { id: req.params.id },
+      include: {
+        client: { select: { name: true, company: true } },
+        faturas: { orderBy: { vencimento: 'desc' } },
+      }
+    });
+    if (!contract) return res.status(404).json({ error: 'Contrato não encontrado.' });
+    res.json(contract);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar contrato.' });
+  }
+});
+
+app.post('/api/contracts', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'COMERCIAL', 'FINANCEIRO'), async (req: any, res: any) => {
+  try {
+    const { title, type, value, recurrence, startDate, endDate, status, renewal, observations, fileUrl, clientId } = req.body;
+    if (!title || !value || !startDate || !clientId) return res.status(400).json({ error: 'title, value, startDate e clientId são obrigatórios.' });
+
+    const contract = await prisma.contract.create({
+      data: {
+        title, type: type || 'servicos', value: parseFloat(value),
+        recurrence, startDate: new Date(startDate),
+        endDate: endDate ? new Date(endDate) : null,
+        status: status || 'VIGENTE', renewal: renewal || false,
+        observations, fileUrl, clientId
+      }
+    });
+    res.status(201).json(contract);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar contrato.' });
+  }
+});
+
+app.put('/api/contracts/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'COMERCIAL', 'FINANCEIRO'), async (req: any, res: any) => {
+  try {
+    const { title, type, value, recurrence, startDate, endDate, status, renewal, observations, fileUrl } = req.body;
+    const contract = await prisma.contract.update({
+      where: { id: req.params.id },
+      data: {
+        title, type, value: value ? parseFloat(value) : undefined,
+        recurrence,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : null,
+        status, renewal, observations, fileUrl
+      }
+    });
+    res.json(contract);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar contrato.' });
+  }
+});
+
+app.delete('/api/contracts/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
+  try {
+    await prisma.contract.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir contrato.' });
+  }
+});
+
+// =====================================================
+// FATURAS — CRUD
+// =====================================================
+app.get('/api/faturas', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'FINANCEIRO'), async (req: any, res: any) => {
+  try {
+    const { contratoId, clienteId } = req.query as any;
+    const where: any = {};
+    if (contratoId) where.contratoId = contratoId;
+    if (clienteId) where.clienteId = clienteId;
+
+    const faturas = await prisma.fatura.findMany({
+      where,
+      include: {
+        contrato: { select: { title: true, value: true } },
+        cliente: { select: { name: true } },
+      },
+      orderBy: { vencimento: 'desc' }
+    });
+    res.json(faturas);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar faturas.' });
+  }
+});
+
+app.post('/api/faturas', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'FINANCEIRO'), async (req: any, res: any) => {
+  try {
+    const { contratoId, clienteId, valor, vencimento, descricao } = req.body;
+    if (!contratoId || !clienteId || !valor || !vencimento) return res.status(400).json({ error: 'contratoId, clienteId, valor e vencimento são obrigatórios.' });
+
+    const fatura = await prisma.fatura.create({
+      data: { contratoId, clienteId, valor: parseFloat(valor), vencimento: new Date(vencimento), descricao }
+    });
+    res.status(201).json(fatura);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar fatura.' });
+  }
+});
+
+app.put('/api/faturas/:id/status', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'FINANCEIRO'), async (req: any, res: any) => {
+  try {
+    const { status } = req.body;
+    const data: any = { status };
+    if (status === 'PAGO') data.paidAt = new Date();
+    const fatura = await prisma.fatura.update({ where: { id: req.params.id }, data });
+    res.json(fatura);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar fatura.' });
+  }
+});
+
 // =====================================================
 // DASHBOARD KPI ROUTES
 // =====================================================
-app.get('/api/dashboard/kpis', authMiddleware, async (_req: any, res: any) => {
+app.get('/api/dashboard/kpis', authMiddleware, blockCliente, async (_req: any, res: any) => {
   try {
     const activeClients = await prisma.client.count({ where: { status: 'ATIVO' } });
     const activeProjects = await prisma.project.count({ where: { status: 'EM_ANDAMENTO' } });
     const pendingTasks = await prisma.task.count({ where: { status: { in: ['BACKLOG', 'A_FAZER', 'DOING', 'REVIEW'] } } });
-    
+
     const contracts = await prisma.contract.findMany({ where: { status: 'VIGENTE' } });
     const monthlyRevenue = contracts.reduce((acc: number, curr: any) => acc + curr.value, 0);
-    
-    // Gráfico mock (6 meses)
+
     const revenueChart = [
       { name: 'Out', total: monthlyRevenue * 0.8 },
       { name: 'Nov', total: monthlyRevenue * 0.85 },

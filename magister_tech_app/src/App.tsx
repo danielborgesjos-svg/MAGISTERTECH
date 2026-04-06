@@ -16,6 +16,25 @@ import Conteudo from './pages/Conteudo';
 import Equipe from './pages/Equipe';
 import Feed from './pages/Feed';
 import Configuracoes from './pages/Configuracoes';
+import ClienteHub from './pages/ClienteHub';
+import KanbanCliente from './pages/KanbanCliente';
+
+import { AuthContext } from './contexts/AuthContext';
+import { useContext } from 'react';
+import { usePermission } from './hooks/usePermission';
+
+function ProtectedRoute({ children, module }: { children: React.ReactNode, module: string }) {
+  const { canViewModule } = usePermission();
+  const { loading } = useContext(AuthContext);
+
+  if (loading) return null;
+
+  if (!canViewModule(module)) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function App() {
   return (
@@ -29,17 +48,35 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
-              <Route path="kanban" element={<Kanban />} />
-              <Route path="crm" element={<Clientes />} />
-              <Route path="contratos" element={<Contratos />} />
-              <Route path="pipeline" element={<Pipeline />} />
-              <Route path="projetos" element={<Projetos />} />
-              <Route path="agenda" element={<Agenda />} />
-              <Route path="conteudo" element={<Conteudo />} />
-              <Route path="financeiro" element={<Financeiro />} />
-              <Route path="equipe" element={<Equipe />} />
-              <Route path="feed" element={<Feed />} />
+              <Route path="kanban" element={<ProtectedRoute module="kanban"><Kanban /></ProtectedRoute>} />
+              <Route path="crm" element={<ProtectedRoute module="crm"><Clientes /></ProtectedRoute>} />
+              <Route path="contratos" element={<ProtectedRoute module="contratos"><Contratos /></ProtectedRoute>} />
+              <Route path="pipeline" element={<ProtectedRoute module="pipeline"><Pipeline /></ProtectedRoute>} />
+              <Route path="projetos" element={<ProtectedRoute module="projetos"><Projetos /></ProtectedRoute>} />
+              <Route path="agenda" element={<ProtectedRoute module="agenda"><Agenda /></ProtectedRoute>} />
+              <Route path="conteudo" element={<ProtectedRoute module="conteudo"><Conteudo /></ProtectedRoute>} />
+              <Route path="financeiro" element={<ProtectedRoute module="financeiro"><Financeiro /></ProtectedRoute>} />
+              <Route path="equipe" element={<ProtectedRoute module="equipe"><Equipe /></ProtectedRoute>} />
+              <Route path="feed" element={<ProtectedRoute module="feed"><Feed /></ProtectedRoute>} />
               <Route path="config" element={<Configuracoes />} />
+
+              {/* ─── FASE 1: Hub 360 e Kanban interno por cliente ─── */}
+              <Route
+                path="clientes/:clienteId/hub"
+                element={
+                  <ProtectedRoute module="cliente-hub">
+                    <ClienteHub />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="clientes/:clienteId/kanban"
+                element={
+                  <ProtectedRoute module="kanban-cliente">
+                    <KanbanCliente />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
           </Routes>
         </DataProvider>
@@ -47,5 +84,6 @@ function App() {
     </BrowserRouter>
   );
 }
+
 
 export default App;

@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search, Plus, MoreVertical, X, User, Building2,
   Mail, Phone, Tag, Globe, StickyNote, FileText,
-  Briefcase, ChevronRight, Archive, MessageSquare, CheckCircle, Activity
+  Briefcase, ChevronRight, Archive, MessageSquare, CheckCircle, Activity,
+  KanbanSquare, LayoutGrid
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Client } from '../contexts/DataContext';
@@ -16,6 +18,7 @@ const ORIGINS = ['Indicação', 'LinkedIn', 'Google Ads', 'Cold Outreach', 'Even
 
 export default function Clientes() {
   const { clients, contracts, projects, addClient, updateClient, addClientNote } = useData();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -214,7 +217,23 @@ export default function Clientes() {
                      <p style={{ fontSize: 14, color: 'var(--text-sec)', fontWeight: 600 }}>Responsável: {selectedClient.name} · Conta ID: {selectedClient.id.split('-')[0].toUpperCase()}</p>
                    </div>
                  </div>
-                 <button className="btn-icon" onClick={() => setSelectedClient(null)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}><X size={18} /></button>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                   <button
+                     className="btn btn-secondary btn-sm"
+                     style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                     onClick={() => { setSelectedClient(null); navigate(`/admin/clientes/${selectedClient.id}/hub`); }}
+                   >
+                     <LayoutGrid size={14} /> Hub 360
+                   </button>
+                   <button
+                     className="btn btn-secondary btn-sm"
+                     style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                     onClick={() => { setSelectedClient(null); navigate(`/admin/clientes/${selectedClient.id}/kanban`); }}
+                   >
+                     <KanbanSquare size={14} /> Kanban
+                   </button>
+                   <button className="btn-icon" onClick={() => setSelectedClient(null)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}><X size={18} /></button>
+                 </div>
               </div>
 
               {/* Tabs */}

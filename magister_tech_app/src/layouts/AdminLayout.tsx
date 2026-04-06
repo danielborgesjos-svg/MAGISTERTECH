@@ -4,7 +4,7 @@ import {
   LayoutDashboard, KanbanSquare, Users, FileText,
   LogOut, Terminal, Calendar, PenTool,
   Briefcase, Landmark, Moon, Sun, Target, UserCircle,
-  Bell, Search, ChevronRight, Settings, X, Rss
+  Bell, Search, ChevronRight, Settings, X, Rss, Activity
 } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 import { usePermission } from '../hooks/usePermission';
