@@ -1,5 +1,31 @@
-node_modules
-.env/
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (NUNCA commitar)
 .env
+.env.local
+.env.production
+
+# Builds (gerados pelo deploy)
+magister_tech_app/dist/
+magister_tech_backend/dist/
+
+# Banco SQLite (fica na VPS, não no git)
+magister_tech_backend/dev.db
+magister_tech_backend/dev.db-journal
+magister_tech_backend/*.db
+magister_tech_backend/*.db-journal
+
+# Logs
+*.log
+magister_tech_backend/out.log
+magister_tech_backend/pm2.log
+
+# IDEs
 .idea/
-.VSCode/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
