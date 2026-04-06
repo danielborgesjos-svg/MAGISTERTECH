@@ -74,6 +74,7 @@ const AdminLayout = () => {
       items: [
         { to: '/admin/projetos', icon: Briefcase, label: 'Projetos', module: 'projetos' },
         { to: '/admin/conteudo', icon: PenTool, label: 'Conteúdo', module: 'conteudo' },
+        { to: '/admin/hub-clientes', icon: Activity, label: 'Hub de Clientes', module: 'cliente-hub' },
       ]
     },
     {

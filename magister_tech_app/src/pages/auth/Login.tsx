@@ -1,9 +1,26 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { AuthContext } from '../../contexts/AuthContext';
 import { Loader2, Zap } from 'lucide-react';
 
-const DEMO_USER = { id: 'demo-1', name: 'Daniel Borges', email: 'admin@magistertech.com.br', role: 'admin', avatar: null };
+// Permissões completas incluindo as da Fase 1
+const ALL_PERMISSIONS = [
+  'dashboard', 'kanban', 'crm', 'pipeline', 'contratos',
+  'projetos', 'financeiro', 'agenda', 'conteudo', 'equipe',
+  'chat', 'config', 'feed',
+  'cliente-hub', 'kanban-cliente',
+];
+
+const DEMO_USER = {
+  id: 'demo-1',
+  name: 'Daniel Borges',
+  email: 'admin@magistertech.com.br',
+  role: 'CEO',
+  avatar: null as null,
+  accessLevel: 'ADMIN' as const,
+  permissions: ALL_PERMISSIONS,
+};
 const DEMO_TOKEN = 'demo-offline-token';
 
 const Login = () => {
@@ -21,49 +38,63 @@ const Login = () => {
     setError('');
 
     try {
+      // 1. Tenta autenticar no backend real
+      const { data } = await axios.post('/api/auth/login', {
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      // Backend respondeu: salva token JWT real e usuário
+      login(data.token, {
+        ...data.user,
+        accessLevel: 'ADMIN',
+        permissions: ALL_PERMISSIONS,
+      });
+      navigate('/admin/dashboard');
+    } catch (backendErr: any) {
+      const status = backendErr?.response?.status;
+
+      if (status === 401) {
+        // Credenciais inválidas
+        setError('E-mail ou senha incorretos.');
+        return;
+      }
+
+      // Backend indisponível — tenta modo offline
       const inputEmail = email.trim().toLowerCase();
-      
-      // ✅ Super Admin Bypass: Sempre funciona, sem depender do database (localStorage)
       if (inputEmail === 'admin@magistertech.com.br' && password === 'admin123') {
         login(DEMO_TOKEN, DEMO_USER);
         navigate('/admin/dashboard');
         return;
       }
 
-      // Offline fallback: varrer usuários cadastrados
+      // Verifica equipe registrada no localStorage (modo offline)
       const teamRaw = localStorage.getItem('mstr_team');
-      let team = [];
       if (teamRaw) {
-        team = JSON.parse(teamRaw);
-      } else {
-        team = [DEMO_USER];
+        const team = JSON.parse(teamRaw);
+        const member = team.find((m: any) => m.email?.toLowerCase() === inputEmail);
+        if (member) {
+          const validPasswords = ['admin123', 'magister123', '123456'];
+          const isValid = (member.password && member.password === password) || (!member.password && validPasswords.includes(password));
+          if (isValid) {
+            login(DEMO_TOKEN, {
+              id: member.id,
+              name: member.name,
+              email: member.email,
+              role: member.role,
+              avatar: null,
+              accessLevel: member.accessLevel || 'VIEWER',
+              permissions: member.permissions || [],
+            });
+            navigate('/admin/dashboard');
+            return;
+          }
+          setError('Senha incorreta.');
+          return;
+        }
       }
 
-      // Busca por outro colaborador
-      const member = team.find((m: any) => m.email?.toLowerCase() === inputEmail);
-      
-      if (member) {
-        // Se ele testou uma master password global ou a senha exata criada pelo admin pra ele.
-        const validPasswords = ['admin123', 'magister123', '123456'];
-        const isValid = (member.password && member.password === password) || (!member.password && validPasswords.includes(password));
-        
-        if (isValid) {
-          login(DEMO_TOKEN, {
-            id: member.id,
-            name: member.name,
-            email: member.email,
-            role: member.role,
-            avatar: null,
-            accessLevel: member.accessLevel || 'VIEWER',
-            permissions: member.permissions || []
-          });
-          navigate('/admin/dashboard');
-        } else {
-          setError('Senha incorreta.');
-        }
-      } else {
-        setError('Colaborador não encontrado.');
-      }
+      setError('Backend indisponível e usuário não encontrado no modo offline.');
     } finally {
       setLoading(false);
     }
@@ -76,23 +107,23 @@ const Login = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F8FAFC', padding: '20px', overflow: 'hidden', position: 'relative' }}>
-      
-      {/* Botão de Voltar */}
+
       <div style={{ position: 'absolute', top: 24, left: 24, zIndex: 10 }}>
-        <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', color: '#64748B', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#2563EB'} onMouseLeave={e => e.currentTarget.style.color = '#64748B'}>
-           <Zap size={16} /> Voltar para o Site
+        <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', color: '#64748B', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'color 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#2563EB'}
+          onMouseLeave={e => e.currentTarget.style.color = '#64748B'}>
+          <Zap size={16} /> Voltar para o Site
         </button>
       </div>
 
       <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
-      
+
       <div className="animate-in" style={{ width: '100%', maxWidth: '440px', background: '#FFFFFF', borderRadius: '16px', padding: '48px 40px', boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.1), 0 10px 15px -3px rgba(15, 23, 42, 0.05)', position: 'relative', zIndex: 1, border: '1px solid #E2E8F0' }}>
-        
-        {/* Logo Superior */}
+
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-             <img src="https://i.imgur.com/jqwwNLv.png" alt="Magister Tech" style={{ height: 44 }} />
+            <img src="https://i.imgur.com/jqwwNLv.png" alt="Magister Tech" style={{ height: 44 }} />
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 6, letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif" }}>Acesso Restrito</h2>
           <p style={{ fontSize: 14, color: '#64748B', fontFamily: "'Inter', sans-serif" }}>Painel corporativo e gestão interna.</p>
@@ -107,12 +138,12 @@ const Login = () => {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8, fontFamily: "'Inter', sans-serif" }}>E-mail corporativo</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              placeholder="admin@magistertech.com.br" 
-              required 
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="admin@magistertech.com.br"
+              required
               style={{ width: '100%', padding: '14px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: 15, transition: 'border 0.2s', background: '#F8FAFC', color: '#0F172A', fontFamily: "'Inter', sans-serif" }}
               onFocus={e => e.target.style.borderColor = '#6366F1'}
               onBlur={e => e.target.style.borderColor = '#CBD5E1'}
@@ -120,19 +151,21 @@ const Login = () => {
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8, fontFamily: "'Inter', sans-serif" }}>Senha</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              placeholder="••••••••" 
-              required 
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
               style={{ width: '100%', padding: '14px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: 15, transition: 'border 0.2s', background: '#F8FAFC', color: '#0F172A', fontFamily: "'Inter', sans-serif" }}
               onFocus={e => e.target.style.borderColor = '#6366F1'}
               onBlur={e => e.target.style.borderColor = '#CBD5E1'}
             />
           </div>
-          
-          <button type="submit" style={{ width: '100%', height: 50, marginTop: 12, fontSize: 15, fontWeight: 600, fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #2563EB, #6366F1)', color: '#FFFFFF', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px 0 rgba(37, 99, 235, 0.2)', transition: 'all 0.2s' }} disabled={loading}>
+
+          <button type="submit"
+            style={{ width: '100%', height: 50, marginTop: 12, fontSize: 15, fontWeight: 600, fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #2563EB, #6366F1)', color: '#FFFFFF', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px 0 rgba(37, 99, 235, 0.2)', transition: 'all 0.2s' }}
+            disabled={loading}>
             {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar no Sistema'}
           </button>
         </form>
@@ -142,10 +175,13 @@ const Login = () => {
           <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#FFFFFF', padding: '0 16px', fontSize: 11, color: '#94A3B8', fontWeight: 600, letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>MODO DESENVOLVEDOR</span>
         </div>
 
-        <button type="button" onClick={handleDemoAccess} style={{ width: '100%', height: 46, fontSize: 14, fontWeight: 600, fontFamily: "'Inter', sans-serif", background: '#FFFFFF', color: '#0F172A', border: '1px solid #E2E8F0', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s', boxShadow: '0 1px 2px 0 rgba(15, 23, 42, 0.05)' }} onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}>
+        <button type="button" onClick={handleDemoAccess}
+          style={{ width: '100%', height: 46, fontSize: 14, fontWeight: 600, fontFamily: "'Inter', sans-serif", background: '#FFFFFF', color: '#0F172A', border: '1px solid #E2E8F0', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s', boxShadow: '0 1px 2px 0 rgba(15, 23, 42, 0.05)' }}
+          onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+          onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}>
           <Zap size={16} color="#6366F1" /> Acesso Bypass (Local)
         </button>
-        
+
         <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: '#94A3B8', fontFamily: "'Inter', sans-serif" }}>
           Suporte: <code style={{ background: '#F1F5F9', padding: '2px 6px', borderRadius: 4, color: '#475569' }}>admin@magistertech.com.br</code>
         </p>

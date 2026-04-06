@@ -18,6 +18,7 @@ import Feed from './pages/Feed';
 import Configuracoes from './pages/Configuracoes';
 import ClienteHub from './pages/ClienteHub';
 import KanbanCliente from './pages/KanbanCliente';
+import ClientesAPI from './pages/ClientesAPI';
 
 import { AuthContext } from './contexts/AuthContext';
 import { useContext } from 'react';
@@ -59,6 +60,16 @@ function App() {
               <Route path="equipe" element={<ProtectedRoute module="equipe"><Equipe /></ProtectedRoute>} />
               <Route path="feed" element={<ProtectedRoute module="feed"><Feed /></ProtectedRoute>} />
               <Route path="config" element={<Configuracoes />} />
+
+              {/* ─── FASE 1: Hub de Clientes (backend) ─── */}
+              <Route
+                path="hub-clientes"
+                element={
+                  <ProtectedRoute module="cliente-hub">
+                    <ClientesAPI />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* ─── FASE 1: Hub 360 e Kanban interno por cliente ─── */}
               <Route

@@ -30,7 +30,12 @@ const DEMO_USER: User = {
   role: 'CEO',
   avatar: null,
   accessLevel: 'ADMIN',
-  permissions: ['dashboard', 'crm', 'pipeline', 'contratos', 'projetos', 'financeiro', 'agenda', 'conteudo', 'equipe', 'chat', 'config']
+  permissions: [
+    'dashboard', 'kanban', 'crm', 'pipeline', 'contratos',
+    'projetos', 'financeiro', 'agenda', 'conteudo', 'equipe',
+    'chat', 'config', 'feed',
+    'cliente-hub', 'kanban-cliente',
+  ],
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
