@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --primary: #00f2ff;
+  --secondary: #7000ff;
+  --background: #050505;
+  --panel: rgba(15, 15, 20, 0.8);
+  --error: #ff2d55;
+  --success: #00ffa3;
+  --text: #e0e0e0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--background);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+}
+
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  background: radial-gradient(circle at center, #101020 0%, #050505 100%);
+}
+
+/* SIDEBAR HUD */
+.hud-sidebar {
+  width: 300px;
+  background: var(--panel);
+  border-right: 1px solid rgba(0, 242, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  z-index: 10;
+}
+
+.hud-section {
+  border-left: 2px solid var(--primary);
+  padding-left: 15px;
+}
+
+/* MAIN CORE AREA */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+
+/* THE CORE ORB */
+.core-container {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orb {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: pulse 4s infinite ease-in-out;
+  opacity: 0.6;
+}
+
+.orb-inner {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 50px var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all 0.5s ease;
+}
+
+.orb-ring {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  border-radius: 50%;
+  animation: rotate 10s linear infinite;
+}
+
+.orb-ring::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 15px var(--primary);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.3); opacity: 0.8; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* STATUS COLORS */
+.status-listening .orb-inner { border-color: var(--primary); box-shadow: 0 0 80px var(--primary); }
+.status-thinking .orb-inner { border-color: var(--secondary); box-shadow: 0 0 80px var(--secondary); }
+.status-speaking .orb-inner { border-color: var(--success); box-shadow: 0 0 80px var(--success); }
+
+/* EMERGENCY BUTTON */
+.emergency-delete {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: rgba(255, 45, 85, 0.1);
+  border: 1px solid var(--error);
+  color: var(--error);
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+
+.emergency-delete:hover {
+  background: var(--error);
+  color: #fff;
+  box-shadow: 0 0 20px var(--error);
+}
+
+/* NEON BUTTONS & INPUTS */
+.neon-button {
+  background: transparent;
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  color: #fff;
+  padding: 8px 15px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.neon-button.active {
+  background: var(--primary);
+  color: #000;
+  box-shadow: 0 0 15px var(--primary);
+}
+
+.sexta-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 242, 255, 0.3);
+  color: #fff;
+  padding: 10px;
+  outline: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* CHAT MINI-OVERLAY */
+.chat-overlay {
+  position: absolute;
+  bottom: 100px;
+  left: 330px;
+  max-width: 500px;
+  background: rgba(0,0,0,0.5);
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 3px solid var(--primary);
+  font-size: 0.9rem;
+  opacity: 0.8;
+}

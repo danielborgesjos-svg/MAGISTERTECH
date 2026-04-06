@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start:*)",
+      "WebFetch(domain:baragaoveiculos.com.br)"
+    ]
+  }
+}

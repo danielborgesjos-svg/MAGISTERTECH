@@ -1,28 +1,36 @@
-# Integração Completa: Holozonic Digital Clinic
+# Magister ERP: Evolução Premium Cockpit
 
-## O que foi realizado
+Finalizamos o grande overhaul do sistema, focando em densidade de informações, controle granular e interatividade. O Magister Tech agora opera como um verdadeiro Cockpit Corporativo.
 
-A migração da nova Landing Page (Front-End estático HTML) para o React foi um sucesso. As conexões de banco de dados foram atualizadas.
+## 🚀 Principais Mudanças
 
-### 1. Novo Schema Prisma e Backend (API Pública)
-- Adicionado campo `meetLink` no objeto `Appointment` do Prisma Validator.
-- Criado o controlador `publicController.ts` que escuta e gerencia conexões desprotegidas de ponta a ponta para a landing page:
-  - Criação rápida de Paciente (via CPF ou Email).
-  - Captura das queixas principais do paciente na `Pré-Anamnese`. 
-  - Geração de Agendamentos sob demanda com retenção de PIX (Status PENDING).
-  - Verificação de Autenticação/Status de Cpf na Área do Paciente.
+### 1. Camada de Dados Evoluída
+- **DataContext**: Expandido para suportar meta-dados de auditoria (`logs`), estado de arquivamento (`isArchived`) e árvore de comentários no mural.
+- **Persistência**: Mantida via `localStorage` para garantir funcionamento offline-first e alta performance.
 
-### 2. Painel Médico Ativo (Dashboard)
-- O `Dashboard.tsx` deixou de usar dados mockados em tela. Ele agora realiza solicitações GET na camada de agendamentos protegidos (`/api/appointments`).
-- Adicionado a leitura detalhada da Pré-anamnese efetuada pelo paciente no momento da triagem do site.
-- **Auto Gerador Meet**: Inserido um botão dinâmico *"Gerar Reunião Meet"*, que injeta a URL customizada de Teleconsulta direto na tabela, ativando imediatamente no perfil e avisando o paciente em tempo real na aba do lado de fora.
+### 2. Conteúdo Editorial (Contextual)
+- **Dashboard de Topo**: KPIs em tempo real (Ideias, Produção, Revisão, Entregas).
+- **Filtro por Empresa**: Ao selecionar uma empresa, todo o pipeline e o calendário se adaptam aos dados específicos dela.
+- **Calendário de Entregas**: Visualização em grade abaixo do Kanban de conteúdo, mostrando o que já foi aprovado e o que está publicado.
 
-### 3. Área do Paciente & Landing
-- O novo template de Landing Page, mais agressivo e luxuoso, foi perfeitamente acomodado em React utilizando Modais controlados por *State* para capturar dados fase-a-fase.
-- **Login Instantâneo pelo CPF**: A área do paciente responde mediante a inserção do número cadastrado, varrendo todos os *Appointments* atrelados e devolvendo em formato de mini-dash. Se a sala do Meet já foi autorizada pelo médico no Dashboard, o botão de acesso "Entrar na Sala" já fica disponível.
+### 3. Equipe & Mural Social
+- **Autenticação & Segurança**: Admin Master agora pode resetar senhas diretamente na edição de membros.
+- **Meu Perfil**: Cada usuário pode agora gerenciar sua própria foto, email e senha.
+- **Mural Interativo**: Novo design de card com sistema de comentários aninhados para alinhamento rápido da squad.
 
-## Próximos Passos
-> [!NOTE]  
-> Você deve inicializar e popular seu banco de dados local da maneira habitual (iniciando o Postgres) e se certificar de rodar o comando `npx prisma db push` dentro da pasta `holozonic_backend` para instanciar a nova coluna de "MeetLink".
+### 4. Kanban Cockpit (Alta Densidade)
+- **Ajuste de Tela**: Colunas compactadas para Visualização Total sem scroll excessivo.
+- **Gaveta de Arquivados**: Nova seção retrátil no rodapé para "esconder" tarefas concluídas sem deletá-las.
+- **Log de Atividades**: Todos os movimentos de cards e edições são registrados e podem ser visualizados nos detalhes de cada ticket.
 
-A operação do Painel agora é **Data-Driven**. O médico entra, analisa as queixas prévias, com um clique abre a sala de chamada, e inicia a consulta integrativa. O paciente usa apenas o CPF para entrar na própria sala virtual com 0% de atrito no acesso.
+## 🛠️ Validação Técnica
+- [x] Teste de Drag & Drop com persistência de log.
+- [x] Validação de filtros contextuais no módulo de Conteúdo.
+- [x] Verificação de reset de senha e edição de perfil.
+- [x] Estabilidade do layout em resoluções 1920x1080.
+
+> [!TIP]
+> Para acessar a **Gaveta de Arquivados**, basta clicar na barra cinza no rodapé do Kanban. Ela se expandirá mostrando todos os tickets antigos.
+
+> [!IMPORTANT]
+> O sistema de comentários no Mural é vinculado ao usuário logado. Certifique-se de estar com o perfil correto para assinar seus comentários.

@@ -7,7 +7,7 @@ import type { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Plus, X, GripVertical, TrendingUp, Trash2, CheckCircle, Flame, Building2, User, DollarSign, AlignLeft, Tags, ArrowRight
+  Plus, X, GripVertical, TrendingUp, Trash2, CheckCircle, Flame, User, DollarSign, AlignLeft, Tags, ArrowRight
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Task, KanbanColumn } from '../contexts/DataContext';

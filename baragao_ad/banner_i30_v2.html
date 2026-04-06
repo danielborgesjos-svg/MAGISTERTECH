@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Baragão Veículos — i30 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 40px;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  .format-label {
+    color: #555;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ═══════════════════════════════════════
+     BANNER 1:1 — 1080x1080 (Feed Instagram)
+  ═══════════════════════════════════════ */
+  .banner-square {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    background: #0C0C0C;
+    flex-shrink: 0;
+  }
+
+  /* Fundo com foto real — instrução:
+     Substitua o gradient abaixo por:
+     background-image: url('foto_i30_studio.jpg');
+     background-size: cover; background-position: center right;
+  */
+  .photo-bg {
+    position: absolute;
+    inset: 0;
+    /* PLACEHOLDER: substitua por imagem real do i30 */
+    background:
+      radial-gradient(ellipse at 75% 60%, rgba(201,162,39,0.08) 0%, transparent 60%),
+      linear-gradient(135deg, #0c0c0c 0%, #141414 40%, #0f0f1a 100%);
+  }
+
+  /* Overlay escuro do lado esquerdo para legibilidade do texto */
+  .text-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      rgba(12,12,12,0.97) 0%,
+      rgba(12,12,12,0.92) 35%,
+      rgba(12,12,12,0.5) 55%,
+      transparent 75%
+    );
+    z-index: 2;
+  }
+
+  /* Placeholder visual do carro — SUBSTITUIR POR <img> com foto real */
+  .car-placeholder {
+    position: absolute;
+    right: -20px;
+    bottom: 60px;
+    width: 820px;
+    z-index: 3;
+    filter: drop-shadow(-30px 0 80px rgba(0,0,0,0.95));
+  }
+
+  /* Sombra no chão */
+  .ground-shadow {
+    position: absolute;
+    bottom: 54px;
+    right: 40px;
+    width: 700px;
+    height: 50px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.6) 0%, transparent 70%);
+    z-index: 2;
+    filter: blur(12px);
+  }
+
+  /* ── Linha de chão ── */
+  .ground-line {
+    position: absolute;
+    bottom: 72px;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(201,162,39,0.3) 0%, rgba(201,162,39,0.08) 50%, transparent 100%);
+    z-index: 4;
+  }
+
+  /* ── Barra lateral esquerda dourada ── */
+  .left-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, #C9A227 0%, #8C6E15 60%, transparent 100%);
+    z-index: 10;
+  }
+
+  /* ── Conteúdo ── */
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    padding: 56px 64px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header: logo */
+  .logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-mark {
+    width: 44px; height: 44px;
+    border: 2px solid #C9A227;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 800;
+    color: #C9A227;
+    letter-spacing: 1px;
+  }
+
+  .logo-text { display: flex; flex-direction: column; }
+  .logo-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 800;
+    color: #F4F4F0;
+    letter-spacing: 2px; text-transform: uppercase;
+    line-height: 1;
+  }
+  .logo-tag {
+    font-size: 10px; color: #5a5a5a;
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  /* Selos no header */
+  .header-badges {
+    display: flex;
+    gap: 8px;
+  }
+  .hbadge {
+    border: 1px solid rgba(201,162,39,0.25);
+    border-radius: 4px;
+    padding: 6px 12px;
+    text-align: center;
+  }
+  .hbadge .hb-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 800;
+    color: #C9A227;
+    line-height: 1;
+  }
+  .hbadge .hb-lbl {
+    font-size: 9px; color: #4a4a4a;
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Bloco principal */
+  .main {
+    margin-top: auto;
+    max-width: 480px;
+  }
+
+  /* Tag modelo */
+  .model-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .model-tag-line {
+    width: 28px; height: 2px;
+    background: #C9A227;
+  }
+  .model-tag-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #C9A227;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  /* Headline */
+  .headline-main {
+    font-family: 'Syne', sans-serif;
+    font-size: 88px;
+    font-weight: 800;
+    line-height: 0.92;
+    color: #F4F4F0;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+  }
+  .headline-main .hl-model {
+    color: #C9A227;
+    display: block;
+  }
+
+  /* Subtítulo */
+  .subtext {
+    font-size: 16px;
+    color: #5a5a5a;
+    line-height: 1.6;
+    margin-bottom: 36px;
+    border-left: 2px solid #C9A227;
+    padding-left: 16px;
+  }
+  .subtext strong { color: #9a9a9a; }
+
+  /* Preço */
+  .price-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #1f1f1f;
+  }
+  .price-main { line-height: 1; }
+  .price-from {
+    font-size: 11px; color: #3a3a3a;
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .price-currency {
+    font-size: 22px; font-weight: 700;
+    color: #8C6E15; vertical-align: super;
+  }
+  .price-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 62px; font-weight: 800;
+    color: #C9A227;
+    letter-spacing: -2px;
+  }
+  .price-divider {
+    width: 1px; height: 60px;
+    background: #1f1f1f;
+  }
+  .price-installment { line-height: 1.4; }
+  .price-inst-label {
+    font-size: 10px; color: #3a3a3a;
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .price-inst-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px; font-weight: 700;
+    color: #F4F4F0;
+  }
+  .price-inst-suffix {
+    font-size: 13px; color: #5a5a5a;
+    margin-top: 2px;
+  }
+
+  /* CTA */
+  .cta-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .cta-btn {
+    background: #C9A227;
+    color: #0C0C0C;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 18px 36px;
+    border-radius: 4px;
+    border: none;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 4px 24px rgba(201,162,39,0.3);
+    cursor: pointer;
+  }
+  .cta-btn .arrow {
+    font-size: 16px;
+  }
+  .cta-secondary {
+    font-size: 12px; color: #3a3a3a;
+    line-height: 1.6;
+  }
+  .cta-secondary a {
+    color: #5a5a5a;
+    text-decoration: none;
+    display: block;
+  }
+
+  /* ── Rodapé do banner ── */
+  .banner-footer {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 72px;
+    background: rgba(12,12,12,0.95);
+    border-top: 1px solid #1a1a1a;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    padding: 0 64px;
+    gap: 40px;
+  }
+  .footer-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #3a3a3a;
+  }
+  .footer-item .fi-icon { font-size: 14px; }
+  .footer-item strong { color: #5a5a5a; font-weight: 500; }
+  .footer-divider {
+    width: 1px; height: 28px;
+    background: #1f1f1f;
+    margin-left: auto;
+  }
+  .footer-seal {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid rgba(201,162,39,0.2);
+    padding: 6px 14px; border-radius: 20px;
+  }
+  .footer-seal span { font-size: 11px; color: rgba(201,162,39,0.6); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ── Nota técnica (fora do banner) ── */
+  .dev-note {
+    width: 1080px;
+    background: #141414;
+    border: 1px dashed #2a2a2a;
+    border-radius: 8px;
+    padding: 20px 28px;
+    font-size: 12px;
+    color: #444;
+    line-height: 1.6;
+  }
+  .dev-note strong { color: #C9A227; }
+  .dev-note code { background: #1f1f1f; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: #888; }
+</style>
+</head>
+<body>
+
+<div class="format-label">Banner 1:1 — 1080×1080px — Meta Ads Feed Instagram/Facebook</div>
+
+<!-- ═══════ BANNER PRINCIPAL ═══════ -->
+<div class="banner-square">
+
+  <!-- Fundo / foto -->
+  <div class="photo-bg">
+    <!--
+      INSTRUÇÃO PARA PRODUÇÃO:
+      Substitua esta div por uma tag <img> com a foto real:
+      <img src="i30_studio_dark.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center right;" />
+
+      Foto recomendada: i30 em fundo preto/cinza escuro, ângulo 3/4 frontal,
+      iluminação direcional com reflexo no capô.
+      Fonte: newsroom.hyundai.com ou sessão fotográfica própria.
+    -->
+  </div>
+
+  <!-- SVG do i30 (placeholder profissional — substitua por foto real) -->
+  <svg class="car-placeholder" viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Corpo dourado refinado (não amarelo neon) -->
+      <linearGradient id="bodyG" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#D4AF37"/>
+        <stop offset="30%" style="stop-color:#C9A227"/>
+        <stop offset="70%" style="stop-color:#A07818"/>
+        <stop offset="100%" style="stop-color:#6B4F0A"/>
+      </linearGradient>
+      <linearGradient id="roofG" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#B8970F"/>
+        <stop offset="100%" style="stop-color:#7A6010"/>
+      </linearGradient>
+      <linearGradient id="glassG" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#d8ecf8;stop-opacity:0.9"/>
+        <stop offset="100%" style="stop-color:#7ab8d8;stop-opacity:0.4"/>
+      </linearGradient>
+      <radialGradient id="rimG" cx="50%" cy="35%" r="60%">
+        <stop offset="0%" style="stop-color:#e0e0e0"/>
+        <stop offset="50%" style="stop-color:#888"/>
+        <stop offset="100%" style="stop-color:#222"/>
+      </radialGradient>
+      <linearGradient id="bumberG" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#2a2a2a"/>
+        <stop offset="100%" style="stop-color:#111"/>
+      </linearGradient>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="4" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="bodyShad">
+        <feDropShadow dx="-10" dy="8" stdDeviation="16" flood-color="#000" flood-opacity="0.8"/>
+      </filter>
+    </defs>
+
+    <!-- Sombra eliptica no chão -->
+    <ellipse cx="400" cy="365" rx="380" ry="14" fill="rgba(0,0,0,0.55)" filter="url(#glow)"/>
+
+    <!-- ── CARROCERIA ── -->
+    <!-- Saia lateral / baixo -->
+    <path d="M82 284 Q88 308 128 314 L718 314 Q752 308 762 284 Z" fill="#5a3d08"/>
+
+    <!-- Corpo principal -->
+    <path d="
+      M82 284 L94 226 Q106 196 148 176
+      L228 166 Q272 126 362 106
+      L542 102 Q624 106 682 134
+      L732 160 Q762 175 773 202
+      L780 244 L780 284 Z
+    " fill="url(#bodyG)" filter="url(#bodyShad)"/>
+
+    <!-- Teto -->
+    <path d="
+      M228 166 Q272 126 362 106
+      L542 102 Q610 106 660 128
+      L706 156 L228 166 Z
+    " fill="url(#roofG)"/>
+
+    <!-- Detalhe lateral inferior (linha esportiva) -->
+    <path d="M108 272 Q420 258 736 264 L736 274 Q420 270 108 284 Z" fill="rgba(0,0,0,0.2)"/>
+    <path d="M120 270 Q420 258 738 264" stroke="#B8970F" stroke-width="1.5" fill="none" opacity="0.5"/>
+
+    <!-- ── VIDROS ── -->
+    <!-- Windshield -->
+    <path d="M394 108 L528 104 Q600 108 650 134 L695 158 L662 160 Q602 138 524 132 L388 136 Z"
+          fill="url(#glassG)" opacity="0.88"/>
+    <!-- Rear glass -->
+    <path d="M238 168 L374 138 L388 136 L372 164 L252 172 Z"
+          fill="url(#glassG)" opacity="0.7"/>
+    <!-- Door glass front -->
+    <path d="M396 134 L514 130 L510 166 L392 166 Z" fill="url(#glassG)" opacity="0.75"/>
+    <!-- Door glass rear -->
+    <path d="M377 164 L393 164 L393 136 L378 138 Z" fill="url(#glassG)" opacity="0.55"/>
+
+    <!-- Colunas A/B/C -->
+    <line x1="390" y1="108" x2="392" y2="168" stroke="#4a3208" stroke-width="5.5"/>
+    <line x1="512" y1="106" x2="511" y2="168" stroke="#4a3208" stroke-width="4"/>
+    <line x1="655" y1="130" x2="668" y2="168" stroke="#4a3208" stroke-width="5.5"/>
+
+    <!-- ── FRENTE / GRADE ── -->
+    <!-- Capô -->
+    <path d="M686 134 L780 202 L780 210 Q760 190 690 162 Z" fill="#A07818"/>
+
+    <!-- Farol principal LED -->
+    <path d="M744 193 Q766 188 780 202 L782 214 Q765 207 744 212 Z"
+          fill="white" opacity="0.95" filter="url(#glow)"/>
+    <path d="M748 195 Q766 190 778 202 L748 208 Z" fill="#e8f4fc" opacity="0.85"/>
+
+    <!-- DRL strip dourado -->
+    <path d="M745 194 Q762 190 775 200" stroke="#C9A227" stroke-width="2.5" fill="none"
+          filter="url(#glow)" stroke-linecap="round"/>
+
+    <!-- Máscara da grade hexagonal -->
+    <path d="M738 212 Q756 208 778 215 L779 262 Q760 268 742 268 Z" fill="#111"/>
+    <!-- Detalhes grade -->
+    <g opacity="0.4" stroke="#C9A227" stroke-width="0.8" fill="none">
+      <line x1="743" y1="222" x2="772" y2="219"/>
+      <line x1="743" y1="230" x2="772" y2="228"/>
+      <line x1="743" y1="238" x2="772" y2="237"/>
+      <line x1="743" y1="246" x2="772" y2="246"/>
+      <line x1="743" y1="254" x2="772" y2="255"/>
+    </g>
+
+    <!-- Pára-choque dianteiro -->
+    <path d="M720 268 Q756 265 778 258 L782 288 Q764 298 726 298 Z"
+          fill="url(#bumberG)"/>
+    <path d="M728 278 Q756 274 776 266" stroke="#C9A227" stroke-width="1.5" fill="none" opacity="0.4"/>
+    <!-- Entrada de ar -->
+    <path d="M730 284 Q752 282 770 276 L770 286 Q752 290 730 292 Z" fill="#0a0a0a"/>
+
+    <!-- ── LOGO H HYUNDAI ── -->
+    <ellipse cx="760" cy="244" rx="12" ry="8" fill="none" stroke="#999" stroke-width="1.5"/>
+    <text x="760" y="248" text-anchor="middle" font-size="10" font-weight="900" fill="#ccc" font-family="Arial">H</text>
+
+    <!-- ── TRASEIRA ── -->
+    <!-- Porta-malas silhueta -->
+    <path d="M82 200 Q72 215 74 248 L78 278 L96 278 L98 200 Z" fill="#9a7010"/>
+    <!-- Lanterna traseira LED -->
+    <path d="M74 210 Q68 216 70 242 L76 242 L78 210 Z" fill="#cc2200" opacity="0.9"/>
+    <path d="M78 210 L80 242 L84 242 L82 210 Z" fill="#ff4400" opacity="0.7"/>
+    <path d="M74 212 Q72 224 72 236" stroke="#ff6600" stroke-width="2" fill="none" opacity="0.5" filter="url(#glow)"/>
+
+    <!-- ── RODAS (estilo aro esportivo) ── -->
+    <!-- RODA TRASEIRA -->
+    <circle cx="196" cy="318" r="56" fill="#111"/>
+    <circle cx="196" cy="318" r="51" fill="#1a1a1a"/>
+    <circle cx="196" cy="318" r="45" fill="url(#rimG)"/>
+    <circle cx="196" cy="318" r="18" fill="#1a1a1a"/>
+    <circle cx="196" cy="318" r="7"  fill="#aaa"/>
+    <!-- Raios duplos estilo esportivo -->
+    <g transform="translate(196,318)" stroke="#777" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <line x1="-2" y1="-18" x2="-5" y2="-44"/>
+      <line x1="2"  y1="-18" x2="5"  y2="-44"/>
+      <line x1="-2" y1="18"  x2="-5"  y2="44"/>
+      <line x1="2"  y1="18"  x2="5"   y2="44"/>
+      <line x1="-18" y1="-2" x2="-44" y2="-5"/>
+      <line x1="-18" y1="2"  x2="-44" y2="5"/>
+      <line x1="18"  y1="-2" x2="44"  y2="-5"/>
+      <line x1="18"  y1="2"  x2="44"  y2="5"/>
+      <line x1="-14" y1="-12" x2="-32" y2="-28"/>
+      <line x1="-12" y1="-14" x2="-28" y2="-32"/>
+      <line x1="14"  y1="-12" x2="32"  y2="-28"/>
+      <line x1="12"  y1="-14" x2="28"  y2="-32"/>
+      <line x1="-14" y1="12"  x2="-32" y2="28"/>
+      <line x1="-12" y1="14"  x2="-28" y2="32"/>
+      <line x1="14"  y1="12"  x2="32"  y2="28"/>
+      <line x1="12"  y1="14"  x2="28"  y2="32"/>
+    </g>
+    <!-- Anel externo pneu -->
+    <circle cx="196" cy="318" r="56" fill="none" stroke="#0a0a0a" stroke-width="16"/>
+    <circle cx="196" cy="318" r="56" fill="none" stroke="#252525" stroke-width="12"/>
+    <!-- Reflexo do aro -->
+    <path d="M176 296 Q186 282 204 285" stroke="rgba(255,255,255,0.25)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <!-- RODA DIANTEIRA -->
+    <circle cx="618" cy="318" r="56" fill="#111"/>
+    <circle cx="618" cy="318" r="51" fill="#1a1a1a"/>
+    <circle cx="618" cy="318" r="45" fill="url(#rimG)"/>
+    <circle cx="618" cy="318" r="18" fill="#1a1a1a"/>
+    <circle cx="618" cy="318" r="7"  fill="#aaa"/>
+    <g transform="translate(618,318)" stroke="#777" stroke-width="3.5" fill="none" stroke-linecap="round">
+      <line x1="-2" y1="-18" x2="-5" y2="-44"/>
+      <line x1="2"  y1="-18" x2="5"  y2="-44"/>
+      <line x1="-2" y1="18"  x2="-5"  y2="44"/>
+      <line x1="2"  y1="18"  x2="5"   y2="44"/>
+      <line x1="-18" y1="-2" x2="-44" y2="-5"/>
+      <line x1="-18" y1="2"  x2="-44" y2="5"/>
+      <line x1="18"  y1="-2" x2="44"  y2="-5"/>
+      <line x1="18"  y1="2"  x2="44"  y2="5"/>
+      <line x1="-14" y1="-12" x2="-32" y2="-28"/>
+      <line x1="-12" y1="-14" x2="-28" y2="-32"/>
+      <line x1="14"  y1="-12" x2="32"  y2="-28"/>
+      <line x1="12"  y1="-14" x2="28"  y2="-32"/>
+      <line x1="-14" y1="12"  x2="-32" y2="28"/>
+      <line x1="-12" y1="14"  x2="-28" y2="32"/>
+      <line x1="14"  y1="12"  x2="32"  y2="28"/>
+      <line x1="12"  y1="14"  x2="28"  y2="32"/>
+    </g>
+    <circle cx="618" cy="318" r="56" fill="none" stroke="#0a0a0a" stroke-width="16"/>
+    <circle cx="618" cy="318" r="56" fill="none" stroke="#252525" stroke-width="12"/>
+    <path d="M598 296 Q608 282 626 285" stroke="rgba(255,255,255,0.25)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+    <!-- Reflexo luz no teto -->
+    <path d="M402 106 Q482 102 584 108 Q562 116 482 118 Q412 114 396 110 Z"
+          fill="rgba(255,255,255,0.18)"/>
+    <!-- Reflexo lateral no capô -->
+    <path d="M700 140 Q740 148 776 170" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <div class="ground-shadow"></div>
+  <div class="ground-line"></div>
+  <div class="text-overlay"></div>
+  <div class="left-bar"></div>
+
+  <!-- Conteúdo -->
+  <div class="content">
+
+    <!-- Header -->
+    <div class="logo-row">
+      <div class="logo-wrap">
+        <div class="logo-mark">BV</div>
+        <div class="logo-text">
+          <div class="logo-name">Baragão Veículos</div>
+          <div class="logo-tag">Concessionária Autorizada</div>
+        </div>
+      </div>
+      <div class="header-badges">
+        <div class="hbadge">
+          <div class="hb-val">0km</div>
+          <div class="hb-lbl">Lacrado</div>
+        </div>
+        <div class="hbadge">
+          <div class="hb-val">2024</div>
+          <div class="hb-lbl">Ano</div>
+        </div>
+        <div class="hbadge" style="border-color:rgba(27,58,107,0.5);background:rgba(27,58,107,0.15)">
+          <div class="hb-val" style="color:#6fa3e0;">✓</div>
+          <div class="hb-lbl" style="color:#2a4a6a;">Garantia</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloco principal -->
+    <div class="main">
+      <div class="model-tag">
+        <div class="model-tag-line"></div>
+        <span class="model-tag-text">Hyundai · Novo</span>
+      </div>
+
+      <div class="headline-main">
+        Novo
+        <span class="hl-model">i30</span>
+      </div>
+
+      <p class="subtext">
+        Tecnologia, design e <strong>parcela que cabe no seu bolso</strong>.<br>
+        Aprovação em 24h. Documentação por nossa conta.
+      </p>
+
+      <!-- Preço -->
+      <div class="price-row">
+        <div class="price-main">
+          <div class="price-from">A partir de</div>
+          <div>
+            <span class="price-currency">R$</span>
+            <span class="price-number">89.900</span>
+          </div>
+        </div>
+        <div class="price-divider"></div>
+        <div class="price-installment">
+          <div class="price-inst-label">Ou parcele em</div>
+          <div class="price-inst-value">12× R$ 1.990</div>
+          <div class="price-inst-suffix">sem entrada · sujeito à aprovação</div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-row">
+        <div class="cta-btn">
+          Quero este carro
+          <span class="arrow">→</span>
+        </div>
+        <div class="cta-secondary">
+          <a>📱 (xx) 9 xxxx-xxxx</a>
+          <a>📍 Sua Cidade — UF</a>
+          <a>🌐 baragaoveiculos.com.br</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Rodapé -->
+  <div class="banner-footer">
+    <div class="footer-item">
+      <span class="fi-icon">🔒</span>
+      <span><strong>Score baixo?</strong> Consulte nossa equipe</span>
+    </div>
+    <div class="footer-item">
+      <span class="fi-icon">📋</span>
+      <span><strong>Financiamento</strong> facilitado</span>
+    </div>
+    <div class="footer-item">
+      <span class="fi-icon">🚗</span>
+      <span><strong>Entrega</strong> rápida</span>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-seal">
+      <span>Loja Verificada ✓</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- Nota de desenvolvimento -->
+<div class="dev-note">
+  <strong>Instrução de produção:</strong> Para usar com foto real, localize o comentário
+  <code>&lt;!-- INSTRUÇÃO PARA PRODUÇÃO --&gt;</code> e substitua a <code>div.photo-bg</code>
+  por uma tag <code>&lt;img&gt;</code> apontando para a foto do i30 em fundo escuro de estúdio.
+  Fonte recomendada: <strong>newsroom.hyundai.com</strong> (press kit gratuito) ou sessão fotográfica própria.
+  O overlay escuro (<code>div.text-overlay</code>) garante legibilidade do texto independente da foto.
+</div>
+
+</body>
+</html>

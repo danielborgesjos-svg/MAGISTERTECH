@@ -5,7 +5,7 @@ import {
 import type { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Plus, X, GripVertical, Calendar, Flag, User, CheckSquare, Square, Trash2, CheckCircle, Activity, ActivityIcon, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { Plus, X, GripVertical, Calendar, Flag, User, CheckSquare, Square, Trash2, CheckCircle, Activity } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { AuthContext } from '../contexts/AuthContext';
 import type { Task, KanbanColumn } from '../contexts/DataContext';
@@ -101,22 +101,22 @@ function BoardColumn({ col, onAddTask, onEditTask }: {
 
   return (
     <div ref={setNodeRef} style={{ ...style }}>
-      <div style={{ width: 340, background: 'var(--bg-subtle)', borderRadius: 16, display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 200px)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+      <div style={{ width: 300, background: 'var(--bg-subtle)', borderRadius: 16, display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 240px)', border: '1px solid var(--border)', overflow: 'hidden' }}>
         <div style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div {...attributes} {...listeners} style={{ cursor: 'grab', color: 'var(--text-light)' }}>
               <GripVertical size={16} />
             </div>
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: col.color || 'var(--primary)', flexShrink: 0, boxShadow: `0 0 10px ${col.color || 'var(--primary)'}` }} />
-            <h4 style={{ fontSize: 14, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{col.title}</h4>
-            <span className="badge" style={{ fontSize: 11, background: 'var(--bg-subtle)', color: 'var(--text-main)', border: '1px solid var(--border)', marginLeft: 4 }}>{col.tasks.length}</span>
+            <h4 style={{ fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{col.title}</h4>
+            <span className="badge" style={{ fontSize: 10, background: 'var(--bg-subtle)', color: 'var(--text-main)', border: '1px solid var(--border)', marginLeft: 4 }}>{col.tasks.filter(t => !t.isArchived).length}</span>
           </div>
           <button className="btn-icon" style={{ width: 28, height: 28, background: 'var(--bg-subtle)' }} onClick={onAddTask}><Plus size={14} /></button>
         </div>
 
         <div style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
           <SortableContext items={taskIds}>
-            {col.tasks.map(task => (
+            {col.tasks.filter(t => !t.isArchived).map(task => (
               <TaskCard key={task.id} task={task} onClick={() => onEditTask(task)} />
             ))}
           </SortableContext>
@@ -135,7 +135,8 @@ function BoardColumn({ col, onAddTask, onEditTask }: {
 // ─── MAIN KANBAN ──────────────────────────────────────────────────────────────
 export default function Kanban() {
   const { user } = useContext(AuthContext);
-  const { kanban, setKanban, addTask, updateTask, deleteTask, team } = useData();
+  const { kanban, setKanban, addTask, updateTask, deleteTask, archiveTask, addTaskLog, team } = useData();
+  const [showArchived, setShowArchived] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [modalTask, setModalTask] = useState<Task | null>(null);
@@ -173,15 +174,26 @@ export default function Kanban() {
       let overColIdx = -1;
       if (isOverTask) overColIdx = newCols.findIndex(c => c.tasks.some(t => t.id === over.id));
       else if (isOverColumn) overColIdx = newCols.findIndex(c => c.id === over.id);
+      
       if (activeColIdx === -1 || overColIdx === -1) return prev;
+      
+      const activeCol = newCols[activeColIdx];
+      const overCol = newCols[overColIdx];
 
-      const activeIdx = newCols[activeColIdx].tasks.findIndex(t => t.id === active.id);
-      const [moved] = newCols[activeColIdx].tasks.splice(activeIdx, 1);
+      if (activeColIdx !== overColIdx) {
+         const task = activeCol.tasks.find(t => t.id === active.id);
+         if (task) {
+            addTaskLog(task.id, `Moveu de ${activeCol.title} para ${overCol.title}`, user?.name || 'Membro');
+         }
+      }
+
+      const activeIdx = activeCol.tasks.findIndex(t => t.id === active.id);
+      const [moved] = activeCol.tasks.splice(activeIdx, 1);
       if (isOverTask) {
-        const overIdx = newCols[overColIdx].tasks.findIndex(t => t.id === over.id);
-        newCols[overColIdx].tasks.splice(overIdx, 0, moved);
+        const overIdx = overCol.tasks.findIndex(t => t.id === over.id);
+        overCol.tasks.splice(overIdx, 0, moved);
       } else {
-        newCols[overColIdx].tasks.push(moved);
+        overCol.tasks.push(moved);
       }
       return newCols;
     });
@@ -189,7 +201,13 @@ export default function Kanban() {
 
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
-    if (over && active.data.current?.type === 'Column' && over.data.current?.type === 'Column' && active.id !== over.id) {
+    if (!over) {
+      setActiveId(null);
+      setActiveTask(null);
+      return;
+    }
+
+    if (active.data.current?.type === 'Column' && over.data.current?.type === 'Column' && active.id !== over.id) {
       const oldIdx = kanban.findIndex(c => c.id === active.id);
       const newIdx = kanban.findIndex(c => c.id === over.id);
       setKanban(arrayMove(kanban, oldIdx, newIdx));
@@ -236,10 +254,18 @@ export default function Kanban() {
 
   const handleDelete = () => {
     if (!modalTask) return;
-    if (confirm('Excluir esta tarefa?')) {
+    if (confirm('Excluir esta tarefa permanentemente?')) {
       deleteTask(modalTask.id);
       setModalTask(null);
     }
+  };
+
+  const handleArchive = () => {
+     if (!modalTask) return;
+     const newArchivedState = !modalTask.isArchived;
+     archiveTask(modalTask.id, newArchivedState);
+     addTaskLog(modalTask.id, newArchivedState ? 'Arquivou a tarefa' : 'Desarquivou a tarefa', user?.name || 'Membro');
+     setModalTask(null);
   };
 
   const addColumn = () => {
@@ -252,9 +278,9 @@ export default function Kanban() {
   const showModal = isNew || !!modalTask;
 
   return (
-    <div className="animate-fade-up kanban-wrapper" style={{ paddingBottom: 40 }}>
+    <div className="animate-fade-up kanban-wrapper" style={{ paddingBottom: 80 }}>
       {/* ─── HEADER COCKPIT ────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 100, fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <Activity size={12} color="var(--primary)" /> Produção · Workflow
@@ -280,7 +306,7 @@ export default function Kanban() {
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-        <div style={{ display: 'flex', overflowX: 'auto', gap: 24, paddingBottom: 32, minHeight: 'calc(100vh - 220px)', alignItems: 'flex-start' }}>
+        <div className="kanban-container">
           <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
             {kanban.map(col => (
               <BoardColumn key={col.id} col={col} onAddTask={() => openNew(col.id)} onEditTask={openEdit} />
@@ -292,10 +318,37 @@ export default function Kanban() {
           {activeId && activeTask ? (
              <div style={{ transform: 'rotate(2deg)' }}><TaskCard task={activeTask} isOverlay /></div>
           ) : activeId ? (
-            <div style={{ width: 340, height: 80, background: 'var(--primary)', opacity: 0.6, borderRadius: 'var(--radius)' }} />
+            <div style={{ width: 300, height: 80, background: 'var(--primary)', opacity: 0.6, borderRadius: 'var(--radius)' }} />
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* ─── ARCHIVED DRAWER ─────────────────────────────────────────── */}
+      <div style={{ 
+        position: 'fixed', bottom: 0, left: 280, right: 0, zIndex: 100,
+        transform: showArchived ? 'translateY(0)' : 'translateY(calc(100% - 40px))',
+        transition: '0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        background: 'var(--bg-card)', borderTop: '1px solid var(--border)',
+        boxShadow: '0 -10px 30px rgba(0,0,0,0.2)', paddingBottom: 20
+      }}>
+         <div 
+          onClick={() => setShowArchived(!showArchived)}
+          style={{ 
+            height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            cursor: 'pointer', background: 'var(--bg-subtle)', color: 'var(--text-muted)',
+            fontSize: 12, fontWeight: 800, gap: 10
+          }}>
+            <Trash2 size={14} /> GAVETA DE ARQUIVADOS ({kanban.flatMap(c => c.tasks).filter(t => t.isArchived).length})
+         </div>
+         <div style={{ padding: 20, maxHeight: 300, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+            {kanban.flatMap(c => c.tasks).filter(t => t.isArchived).map(task => (
+              <TaskCard key={task.id} task={task} onClick={() => openEdit(task)} />
+            ))}
+            {kanban.flatMap(c => c.tasks).filter(t => t.isArchived).length === 0 && (
+              <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: 40, color: 'var(--text-muted)' }}>Nenhum item arquivado</div>
+            )}
+         </div>
+      </div>
 
       {/* ─── TASK MODAL PREMIUM ────────────────────────────────────── */}
       {showModal && (
@@ -383,19 +436,44 @@ export default function Kanban() {
                     </div>
                   )}
                 </div>
+
+                {/* Histórico/Log */}
+                {!isNew && modalTask?.logs && (
+                  <div style={{ gridColumn: '1/-1', borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+                    <label className="form-label" style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Activity size={14} /> Histórico de Atividades
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                      {modalTask.logs.slice().reverse().map((log, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-sec)' }}>
+                          <span style={{ fontWeight: 700, color: 'var(--primary)', minWidth: 40 }}>{new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span style={{ fontWeight: 800 }}>{log.user}:</span>
+                          <span>{log.action}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="modal-footer" style={{ justifyContent: !isNew ? 'space-between' : 'flex-end', padding: '24px 32px', background: 'var(--bg-card)' }}>
-              {!isNew && (
-                <button className="btn btn-ghost" style={{ color: 'var(--danger)', fontWeight: 800 }} onClick={handleDelete}>
-                  <Trash2 size={16} /> Excluir Solicitação
-                </button>
-              )}
-              <div style={{ display: 'flex', gap: 12, marginLeft: !isNew ? 'auto' : 0 }}>
+            <div className="modal-footer" style={{ justifyContent: 'space-between', padding: '24px 32px', background: 'var(--bg-card)' }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {!isNew && (
+                  <>
+                    <button className="btn btn-ghost" style={{ color: 'var(--danger)', fontWeight: 800 }} onClick={handleDelete}>
+                      <Trash2 size={16} /> Excluir
+                    </button>
+                    <button className="btn btn-ghost" style={{ color: 'var(--warning)', fontWeight: 800 }} onClick={handleArchive}>
+                      {modalTask?.isArchived ? 'Desarquivar' : 'Arquivar'}
+                    </button>
+                  </>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
                 <button className="btn btn-ghost" onClick={() => { setModalTask(null); setTargetColId(null); }}>Cancelar</button>
                 <button className="btn btn-primary" onClick={handleSave} disabled={!form.title} style={{ padding: '10px 24px' }}>
-                   {isNew ? <><CheckCircle size={16} /> Emitir Subtarefa</> : <><CheckCircle size={16} /> Salvar Alterações</>}
+                   {isNew ? <><CheckCircle size={16} /> Emitir Ticket</> : <><CheckCircle size={16} /> Salvar Alterações</>}
                 </button>
               </div>
             </div>

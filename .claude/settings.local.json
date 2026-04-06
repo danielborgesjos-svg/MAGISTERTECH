@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /c/Users/Danie/OneDrive/Desktop/JARVIS-WORKSPACE/magister_tech_app/src/pages/*.tsx)",
+      "Bash(npx prisma:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ssh -o ConnectTimeout=5 -o BatchMode=yes root@187.127.11.1 \"echo OK\")",
+      "Bash(where ssh:*)",
+      "Bash(ssh -V)",
+      "Bash(sshpass -V)",
+      "Bash(pip install:*)",
+      "Bash(winget install:*)",
+      "Bash(choco install:*)",
+      "Bash(export PATH=\"$PATH:/c/Users/Danie/AppData/Local/Microsoft/WinGet/Links\")",
+      "Bash(\"/c/Users/Danie/AppData/Local/Microsoft/WinGet/Packages/xhcoding.sshpass-win32_Microsoft.Winget.Source_8wekyb3d8bbwe/sshpass.exe\" -V)",
+      "Bash(python -c \"import paramiko; print\\('paramiko OK'\\)\")",
+      "Bash(python:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=none -o BatchMode=yes root@187.127.11.1)"
+    ]
+  }
+}

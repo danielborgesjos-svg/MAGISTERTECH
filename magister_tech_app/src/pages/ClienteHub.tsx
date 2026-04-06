@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  ArrowLeft, Building2, FileText, Briefcase, Receipt,
+  ArrowLeft, FileText, Briefcase, Receipt,
   CheckSquare, PenTool, AlertCircle, Calendar, User,
   TrendingUp, CheckCircle2, Clock, XCircle, Activity,
   KanbanSquare

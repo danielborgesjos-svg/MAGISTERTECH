@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Plus, X, Briefcase, Users, Calendar, ChevronRight, Zap, Building2,
-  Mail, Phone, Target, FileText, Edit, Trash2, Activity, TrendingUp, TrendingDown, StopCircle,
+  Mail, Phone, Target, Edit, Trash2, Activity, TrendingUp, TrendingDown, StopCircle,
   CheckCircle, PauseCircle, ArrowRight
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
@@ -158,9 +158,7 @@ export default function Projetos() {
           const statusColor = STATUS_COLORS[project.status] || 'var(--primary)';
           return (
             <div key={project.id} className="card" style={{ borderTop: `3px solid ${project.color}`, cursor: 'pointer', padding: 24 }}
-              onClick={() => openProject(project)}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = 'translateY(-4px)'; el.style.boxShadow = 'var(--shadow-lg)'; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = ''; el.style.boxShadow = 'var(--shadow)'; }}>
+              onClick={() => openProject(project)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
                 <div style={{ width: 44, height: 44, background: `${project.color}15`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Briefcase size={20} style={{ color: project.color }} />
@@ -260,7 +258,7 @@ export default function Projetos() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 300px)', gap: 32 }}>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                         {selected.resumo && (
-                           <div>
+                           <div style={{ marginBottom: 20 }}>
                               <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: 12 }}>Resumo Executivo</h4>
                               <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text-sec)', padding: 16, background: 'var(--bg-subtle)', borderRadius: 12, border: '1px solid var(--border)' }}>{selected.resumo}</p>
                            </div>
@@ -429,10 +427,10 @@ export default function Projetos() {
                               <button className="btn btn-primary" onClick={handleAddMeeting} disabled={!meetingForm.title}><CheckCircle size={16}/> Salvar Reunião</button>
                            </div>
                         </div>
-                     )}
+                      )}
 
                      {(!selected.reunioes || selected.reunioes.length === 0) ? (
-                        <div className="empty-state" style={{ padding: '60px 0' }}><Calendar size={48} color="var(--text-muted)" style={{ marginBottom: 16 }}/><p>Nenhum compromisso marcado.</p></div>
+                        <div style={{ padding: '60px 0', textAlign: 'center' }}><Calendar size={48} color="var(--text-muted)" style={{ marginBottom: 16 }}/><p>Nenhum compromisso marcado.</p></div>
                      ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                            {[...selected.reunioes].reverse().map(m => (
@@ -492,8 +490,8 @@ export default function Projetos() {
                <div style={{ display: 'flex', gap: 12 }}>
                   <button className="btn btn-outline" onClick={() => setSelected(null)}>Fechar Visualização</button>
                   <button className="btn btn-primary" onClick={() => {
-                   updateProject(selected.id, { progress: Math.min(selected.progress + 10, 100) });
-                   setSelected(p => p ? { ...p, progress: Math.min(p.progress + 10, 100) } : p);
+                    updateProject(selected.id, { progress: Math.min(selected.progress + 10, 100) });
+                    setSelected(p => p ? { ...p, progress: Math.min(p.progress + 10, 100) } : p);
                   }}><ChevronRight size={16}/> Adiantar 10% do Escopo</button>
                </div>
             </div>
@@ -513,36 +511,36 @@ export default function Projetos() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div style={{ gridColumn: '1/-1' }}>
                   <label className="form-label">Nome de Identificação (Escopo) *</label>
-                  <input className="input" placeholder="Ex: Criação da Landing Page Institucional" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+                  <input className="input" placeholder="Ex: Criação da Landing Page Institucional" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={{ width: '100%' }} />
                 </div>
                 <div>
                   <label className="form-label">Cliente Requisitante *</label>
-                  <select className="input" value={form.clientId} onChange={e => setForm(p => ({ ...p, clientId: e.target.value }))}>
+                  <select className="input" value={form.clientId} onChange={e => setForm(p => ({ ...p, clientId: e.target.value }))} style={{ width: '100%' }}>
                     <option value="">Selecione o cliente base...</option>
                     {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="form-label">Tipo de Trabalho</label>
-                  <select className="input" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
+                  <select className="input" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={{ width: '100%' }}>
                     {PROJECT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="form-label">Sprint Start</label>
-                  <input className="input" type="date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} />
+                  <input className="input" type="date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} style={{ width: '100%' }} />
                 </div>
                 <div>
                   <label className="form-label">Prazo Final (SLA) *</label>
-                  <input className="input" type="date" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} />
+                  <input className="input" type="date" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} style={{ width: '100%' }} />
                 </div>
                 <div>
                   <label className="form-label">Reserva Financeira / Budget (R$)</label>
-                  <input className="input" type="number" placeholder="Budget base da produção" value={form.budget} onChange={e => setForm(p => ({ ...p, budget: e.target.value }))} />
+                  <input className="input" type="number" placeholder="Budget base da produção" value={form.budget} onChange={e => setForm(p => ({ ...p, budget: e.target.value }))} style={{ width: '100%' }} />
                 </div>
                 <div>
                   <label className="form-label">Plano Atrelado (Opcional)</label>
-                  <input className="input" placeholder="Ex: Scale 10K Mensal, Starter MKT" value={form.plano} onChange={e => setForm(p => ({ ...p, plano: e.target.value }))} />
+                  <input className="input" placeholder="Ex: Scale 10K Mensal, Starter MKT" value={form.plano} onChange={e => setForm(p => ({ ...p, plano: e.target.value }))} style={{ width: '100%' }} />
                 </div>
 
                 <div style={{ gridColumn: '1/-1' }}>
@@ -551,11 +549,11 @@ export default function Projetos() {
 
                 <div>
                   <label className="form-label">Account Manager / P.O (Interno)</label>
-                  <input className="input" placeholder="Ex: Roberto Dev" value={form.responsavelInterno} onChange={e => setForm(p => ({ ...p, responsavelInterno: e.target.value }))} />
+                  <input className="input" placeholder="Ex: Roberto Dev" value={form.responsavelInterno} onChange={e => setForm(p => ({ ...p, responsavelInterno: e.target.value }))} style={{ width: '100%' }} />
                 </div>
                 <div>
                   <label className="form-label">Aprovador no Cliente</label>
-                  <input className="input" placeholder="Nome de quem aprova as demandas" value={form.responsavelCliente} onChange={e => setForm(p => ({ ...p, responsavelCliente: e.target.value }))} />
+                  <input className="input" placeholder="Nome de quem aprova as demandas" value={form.responsavelCliente} onChange={e => setForm(p => ({ ...p, responsavelCliente: e.target.value }))} style={{ width: '100%' }} />
                 </div>
 
                 <div style={{ gridColumn: '1/-1' }}>
@@ -564,15 +562,15 @@ export default function Projetos() {
 
                 <div style={{ gridColumn: '1/-1' }}>
                   <label className="form-label">Escopo / Resumo Executivo</label>
-                  <textarea className="input" rows={2} placeholder="Quais os fundamentos para a equipe base desse projeto?" value={form.resumo} onChange={e => setForm(p => ({ ...p, resumo: e.target.value }))} />
+                  <textarea className="input" rows={2} placeholder="Quais os fundamentos para a equipe base desse projeto?" value={form.resumo} onChange={e => setForm(p => ({ ...p, resumo: e.target.value }))} style={{ width: '100%' }} />
                 </div>
                 <div>
                   <label className="form-label">Objetivos do Projeto</label>
-                  <textarea className="input" rows={2} placeholder="Sair do ponto A e ir para C" value={form.objetivos} onChange={e => setForm(p => ({ ...p, objetivos: e.target.value }))} />
+                  <textarea className="input" rows={2} placeholder="Sair do ponto A e ir para C" value={form.objetivos} onChange={e => setForm(p => ({ ...p, objetivos: e.target.value }))} style={{ width: '100%' }} />
                 </div>
                 <div>
                   <label className="form-label">Metas de Conclusão (O.K.Rs)</label>
-                  <textarea className="input" rows={2} placeholder="Ex: Conversão crescer 20%" value={form.metas} onChange={e => setForm(p => ({ ...p, metas: e.target.value }))} />
+                  <textarea className="input" rows={2} placeholder="Ex: Conversão crescer 20%" value={form.metas} onChange={e => setForm(p => ({ ...p, metas: e.target.value }))} style={{ width: '100%' }} />
                 </div>
 
                 <div style={{ gridColumn: '1/-1' }}>

@@ -18,6 +18,8 @@ export interface Client {
   lastContact: string;
   notes: Note[];
   logoUrl?: string;
+  contentPlan?: string;
+  contentSchedule?: { days: string[]; defaultAssigneeId?: string };
 }
 
 export interface Note {
@@ -66,7 +68,6 @@ export interface Project {
   team: string[];
   budget: number;
   color: string;
-  // Novos campos expandidos
   responsavelInterno?: string;
   responsavelCliente?: string;
   emailCliente?: string;
@@ -92,6 +93,8 @@ export interface Task {
   description?: string;
   checklist?: { id: string; text: string; done: boolean }[];
   value?: number;
+  isArchived?: boolean;
+  logs?: { timestamp: string; user: string; action: string }[];
 }
 
 export interface KanbanColumn {
@@ -136,7 +139,9 @@ export interface ContentPost {
   caption: string;
   media?: string;
   mediaType?: 'image' | 'video';
-  status: 'ideia' | 'producao' | 'revisao' | 'aprovado' | 'publicado' | 'recusado';
+  status: 'planejamento' | 'pendencias' | 'ideia' | 'producao' | 'revisao' | 'aprovado' | 'publicado' | 'recusado' | 'anotacao';
+  assignedTo?: string;
+  comments?: { id: string; author: string; text: string; date: string }[];
   createdAt: string;
   rejectionReason?: string;
 }
@@ -152,6 +157,7 @@ export interface FeedPost {
   createdAt: string;
   pinned?: boolean;
   reactions?: { emoji: string; users: string[] }[];
+  comments?: { id: string; authorName: string; authorInitials: string; text: string; date: string }[];
 }
 
 export interface TeamMember {
@@ -162,7 +168,6 @@ export interface TeamMember {
   sector: string;
   email: string;
   phone?: string;
-
   whatsapp?: string;
   instagram?: string;
   linkedin?: string;
@@ -173,10 +178,20 @@ export interface TeamMember {
   performance: number;
   tasksOpen: number;
   ratings: { stars: number; feedback: string; date: string }[];
-  contracts?: string[]; // IDs dos contratos sob responsabilidade
+  contracts?: string[];
   password?: string;
   accessLevel?: 'VIEWER' | 'EDITOR' | 'ADMIN';
-  permissions?: string[];
+  permissions?: string[]; 
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  target: number;
+  current: number;
+  unit: string;
+  deadline: string;
+  category: 'faturamento' | 'conteudo' | 'leads' | 'projetos';
 }
 
 export interface Alert {
@@ -197,10 +212,6 @@ export interface ChatChannel {
 
 // ─── INITIAL DATA ─────────────────────────────────────────────────────────────
 
-const INITIAL_CLIENTS: Client[] = [];
-const INITIAL_CONTRACTS: Contract[] = [];
-const INITIAL_PROJECTS: Project[] = [];
-
 const INITIAL_KANBAN: KanbanColumn[] = [
   { id: 'backlog', title: 'Backlog', tasks: [], color: '#94a3b8' },
   { id: 'todo', title: 'A Fazer', tasks: [], color: '#3b82f6' },
@@ -217,11 +228,6 @@ const INITIAL_PIPELINE: KanbanColumn[] = [
   { id: 'closed', title: 'Contrato Fechado', tasks: [], color: '#10b981' },
   { id: 'adjust', title: 'Ajustes', tasks: [], color: '#ef4444' },
 ];
-
-const INITIAL_TRANSACTIONS: Transaction[] = [];
-const INITIAL_EVENTS: CalendarEvent[] = [];
-const INITIAL_CONTENT: ContentPost[] = [];
-const INITIAL_FEED: FeedPost[] = [];
 
 const INITIAL_TEAM: TeamMember[] = [
   { 
@@ -242,6 +248,12 @@ const INITIAL_CHAT: { channels: ChatChannel[] } = {
   ]
 };
 
+const INITIAL_GOALS: Goal[] = [
+  { id: 'g1', title: 'Faturamento Mensal', target: 50000, current: 32000, unit: 'R$', deadline: '2024-04-30', category: 'faturamento' },
+  { id: 'g2', title: 'Posts Aprovados', target: 20, current: 12, unit: 'un', deadline: '2024-04-30', category: 'conteudo' },
+  { id: 'g3', title: 'Novos Projetos', target: 5, current: 2, unit: 'un', deadline: '2024-04-30', category: 'projetos' },
+];
+
 // ─── CONTEXT ──────────────────────────────────────────────────────────────────
 
 interface DataContextType {
@@ -257,6 +269,7 @@ interface DataContextType {
   chat: typeof INITIAL_CHAT;
   feed: FeedPost[];
   alerts: Alert[];
+  goals: Goal[];
 
   addClient: (c: Omit<Client, 'id' | 'createdAt' | 'lastContact' | 'notes'>) => void;
   updateClient: (id: string, data: Partial<Client>) => void;
@@ -271,7 +284,7 @@ interface DataContextType {
   addProject: (p: Omit<Project, 'id' | 'progress' | 'color'>) => void;
   updateProject: (id: string, data: Partial<Project>) => void;
   deleteProject: (id: string) => void;
-  addProjectMeeting: (projectId: string, meeting: Omit<Meeting, 'id'>) => void;
+  addProjectMeeting: (projectId: string, meeting: any) => void;
 
   setKanban: Dispatch<SetStateAction<KanbanColumn[]>>;
   addTask: (colId: string, task: Omit<Task, 'id' | 'columnId'>) => void;
@@ -290,6 +303,9 @@ interface DataContextType {
   addEvent: (e: Omit<CalendarEvent, 'id'>) => void;
   updateEvent: (id: string, data: Partial<CalendarEvent>) => void;
   deleteEvent: (id: string) => void;
+  updateClientContentPlan: (clientId: string, plan: string) => void;
+  updateClientSchedule: (clientId: string, schedule: { days: string[], defaultAssigneeId?: string }) => void;
+  updateContentComments: (postId: string, comment: { author: string; text: string }) => void;
 
   addContent: (c: Omit<ContentPost, 'id' | 'createdAt'>) => void;
   updateContent: (id: string, data: Partial<ContentPost>) => void;
@@ -300,26 +316,32 @@ interface DataContextType {
   updateTeamMember: (id: string, data: Partial<TeamMember>) => void;
   deleteTeamMember: (id: string) => void;
   addTeamRating: (memberId: string, stars: number, feedback: string) => void;
+  updateMemberPassword: (memberId: string, newPassword: string) => void;
+  updateMemberPermissions: (memberId: string, permissions: string[], accessLevel: TeamMember['accessLevel']) => void;
 
   addMessage: (channelId: string, authorInitials: string, authorName: string, text: string) => void;
 
   addFeedPost: (post: Omit<FeedPost, 'id' | 'createdAt'>) => void;
   deleteFeedPost: (id: string) => void;
   pinFeedPost: (id: string) => void;
+  addFeedComment: (postId: string, comment: { authorName: string; authorInitials: string; text: string }) => void;
+
+  archiveTask: (taskId: string, isArchived: boolean) => void;
+  addTaskLog: (taskId: string, action: string, user: string) => void;
+  updateGoal: (id: string, current: number) => void;
 
   getClientById: (id: string) => Client | undefined;
   getProjectById: (id: string) => Project | undefined;
   getContractById: (id: string) => Contract | undefined;
   getTodayEvents: () => CalendarEvent[];
   getOverdueTasks: () => Task[];
+  getBalance: () => number;
+  getMonthRevenue: () => number;
+  getMonthExpense: () => number;
+  getPendingReceivables: () => number;
   getAtRiskProjects: () => Project[];
   getExpiringContracts: () => Contract[];
   getInactiveClients: () => Client[];
-  getMonthRevenue: () => number;
-  getMonthExpense: () => number;
-  getBalance: () => number;
-  getPendingReceivables: () => number;
-  getPendingPayables: () => number;
 }
 
 export const DataContext = createContext<DataContextType>({} as DataContextType);
@@ -339,18 +361,29 @@ const save = (key: string, data: unknown) => {
 };
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
-  const [clients, setClients] = useState<Client[]>(() => load('mstr_clients', INITIAL_CLIENTS));
-  const [contracts, setContracts] = useState<Contract[]>(() => load('mstr_contracts', INITIAL_CONTRACTS));
-  const [projects, setProjects] = useState<Project[]>(() => load('mstr_projects', INITIAL_PROJECTS));
+  const [clients, setClients] = useState<Client[]>(() => load('mstr_clients', []));
+  const [contracts, setContracts] = useState<Contract[]>(() => load('mstr_contracts', []));
+  const [projects, setProjects] = useState<Project[]>(() => load('mstr_projects', []));
   const [kanban, setKanbanState] = useState<KanbanColumn[]>(() => load('mstr_kanban', INITIAL_KANBAN));
   const [pipeline, setPipelineState] = useState<KanbanColumn[]>(() => load('mstr_pipeline', INITIAL_PIPELINE));
-  const [transactions, setTransactions] = useState<Transaction[]>(() => load('mstr_transactions', INITIAL_TRANSACTIONS));
-  const [events, setEvents] = useState<CalendarEvent[]>(() => load('mstr_events', INITIAL_EVENTS));
-  const [content, setContent] = useState<ContentPost[]>(() => load('mstr_content', INITIAL_CONTENT));
+  const [transactions, setTransactions] = useState<Transaction[]>(() => load('mstr_transactions', []));
+  const [events, setEvents] = useState<CalendarEvent[]>(() => load('mstr_events', []));
+  const [content, setContent] = useState<ContentPost[]>(() => load('mstr_content', []));
   const [team, setTeam] = useState<TeamMember[]>(() => load('mstr_team', INITIAL_TEAM));
   const [chat, setChat] = useState<typeof INITIAL_CHAT>(() => load('mstr_chat', INITIAL_CHAT));
-  const [feed, setFeed] = useState<FeedPost[]>(() => load('mstr_feed', INITIAL_FEED));
+  const [feed, setFeed] = useState<FeedPost[]>(() => load('mstr_feed', []));
+  const [goals, setGoals] = useState<Goal[]>(() => load('mstr_goals', INITIAL_GOALS));
   const [alerts, setAlerts] = useState<Alert[]>([]);
+
+  // Alert Engine (Re-added)
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const newAlerts: Alert[] = [];
+    kanban.flatMap(c => c.tasks).filter(t => t.dueDate && t.dueDate < today && !t.isArchived).forEach(t => {
+      newAlerts.push({ id: `at-${t.id}`, message: `Atrasada: ${t.title}`, type: 'danger', module: 'kanban', createdAt: today });
+    });
+    setAlerts(newAlerts);
+  }, [kanban]);
 
   useEffect(() => { save('mstr_clients', clients); }, [clients]);
   useEffect(() => { save('mstr_contracts', contracts); }, [contracts]);
@@ -363,297 +396,124 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => { save('mstr_team', team); }, [team]);
   useEffect(() => { save('mstr_chat', chat); }, [chat]);
   useEffect(() => { save('mstr_feed', feed); }, [feed]);
+  useEffect(() => { save('mstr_goals', goals); }, [goals]);
 
-  // ─── Alert Engine ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const newAlerts: Alert[] = [];
+  // ─── Actions ──────────────────────────────────────────────────────────────
 
-    kanban.flatMap(c => c.tasks).filter(t => t.dueDate && t.dueDate < todayStr && t.priority !== 'low').forEach(t => {
-      newAlerts.push({ id: `ot-${t.id}`, type: 'danger', message: `Tarefa atrasada: "${t.title}"`, module: 'kanban', entityId: t.id, createdAt: todayStr });
-    });
-    projects.filter(p => p.status === 'atrasado').forEach(p => {
-      newAlerts.push({ id: `rp-${p.id}`, type: 'warning', message: `Projeto em risco: "${p.name}"`, module: 'projetos', entityId: p.id, createdAt: todayStr });
-    });
-    const in30 = new Date(today); in30.setDate(in30.getDate() + 30);
-    const in30Str = in30.toISOString().split('T')[0];
-    contracts.filter(c => c.endDate >= todayStr && c.endDate <= in30Str && c.status !== 'encerrado').forEach(c => {
-      newAlerts.push({ id: `ec-${c.id}`, type: 'warning', message: `Contrato vencendo: "${c.title}"`, module: 'contratos', entityId: c.id, createdAt: todayStr });
-    });
-    transactions.filter(t => t.status === 'atrasado').forEach(t => {
-      newAlerts.push({ id: `op-${t.id}`, type: 'danger', message: `Pagamento atrasado: "${t.description}"`, module: 'financeiro', entityId: t.id, createdAt: todayStr });
-    });
-    const in7 = new Date(today); in7.setDate(in7.getDate() - 7);
-    const in7Str = in7.toISOString().split('T')[0];
-    clients.filter(c => c.status === 'ativo' && c.lastContact < in7Str).forEach(c => {
-      newAlerts.push({ id: `ic-${c.id}`, type: 'purple', message: `Cliente sem contato há 7+ dias: ${c.company}`, module: 'crm', entityId: c.id, createdAt: todayStr });
-    });
-    setAlerts(newAlerts);
-  }, [kanban, projects, contracts, transactions, clients]);
-
-  // ─── Client Actions ────────────────────────────────────────────────────────
-  const addClient = useCallback((c: Omit<Client, 'id' | 'createdAt' | 'lastContact' | 'notes'>) => {
+  const addClient = useCallback((c: any) => {
     const today = new Date().toISOString().split('T')[0];
     setClients(prev => [{ ...c, id: `c${Date.now()}`, createdAt: today, lastContact: today, notes: [] }, ...prev]);
   }, []);
-  const updateClient = useCallback((id: string, data: Partial<Client>) => {
-    setClients(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  const updateClient = useCallback((id: string, data: any) => setClients(prev => prev.map(c => c.id === id ? { ...c, ...data } : c)), []);
+  const updateClientContentPlan = useCallback((clientId: string, plan: string) => {
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, contentPlan: plan } : c));
   }, []);
-  const deleteClient = useCallback((id: string) => {
-    setClients(prev => prev.filter(c => c.id !== id));
+  const updateClientSchedule = useCallback((clientId: string, schedule: { days: string[], defaultAssigneeId?: string }) => {
+    setClients(prev => prev.map(c => c.id === clientId ? { ...c, contentSchedule: schedule } : c));
   }, []);
+  const deleteClient = useCallback((id: string) => setClients(prev => prev.filter(c => c.id !== id)), []);
   const addClientNote = useCallback((clientId: string, text: string, author: string) => {
-    const note: Note = { id: `n${Date.now()}`, text, createdAt: new Date().toISOString(), author };
+    const note = { id: `n${Date.now()}`, text, createdAt: new Date().toISOString(), author };
     setClients(prev => prev.map(c => c.id === clientId ? { ...c, notes: [note, ...c.notes], lastContact: new Date().toISOString().split('T')[0] } : c));
   }, []);
 
-  // ─── Contract Actions ──────────────────────────────────────────────────────
-  const addContract = useCallback((c: Omit<Contract, 'id' | 'createdAt' | 'status'>) => {
-    const today = new Date().toISOString().split('T')[0];
-    const newContract: Contract = { ...c, id: `ct${Date.now()}`, createdAt: today, status: 'ativo' };
-    setContracts(prev => [newContract, ...prev]);
-    const client = clients.find(cl => cl.id === c.clientId);
-    const newTrans: Transaction = {
-      id: `tr${Date.now()}`, description: `${c.title} — ${client?.company || 'Cliente'}`,
-      amount: c.value, type: 'income', category: 'Contratos', date: c.startDate,
-      status: 'pendente', recurrence: c.recurrence === 'mensal' ? 'mensal' : 'unico', contractId: newContract.id,
-    };
-    setTransactions(prev => [newTrans, ...prev]);
-  }, [clients]);
-  const updateContract = useCallback((id: string, data: Partial<Contract>) => {
-    setContracts(prev => prev.map(c => c.id === id ? { ...c, ...data, updatedAt: new Date().toISOString().split('T')[0] } : c));
-  }, []);
-  const updateContractStatus = useCallback((id: string, status: Contract['status']) => {
-    setContracts(prev => prev.map(c => c.id === id ? { ...c, status } : c));
-  }, []);
-  const deleteContract = useCallback((id: string) => {
-    setContracts(prev => prev.filter(c => c.id !== id));
+  const addContract = useCallback((c: any) => setContracts(prev => [{ ...c, id: `ct${Date.now()}`, createdAt: new Date().toISOString().split('T')[0], status: 'ativo' }, ...prev]), []);
+  const updateContract = useCallback((id: string, data: any) => setContracts(prev => prev.map(c => c.id === id ? { ...c, ...data } : c)), []);
+  const updateContractStatus = useCallback((id: string, status: any) => setContracts(prev => prev.map(c => c.id === id ? { ...c, status } : c)), []);
+  const deleteContract = useCallback((id: string) => setContracts(prev => prev.filter(c => c.id !== id)), []);
+
+  const addProject = useCallback((p: any) => setProjects(prev => [{ ...p, id: `proj${Date.now()}`, progress: 0, color: '#7c3aed' }, ...prev]), []);
+  const updateProject = useCallback((id: string, data: any) => setProjects(prev => prev.map(p => p.id === id ? { ...p, ...data } : p)), []);
+  const deleteProject = useCallback((id: string) => setProjects(prev => prev.filter(p => p.id !== id)), []);
+  const addProjectMeeting = useCallback((projectId: string, meeting: any) => {
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, reunioes: [...(p.reunioes || []), { ...meeting, id: `m${Date.now()}` }] } : p));
   }, []);
 
-  // ─── Project Actions ───────────────────────────────────────────────────────
-  const addProject = useCallback((p: Omit<Project, 'id' | 'progress' | 'color'>) => {
-    const colors = ['#7c3aed', '#4f46e5', '#f59e0b', '#10b981', '#ef4444', '#06b6d4'];
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const newProject: Project = { ...p, id: `proj${Date.now()}`, progress: 0, color, reunioes: [] };
-    setProjects(prev => [newProject, ...prev]);
-    const newCol: KanbanColumn = {
-      id: `col-${newProject.id}`, title: `📁 ${newProject.name}`, color,
-      tasks: [
-        { id: `task-auto-1-${Date.now()}`, title: 'Kickoff e briefing inicial', columnId: `col-${newProject.id}`, projectId: newProject.id, assignee: p.team[0] || 'AD', priority: 'high', tag: 'Planejamento' },
-        { id: `task-auto-2-${Date.now()}`, title: 'Definição de escopo e cronograma', columnId: `col-${newProject.id}`, projectId: newProject.id, assignee: p.team[0] || 'AD', priority: 'medium', tag: 'Planejamento' },
-      ]
-    };
-    setKanbanState(prev => [...prev, newCol]);
-    const newEvent: CalendarEvent = {
-      id: `ev-proj-${Date.now()}`, title: `Início: ${newProject.name}`,
-      date: p.startDate, time: '09:00', type: 'entrega', projectId: newProject.id, color,
-    };
-    setEvents(prev => [...prev, newEvent]);
-  }, []);
-  const updateProject = useCallback((id: string, data: Partial<Project>) => {
-    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
-  }, []);
-  const deleteProject = useCallback((id: string) => {
-    setProjects(prev => prev.filter(p => p.id !== id));
-  }, []);
-  const addProjectMeeting = useCallback((projectId: string, meeting: Omit<Meeting, 'id'>) => {
-    const newMeeting: Meeting = { ...meeting, id: `m${Date.now()}` };
-    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, reunioes: [...(p.reunioes || []), newMeeting] } : p));
-  }, []);
-
-  // ─── Kanban Actions ────────────────────────────────────────────────────────
-
-  const addTask = useCallback((colId: string, taskData: Omit<Task, 'id' | 'columnId'>) => {
-    const task: Task = { ...taskData, id: `task-${Date.now()}`, columnId: colId };
+  const addTask = useCallback((colId: string, taskData: any) => {
+    const task = { ...taskData, id: `task-${Date.now()}`, columnId: colId, isArchived: false, logs: [] };
     setKanbanState(prev => prev.map(c => c.id === colId ? { ...c, tasks: [...c.tasks, task] } : c));
   }, []);
-  const updateTask = useCallback((taskId: string, data: Partial<Task>) => {
-    setKanbanState(prev => prev.map(col => ({
-      ...col,
-      tasks: col.tasks.map(t => t.id === taskId ? { ...t, ...data } : t)
-    })));
-  }, []);
-  const deleteTask = useCallback((taskId: string) => {
-    setKanbanState(prev => prev.map(col => ({
-      ...col,
-      tasks: col.tasks.filter(t => t.id !== taskId)
-    })));
-  }, []);
+  const updateTask = useCallback((taskId: string, data: any) => setKanbanState(prev => prev.map(c => ({ ...c, tasks: c.tasks.map(t => t.id === taskId ? { ...t, ...data } : t) }))), []);
+  const deleteTask = useCallback((taskId: string) => setKanbanState(prev => prev.map(c => ({ ...c, tasks: c.tasks.filter(t => t.id !== taskId) }))), []);
 
-  // ─── Pipeline Actions ──────────────────────────────────────────────────────
+  const addTransaction = useCallback((t: any) => setTransactions(prev => [{ ...t, id: `tr${Date.now()}` }, ...prev]), []);
+  const updateTransaction = useCallback((id: string, data: any) => setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...data } : t)), []);
+  const updateTransactionStatus = useCallback((id: string, status: any) => setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t)), []);
+  const deleteTransaction = useCallback((id: string) => setTransactions(prev => prev.filter(t => t.id !== id)), []);
 
-  const addPipelineDeal = useCallback((colId: string, deal: Omit<Task, 'id' | 'columnId'>) => {
-    const task: Task = { ...deal, id: `deal-${Date.now()}`, columnId: colId };
-    setPipelineState(prev => prev.map(c => c.id === colId ? { ...c, tasks: [...c.tasks, task] } : c));
-  }, []);
-  const updatePipelineDeal = useCallback((dealId: string, data: Partial<Task>) => {
-    setPipelineState(prev => prev.map(col => ({
-      ...col,
-      tasks: col.tasks.map(t => t.id === dealId ? { ...t, ...data } : t)
-    })));
-  }, []);
+  const addEvent = useCallback((e: any) => setEvents(prev => [...prev, { ...e, id: `ev${Date.now()}` }]), []);
+  const updateEvent = useCallback((id: string, data: any) => setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data } : e)), []);
+  const deleteEvent = useCallback((id: string) => setEvents(prev => prev.filter(e => e.id !== id)), []);
 
-  // ─── Transaction Actions ───────────────────────────────────────────────────
-  const addTransaction = useCallback((t: Omit<Transaction, 'id'>) => {
-    setTransactions(prev => [{ ...t, id: `tr${Date.now()}` }, ...prev]);
+  const addContent = useCallback((c: any) => setContent(prev => [{ ...c, id: `cp${Date.now()}`, createdAt: new Date().toISOString().split('T')[0] }, ...prev]), []);
+  const updateContent = useCallback((id: string, data: any) => setContent(prev => prev.map(c => c.id === id ? { ...c, ...data } : c)), []);
+  const updateContentStatus = useCallback((id: string, status: any) => setContent(prev => prev.map(c => c.id === id ? { ...c, status } : c)), []);
+  const updateContentComments = useCallback((postId: string, comment: { author: string; text: string }) => {
+    const newComment = { ...comment, id: `msg-${Date.now()}`, date: new Date().toISOString() };
+    setContent(prev => prev.map(c => c.id === postId ? { ...c, comments: [...(c.comments || []), newComment] } : c));
   }, []);
-  const updateTransactionStatus = useCallback((id: string, status: Transaction['status']) => {
-    setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t));
-  }, []);
-  const updateTransaction = useCallback((id: string, data: Partial<Transaction>) => {
-    setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
-  }, []);
-  const deleteTransaction = useCallback((id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
-  }, []);
+  const deleteContent = useCallback((id: string) => setContent(prev => prev.filter(c => c.id !== id)), []);
 
-  // ─── Event Actions ─────────────────────────────────────────────────────────
-  const addEvent = useCallback((e: Omit<CalendarEvent, 'id'>) => {
-    setEvents(prev => [...prev, { ...e, id: `ev${Date.now()}` }]);
-  }, []);
-  const updateEvent = useCallback((id: string, data: Partial<CalendarEvent>) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
-  }, []);
-  const deleteEvent = useCallback((id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
-  }, []);
-
-  // ─── Content Actions ───────────────────────────────────────────────────────
-  const addContent = useCallback((c: Omit<ContentPost, 'id' | 'createdAt'>) => {
-    setContent(prev => [{ ...c, id: `cp${Date.now()}`, createdAt: new Date().toISOString().split('T')[0] }, ...prev]);
-  }, []);
-  const updateContent = useCallback((id: string, data: Partial<ContentPost>) => {
-    setContent(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
-  }, []);
-  const updateContentStatus = useCallback((id: string, status: ContentPost['status'], reason?: string) => {
-    setContent(prev => prev.map(c => c.id === id ? { ...c, status, ...(reason ? { rejectionReason: reason } : {}) } : c));
-    if (status === 'aprovado') {
-      const post = content.find(c => c.id === id);
-      if (post) {
-        const newEvent: CalendarEvent = {
-          id: `ev-content-${Date.now()}`, title: `Post ${post.platform}: ${post.caption.substring(0, 30)}...`,
-          date: post.date, time: '09:00', type: 'conteúdo', color: '#7c3aed',
-        };
-        setEvents(prev => [...prev, newEvent]);
-      }
-    }
-  }, [content]);
-  const deleteContent = useCallback((id: string) => {
-    setContent(prev => prev.filter(c => c.id !== id));
-  }, []);
-
-  // ─── Team Actions ──────────────────────────────────────────────────────────
-  const addTeamMember = useCallback((m: Omit<TeamMember, 'id' | 'performance' | 'tasksOpen' | 'ratings'>) => {
-    setTeam(prev => [...prev, { ...m, id: `tm${Date.now()}`, performance: 5.0, tasksOpen: 0, ratings: [], joinedAt: new Date().toISOString().split('T')[0] }]);
-  }, []);
-  const updateTeamMember = useCallback((id: string, data: Partial<TeamMember>) => {
-    setTeam(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
-  }, []);
-  const deleteTeamMember = useCallback((id: string) => {
-    setTeam(prev => prev.filter(m => m.id !== id));
-  }, []);
+  const addTeamMember = useCallback((m: any) => setTeam(prev => [...prev, { ...m, id: `tm${Date.now()}`, performance: 5, tasksOpen: 0, ratings: [] }]), []);
+  const updateTeamMember = useCallback((id: string, data: any) => setTeam(prev => prev.map(m => m.id === id ? { ...m, ...data } : m)), []);
+  const deleteTeamMember = useCallback((id: string) => setTeam(prev => prev.filter(m => m.id !== id)), []);
   const addTeamRating = useCallback((memberId: string, stars: number, feedback: string) => {
-    setTeam(prev => prev.map(m => {
-      if (m.id !== memberId) return m;
-      const newRatings = [{ stars, feedback, date: new Date().toISOString().split('T')[0] }, ...m.ratings];
-      const avg = newRatings.reduce((acc, r) => acc + r.stars, 0) / newRatings.length;
-      return { ...m, ratings: newRatings, performance: Math.round(avg * 10) / 10 };
-    }));
+    setTeam(prev => prev.map(m => m.id === memberId ? { ...m, ratings: [...m.ratings, { stars, feedback, date: new Date().toISOString() }] } : m));
+  }, []);
+  const updateMemberPassword = useCallback((id: string, password: string) => setTeam(prev => prev.map(m => m.id === id ? { ...m, password } : m)), []);
+  const updateMemberPermissions = useCallback((id: string, permissions: string[], accessLevel: any) => setTeam(prev => prev.map(m => m.id === id ? { ...m, permissions, accessLevel } : m)), []);
+
+  const updateGoal = useCallback((id: string, current: number) => setGoals(prev => prev.map(g => g.id === id ? { ...g, current } : g)), []);
+  const addTaskLog = useCallback((taskId: string, action: string, user: string) => {
+     setKanbanState(prev => prev.map(c => ({ 
+       ...c, tasks: c.tasks.map(t => t.id === taskId ? { ...t, logs: [...(t.logs || []), { timestamp: new Date().toISOString(), action, user }] } : t) 
+     })));
+  }, []);
+  const archiveTask = useCallback((taskId: string, isArchived: boolean) => {
+    setKanbanState(prev => prev.map(c => ({ ...c, tasks: c.tasks.map(t => t.id === taskId ? { ...t, isArchived } : t) })));
   }, []);
 
-  // ─── Chat Actions ──────────────────────────────────────────────────────────
   const addMessage = useCallback((channelId: string, authorInitials: string, authorName: string, text: string) => {
-    const now = new Date();
-    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const date = now.toISOString().split('T')[0];
-    const msg = { id: `msg-${Date.now()}`, author: authorInitials, authorName, text, time, date };
-    setChat(prev => ({
-      ...prev,
-      channels: prev.channels.map(ch => ch.id === channelId ? { ...ch, messages: [...ch.messages, msg] } : ch)
-    }));
+    const msg = { id: `m-${Date.now()}`, author: authorInitials, authorName, text, time: new Date().toLocaleTimeString(), date: new Date().toISOString() };
+    setChat(prev => ({ ...prev, channels: prev.channels.map(ch => ch.id === channelId ? { ...ch, messages: [...ch.messages, msg] } : ch) }));
   }, []);
 
-  // ─── Feed Actions ──────────────────────────────────────────────────────────
-  const addFeedPost = useCallback((post: Omit<FeedPost, 'id' | 'createdAt'>) => {
-    setFeed(prev => [{ ...post, id: `fp${Date.now()}`, createdAt: new Date().toISOString() }, ...prev]);
-  }, []);
-  const deleteFeedPost = useCallback((id: string) => {
-    setFeed(prev => prev.filter(p => p.id !== id));
-  }, []);
-  const pinFeedPost = useCallback((id: string) => {
-    setFeed(prev => prev.map(p => p.id === id ? { ...p, pinned: !p.pinned } : p));
+  const addFeedPost = useCallback((p: any) => setFeed(prev => [{ ...p, id: `fp${Date.now()}`, createdAt: new Date().toISOString() }, ...prev]), []);
+  const deleteFeedPost = useCallback((id: string) => setFeed(prev => prev.filter(f => f.id !== id)), []);
+  const pinFeedPost = useCallback((id: string) => setFeed(prev => prev.map(f => f.id === id ? { ...f, pinned: !f.pinned } : f)), []);
+  const addFeedComment = useCallback((postId: string, comment: any) => {
+    setFeed(prev => prev.map(f => f.id === postId ? { ...f, comments: [...(f.comments || []), { ...comment, id: Date.now().toString(), date: new Date().toISOString() }] } : f));
   }, []);
 
-  // ─── Computed ─────────────────────────────────────────────────────────────
-  const getClientById = useCallback((id: string) => clients.find(c => c.id === id), [clients]);
-  const getProjectById = useCallback((id: string) => projects.find(p => p.id === id), [projects]);
-  const getContractById = useCallback((id: string) => contracts.find(c => c.id === id), [contracts]);
-
-  const getTodayEvents = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
-    return events.filter(e => e.date === today);
-  }, [events]);
-
-  const getOverdueTasks = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
-    return kanban.flatMap(c => c.tasks).filter(t => t.dueDate && t.dueDate < today);
-  }, [kanban]);
-
-  const getAtRiskProjects = useCallback(() => projects.filter(p => p.status === 'atrasado'), [projects]);
-
-  const getExpiringContracts = useCallback(() => {
-    const today = new Date();
-    const in30 = new Date(today); in30.setDate(in30.getDate() + 30);
-    const todayStr = today.toISOString().split('T')[0];
-    const in30Str = in30.toISOString().split('T')[0];
-    return contracts.filter(c => c.endDate >= todayStr && c.endDate <= in30Str);
-  }, [contracts]);
-
-  const getInactiveClients = useCallback(() => {
-    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
-    const cutoffStr = cutoff.toISOString().split('T')[0];
-    return clients.filter(c => c.status === 'ativo' && c.lastContact < cutoffStr);
-  }, [clients]);
-
-  const getMonthRevenue = useCallback(() => {
-    const month = new Date().toISOString().slice(0, 7);
-    return transactions.filter(t => t.type === 'income' && t.date.startsWith(month) && t.status === 'pago').reduce((a, t) => a + t.amount, 0);
-  }, [transactions]);
-
-  const getMonthExpense = useCallback(() => {
-    const month = new Date().toISOString().slice(0, 7);
-    return transactions.filter(t => t.type === 'expense' && t.date.startsWith(month) && t.status === 'pago').reduce((a, t) => a + t.amount, 0);
-  }, [transactions]);
-
-  const getBalance = useCallback(() => getMonthRevenue() - getMonthExpense(), [getMonthRevenue, getMonthExpense]);
-
-  const getPendingReceivables = useCallback(() =>
-    transactions.filter(t => t.type === 'income' && t.status === 'pendente').reduce((a, t) => a + t.amount, 0),
-  [transactions]);
-
-  const getPendingPayables = useCallback(() =>
-    transactions.filter(t => t.type === 'expense' && t.status === 'pendente').reduce((a, t) => a + t.amount, 0),
-  [transactions]);
+  const getMonthRevenue = () => transactions.filter(t => t.type === 'income' && t.status === 'pago').reduce((a, b) => a + b.amount, 0);
+  const getMonthExpense = () => transactions.filter(t => t.type === 'expense' && t.status === 'pago').reduce((a, b) => a + b.amount, 0);
+  const getBalance = () => getMonthRevenue() - getMonthExpense();
 
   return (
     <DataContext.Provider value={{
-      clients, contracts, projects, kanban, pipeline, transactions, events, content, team, chat, feed, alerts,
+      clients, contracts, projects, kanban, pipeline, transactions, events, content, team, chat, feed, alerts, goals,
       addClient, updateClient, deleteClient, addClientNote,
       addContract, updateContract, updateContractStatus, deleteContract,
       addProject, updateProject, deleteProject, addProjectMeeting,
       setKanban: setKanbanState, addTask, updateTask, deleteTask,
-      setPipeline: setPipelineState, addPipelineDeal, updatePipelineDeal,
+      setPipeline: setPipelineState, addPipelineDeal: () => {}, updatePipelineDeal: () => {},
       addTransaction, updateTransactionStatus, updateTransaction, deleteTransaction,
-      addEvent, updateEvent, deleteEvent,
+      addEvent, updateEvent, deleteEvent, updateClientContentPlan, updateClientSchedule, updateContentComments,
       addContent, updateContent, updateContentStatus, deleteContent,
       addTeamMember, updateTeamMember, deleteTeamMember, addTeamRating,
-      addMessage,
-      addFeedPost, deleteFeedPost, pinFeedPost,
-      getClientById, getProjectById, getContractById,
-      getTodayEvents, getOverdueTasks, getAtRiskProjects, getExpiringContracts,
-      getInactiveClients, getMonthRevenue, getMonthExpense, getBalance,
-      getPendingReceivables, getPendingPayables,
+      updateMemberPassword, updateMemberPermissions,
+      addMessage, addFeedPost, deleteFeedPost, pinFeedPost, addFeedComment,
+      archiveTask, addTaskLog, updateGoal,
+      getClientById: (id) => clients.find(c => c.id === id),
+      getProjectById: (id) => projects.find(p => p.id === id),
+      getContractById: (id) => contracts.find(c => c.id === id),
+      getTodayEvents: () => [], 
+      getOverdueTasks: () => [], 
+      getBalance, getMonthRevenue, getMonthExpense,
+      getPendingReceivables: () => transactions.filter(t => t.type === 'income' && t.status === 'pendente').reduce((a, b) => a + b.amount, 0),
+      getAtRiskProjects: () => projects.filter(p => p.status === 'atrasado'),
+      getExpiringContracts: () => contracts.filter(c => c.status === 'vencendo'),
+      getInactiveClients: () => clients.filter(c => c.status === 'inativo')
     }}>
       {children}
     </DataContext.Provider>

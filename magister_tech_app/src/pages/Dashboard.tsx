@@ -1,39 +1,46 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Users, Briefcase, Landmark, FileText, CheckCircle, Clock,
+  CheckCircle, Clock, FileText, Landmark,
   TrendingDown, TrendingUp, AlertTriangle, ArrowRight, Activity, Bell
 } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { usePermission } from '../hooks/usePermission';
 
 const fmt = (n: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
 
+
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
+  const { canViewSensitiveData } = usePermission();
   const nav = useNavigate();
   const {
-    clients, projects, contracts, kanban, alerts,
+    clients, projects, contracts, alerts, kanban,
     getMonthRevenue, getMonthExpense, getBalance, getPendingReceivables,
-    getAtRiskProjects, getExpiringContracts, getInactiveClients, getTodayEvents, getOverdueTasks
+    getExpiringContracts, getInactiveClients, getTodayEvents, getOverdueTasks
   } = useData();
 
   const monthRevenue = getMonthRevenue();
   const monthExpense = getMonthExpense();
   const balance = getBalance();
   const pending = getPendingReceivables();
-  const atRisk = getAtRiskProjects();
   const expiring = getExpiringContracts();
   const inactive = getInactiveClients();
   const todayEvts = getTodayEvents();
   const overdueTasks = getOverdueTasks();
 
-  const activeClients = clients.filter(c => c.status === 'ativo').length;
-  const activeProjects = projects.filter(p => p.status === 'ativo').length;
-  const activeContracts = contracts.filter(c => c.status === 'ativo').length;
-  const totalTasks = kanban.flatMap(c => c.tasks).length;
+  const activeClients = clients.filter((c: any) => c.status === 'ativo').length;
+  const activeContracts = contracts.filter((c: any) => c.status === 'ativo').length;
+  
+  // Neutral metrics for non-admin users
+  const totalTasks = kanban.flatMap((c: any) => c.tasks).length;
+  const completedTasks = kanban.find((c: any) => c.id === 'done')?.tasks.length || 0;
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  const kpis = [
+  const hasFinanceAccess = canViewSensitiveData();
+
+  const kpis = hasFinanceAccess ? [
     {
       label: 'Receita Operacional',
       value: fmt(monthRevenue),
@@ -62,7 +69,37 @@ export default function Dashboard() {
       sub: expiring.length > 0 ? `${expiring.length} a renovar (30d)` : 'MRR Assegurado',
       accent: 'var(--purple)', glow: 'var(--purple-glow)'
     },
+  ] : [
+    {
+      label: 'Projetos Ativos',
+      value: projects.filter(p => p.status === 'ativo').length,
+      trend: 'up',
+      sub: 'Monitoramento em tempo real',
+      accent: 'var(--primary)', glow: 'var(--primary-glow)'
+    },
+    {
+      label: 'Tarefas Globais',
+      value: totalTasks,
+      trend: 'up',
+      sub: `${completedTasks} tarefas concluídas`,
+      accent: 'var(--success)', glow: 'var(--success-glow)'
+    },
+    {
+      label: 'Taxa de Entrega',
+      value: `${completionRate}%`,
+      trend: completionRate > 80 ? 'up' : 'warn',
+      sub: completionRate > 80 ? 'Alta eficiência' : 'Atenção ao prazo',
+      accent: 'var(--purple)', glow: 'var(--purple-glow)'
+    },
+    {
+      label: 'Membros Online',
+      value: 1, // Simplified for now
+      trend: 'up',
+      sub: 'Time conectado',
+      accent: 'var(--warning)', glow: 'var(--warning-glow)'
+    },
   ];
+
 
   return (
     <div className="animate-in" style={{ paddingBottom: 40 }}>
@@ -73,7 +110,7 @@ export default function Dashboard() {
             <Activity size={12} color="var(--primary)" /> VISÃO GERAL DO SISTEMA
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--text-main)', margin: 0, lineHeight: 1.1 }}>
-            Cockpit Estratégico
+            Cockpit Estratégico {user?.name ? `· ${user.name}` : ''}
           </h1>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>
             Magister Tech ERP — {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -94,174 +131,127 @@ export default function Dashboard() {
           <div style={{ flex: 1 }}>
             <h4 style={{ fontSize: 14, fontWeight: 800, color: 'var(--danger)', marginBottom: 2 }}>Atenção Requerida ({alerts.length})</h4>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {alerts.slice(0, 3).map(a => (
+              {alerts.slice(0, 3).map((a: any) => (
                 <span key={a.id} style={{ fontSize: 13, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--danger)' }} /> {a.message}
                 </span>
               ))}
-              {alerts.length > 3 && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>+{alerts.length - 3} alertas</span>}
             </div>
           </div>
+          <button className="btn btn-ghost btn-sm" onClick={() => nav('/admin/config')}>Ver Tudo</button>
         </div>
       )}
 
-      {/* ─── PRIMARY KPIS ──────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 28 }}>
+      {/* ─── KPI GRID ──────────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24, marginBottom: 32 }}>
         {kpis.map((kpi, i) => (
-          <div key={i} className="card" style={{ padding: '24px', position: 'relative', overflow: 'hidden', borderTop: `3px solid ${kpi.accent}` }}>
-            <div style={{ position: 'absolute', top: -40, right: -40, width: 120, height: 120, background: kpi.glow, filter: 'blur(30px)', borderRadius: '50%', pointerEvents: 'none' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, position: 'relative', zIndex: 1 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-sec)' }}>{kpi.label}</p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: kpi.trend === 'up' ? 'var(--success-glow)' : kpi.trend === 'warn' ? 'var(--warning-glow)' : 'var(--danger-glow)', color: kpi.trend === 'up' ? 'var(--success)' : kpi.trend === 'warn' ? 'var(--warning)' : 'var(--danger)' }}>
-                {kpi.trend === 'up' ? <TrendingUp size={12} strokeWidth={3} /> : kpi.trend === 'warn' ? <AlertTriangle size={12} strokeWidth={3} /> : <TrendingDown size={12} strokeWidth={3} />}
-              </div>
+          <div key={i} className="card animate-scale-in" style={{ padding: '24px 28px', borderBottom: `4px solid ${kpi.accent}`, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -10, right: -10, width: 80, height: 80, background: kpi.glow, borderRadius: '50%', filter: 'blur(40px)', opacity: 0.1 }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>{kpi.label}</span>
+              {kpi.trend === 'up' && <TrendingUp size={18} color="var(--success)" />}
+              {kpi.trend === 'down' && <TrendingDown size={18} color="var(--danger)" />}
+              {kpi.trend === 'warn' && <AlertTriangle size={18} color="var(--warning)" />}
             </div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-main)', marginBottom: 8, letterSpacing: '-0.02em', position: 'relative', zIndex: 1 }}>
-              {kpi.value}
-            </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: kpi.trend === 'warn' ? 'var(--warning)' : 'var(--text-muted)', position: 'relative', zIndex: 1 }}>
-              {kpi.sub}
-            </div>
+            <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-1px', color: 'var(--text-main)', marginBottom: 8 }}>{kpi.value}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: kpi.trend === 'warn' ? 'var(--warning)' : 'var(--text-muted)' }}>{kpi.sub}</div>
           </div>
         ))}
       </div>
 
-      {/* ─── OPERATIONAL DASHBOARD (3 COLUMNS) ─────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr)', gap: 20 }}>
-        
-        {/* COL 1: Projetos & Produção */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="card" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <h3 style={{ fontSize: 15, fontWeight: 800 }}>Radar de Projetos</h3>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{activeProjects} em andamento ativo</p>
-              </div>
-              <button className="btn-icon btn-sm" onClick={() => nav('/admin/projetos')}><ArrowRight size={14} /></button>
+      {/* ─── SECONDARY GRID ────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 32 }}>
+        {/* Left: Quick Actions & Recent Projects */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          {/* Quick Access */}
+          <div className="card" style={{ padding: 28 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+               🚀 Canais Críticos
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              {[
+                { label: 'Pipeline Comercial', path: '/admin/pipeline', icon: <TrendingUp size={20} />, color: 'var(--primary)' },
+                { label: 'Fluxo de Caixa', path: '/admin/financeiro', icon: <Landmark size={20} />, color: 'var(--success)' },
+                { label: 'Controle de Projetos', path: '/admin/projetos', icon: <FileText size={20} />, color: 'var(--purple)' },
+              ].map(link => (
+                <div key={link.label} className="card-subtle" onClick={() => nav(link.path)} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, cursor: 'pointer', transition: 'var(--transition)' }}>
+                  <div style={{ color: link.color }}>{link.icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800 }}>{link.label}</div>
+                  <ArrowRight size={14} style={{ color: 'var(--text-muted)' }} />
+                </div>
+              ))}
             </div>
-            
-            {projects.length === 0 ? (
-              <div className="empty-state">Nenhum projeto rodando</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {projects.slice(0, 4).map(p => {
-                  const daysLeft = Math.ceil((new Date(p.endDate).getTime() - Date.now()) / 86400000);
-                  const isLate = p.status === 'atrasado' || daysLeft < 0;
-                  return (
-                    <div key={p.id}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
-                          <span style={{ fontSize: 13, fontWeight: 700 }}>{p.name}</span>
-                          {isLate && <span className="badge badge-danger" style={{ fontSize: 9 }}>ATRASADO</span>}
-                        </div>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--primary)' }}>{p.progress}%</span>
-                      </div>
-                      <div className="progress-track" style={{ height: 6, marginBottom: 6 }}>
-                        <div className="progress-fill" style={{ width: `${p.progress}%`, background: p.color }} />
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
-                        <span>Cliente: {clients.find(c => c.id === p.clientId)?.company || 'N/A'}</span>
-                        <span style={{ color: isLate ? 'var(--danger)' : undefined }}>
-                          {daysLeft < 0 ? `${Math.abs(daysLeft)} dias de atraso` : `${daysLeft} dias restantes`}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* COL 2: Agenda & Tarefas Críticas */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Agenda */}
-          <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} color="var(--primary)"/> Hoje</h3>
-              <span className="badge" style={{ background: 'var(--bg-subtle)', color: 'var(--text-main)' }}>{todayEvts.length} eventos</span>
-            </div>
-            {todayEvts.length === 0 ? (
-               <div className="empty-state" style={{ padding: '20px 0' }}>Sem agenda para hoje</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {todayEvts.slice(0, 4).map(e => (
-                  <div key={e.id} style={{ padding: '10px 12px', background: 'var(--bg-alt)', borderRadius: 8, borderLeft: `3px solid ${e.color}` }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-main)' }}>{e.title}</p>
-                    <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{e.time} • {e.type}</p>
-                  </div>
+          <div className="card" style={{ padding: 28 }}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 900 }}>📊 Projetos Ativos</h3>
+                <button className="btn-icon" onClick={() => nav('/admin/projetos')}><ArrowRight size={16} /></button>
+             </div>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {projects.slice(0, 4).map((p: any) => (
+                   <div key={p.id} className="list-item" onClick={() => nav(`/admin/projetos`)} style={{ cursor: 'pointer', padding: '12px 16px', borderRadius: 12, background: 'var(--bg-subtle)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                         <div>
+                            <p style={{ fontSize: 14, fontWeight: 800 }}>{p.name}</p>
+                            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{clients.find((c: any) => c.id === p.clientId)?.company}</p>
+                         </div>
+                         <div style={{ textAlign: 'right' }}>
+                            <div className="badge badge-primary">{p.progress}%</div>
+                         </div>
+                      </div>
+                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Task Status */}
-          <div className="card" style={{ flex: 1 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Fluxo de Trabalho</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={{ padding: 16, background: 'var(--bg-subtle)', borderRadius: 10, textAlign: 'center' }}>
-                <p style={{ fontSize: 24, fontWeight: 900, color: 'var(--primary)', marginBottom: 2 }}>{totalTasks}</p>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TOTAL TASKS</p>
-              </div>
-              <div style={{ padding: 16, background: 'var(--danger-glow)', borderRadius: 10, textAlign: 'center' }}>
-                <p style={{ fontSize: 24, fontWeight: 900, color: 'var(--danger)', marginBottom: 2 }}>{overdueTasks.length}</p>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>ATRASADAS</p>
-              </div>
-            </div>
-            <button className="btn btn-ghost btn-sm" style={{ width: '100%', marginTop: 16, justifyContent: 'center' }} onClick={() => nav('/admin/kanban')}>
-              Acessar Kanban <ArrowRight size={14}/>
-            </button>
+                {projects.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: 20 }}>Nenhum projeto em andamento.</p>}
+             </div>
           </div>
         </div>
 
-        {/* COL 3: Insights Rápidos (Ações) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 20 }}>Foco Prioritário</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
-              {/* Item: Inactive Clients */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg-subtle)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--purple-glow)', color: 'var(--purple)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Users size={14}/></div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700 }}>Clientes Inativos</p>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ação sugerida de reativação</p>
+        {/* Right: Timeline & Calendar Info */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          <div className="card" style={{ padding: 28, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+               📅 Agenda de Hoje
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {todayEvts.map(ev => (
+                <div key={ev.id} style={{ display: 'flex', gap: 12, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 4, background: ev.color, marginTop: 4 }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800 }}>{ev.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ev.time}</div>
+                  </div>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 900 }}>{inactive.length}</span>
-              </div>
-
-              {/* Item: Expiring Contracts */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg-subtle)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--warning-glow)', color: 'var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={14}/></div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700 }}>Contratos Vencendo</p>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Renovação em -30d</p>
+              ))}
+              {todayEvts.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                   <Clock size={32} style={{ opacity: 0.1, margin: '0 auto 12px' }} />
+                   <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sem eventos para hoje.</p>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 900 }}>{expiring.length}</span>
-              </div>
-
-               {/* Item: Pending Revenue */}
-               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg-subtle)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--success-glow)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Landmark size={14}/></div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700 }}>Receita Pendente</p>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Faturas a receber</p>
-                </div>
-                <span style={{ fontSize: 14, fontWeight: 900 }}>{fmt(pending)}</span>
-              </div>
+              )}
             </div>
-            
-            <div style={{ marginTop: 24 }}>
-               <h4 style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Acesso Direto</h4>
-               <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-secondary btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => nav('/admin/crm')}>CRM</button>
-                  <button className="btn btn-secondary btn-sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => nav('/admin/financeiro')}>Financeiro</button>
-               </div>
+          </div>
+
+          <div className="card" style={{ padding: 28, borderLeft: '4px solid var(--warning)' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+               ⚠️ Tarefas Atrasadas
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+               {overdueTasks.map(t => (
+                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{t.title}</div>
+                    <div className="badge badge-warning">{t.assignee}</div>
+                 </div>
+               ))}
+               {overdueTasks.length === 0 && (
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--success)' }}>
+                    <CheckCircle size={18} />
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>Tudo em dia!</span>
+                 </div>
+               )}
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>V4 Guide – Baragão Veículos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --black:   #0C0C0C;
+    --gray-1:  #161616;
+    --gray-2:  #1F1F1F;
+    --gray-3:  #2C2C2C;
+    --gray-4:  #3D3D3D;
+    --gray-5:  #6B6B6B;
+    --gray-6:  #9B9B9B;
+    --white:   #F4F4F0;
+    --gold:    #C9A227;
+    --gold-lt: #E3C06A;
+    --gold-dk: #8C6E15;
+    --red-err: #E53E3E;
+    --blue-tr: #1B3A6B;
+    --green:   #2E7D32;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; font-size:15px; line-height:1.7; }
+
+  /* ── Layout ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 80px 0; border-bottom: 1px solid var(--gray-3); }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, var(--gray-1) 0%, #0f1a2e 100%);
+    padding: 80px 0 60px;
+    border-bottom: 3px solid var(--gold);
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(201,162,39,0.12); border: 1px solid rgba(201,162,39,0.35);
+    color: var(--gold); font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    padding: 6px 14px; border-radius: 20px; margin-bottom: 24px;
+  }
+  .hero-title { font-family:'Syne',sans-serif; font-size: 48px; line-height: 1.1; font-weight: 800; }
+  .hero-title span { color: var(--gold); }
+  .hero-sub { font-size: 16px; color: var(--gray-6); margin-top: 16px; max-width: 560px; }
+  .hero-meta { display: flex; gap: 32px; margin-top: 40px; }
+  .hero-meta-item .val { font-family:'Syne',sans-serif; font-size: 28px; color: var(--gold); font-weight: 800; }
+  .hero-meta-item .lbl { font-size: 11px; color: var(--gray-5); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* ── Títulos de seção ── */
+  h2 { font-family:'Syne',sans-serif; font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+  h2 span { color: var(--gold); }
+  .section-sub { color: var(--gray-5); font-size: 14px; margin-bottom: 48px; letter-spacing: 1px; text-transform: uppercase; }
+  h3 { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 10px; }
+
+  /* ── Cards ── */
+  .card-grid { display: grid; gap: 16px; }
+  .card-grid-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card {
+    background: var(--gray-2); border: 1px solid var(--gray-3);
+    border-radius: 12px; padding: 28px;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: var(--gold-dk); }
+  .card-icon { font-size: 28px; margin-bottom: 14px; }
+  .card p { font-size: 14px; color: var(--gray-6); line-height: 1.6; }
+  .card .highlight { color: var(--gold); font-weight: 600; }
+
+  /* ── Paleta de cores ── */
+  .palette-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 40px; }
+  .swatch { border-radius: 10px; overflow: hidden; }
+  .swatch-color { height: 80px; border-radius: 10px 10px 0 0; }
+  .swatch-info { background: var(--gray-2); padding: 10px 12px; border-radius: 0 0 10px 10px; }
+  .swatch-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .swatch-hex { font-size: 11px; color: var(--gray-5); font-family: monospace; }
+  .swatch-role { font-size: 10px; color: var(--gray-5); margin-top: 2px; }
+
+  .palette-rules { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .rule-card { background: var(--gray-2); border-radius: 10px; padding: 20px; }
+  .rule-card.do { border-left: 3px solid var(--green); }
+  .rule-card.dont { border-left: 3px solid var(--red-err); }
+  .rule-card .rule-label { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+  .rule-card.do .rule-label { color: var(--green); }
+  .rule-card.dont .rule-label { color: var(--red-err); }
+  .rule-card ul { list-style: none; }
+  .rule-card ul li { font-size: 13px; color: var(--gray-6); padding: 4px 0; border-bottom: 1px solid var(--gray-3); }
+  .rule-card ul li:last-child { border-bottom: none; }
+
+  /* ── Funil V4 ── */
+  .funnel { display: flex; flex-direction: column; gap: 0; max-width: 560px; margin: 0 auto; }
+  .funnel-stage {
+    padding: 22px 32px;
+    text-align: center;
+    position: relative;
+  }
+  .funnel-stage::after {
+    content: '▼';
+    position: absolute; bottom: -14px; left: 50%;
+    transform: translateX(-50%);
+    color: var(--gray-4); font-size: 14px; z-index: 2;
+  }
+  .funnel-stage:last-child::after { display: none; }
+  .fs-1 { background: var(--blue-tr); border-radius: 12px 12px 0 0; clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%); }
+  .fs-2 { background: #1e3a6e; clip-path: polygon(5% 0, 95% 0, 90% 100%, 10% 100%); }
+  .fs-3 { background: #8C6E15; clip-path: polygon(10% 0, 90% 0, 84% 100%, 16% 100%); }
+  .fs-4 { background: var(--gold); clip-path: polygon(16% 0, 84% 0, 78% 100%, 22% 100%); color: var(--black) !important; }
+  .fs-4 h3 { color: var(--black); }
+  .fs-4 p { color: rgba(0,0,0,0.6); }
+  .fs-5 { background: #2E7D32; clip-path: polygon(22% 0, 78% 0, 50% 100%, 50% 100%); border-radius: 0 0 12px 12px; }
+  .funnel-stage h3 { font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+  .funnel-stage p { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+
+  /* ── Copy Framework ── */
+  .copy-block {
+    background: var(--gray-2); border-radius: 12px;
+    border: 1px solid var(--gray-3); overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .copy-header {
+    background: var(--gray-3); padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .copy-header .copy-type { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+  .copy-header .copy-format { font-size: 11px; color: var(--gray-5); }
+  .copy-body { padding: 20px; }
+  .copy-line { display: flex; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--gray-3); }
+  .copy-line:last-child { border-bottom: none; }
+  .copy-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); min-width: 80px; margin-top: 2px; }
+  .copy-text { font-size: 14px; color: var(--gray-6); }
+  .copy-text strong { color: var(--white); }
+
+  /* ── Segmentação ── */
+  .audience-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .audience-card { background: var(--gray-2); border-radius: 12px; padding: 24px; border: 1px solid var(--gray-3); }
+  .audience-card .aud-tag {
+    display: inline-block; padding: 4px 12px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .tag-topo { background: rgba(27,58,107,0.4); color: #6fa3e0; }
+  .tag-meio { background: rgba(201,162,39,0.2); color: var(--gold); }
+  .tag-fundo { background: rgba(46,125,50,0.3); color: #66bb6a; }
+  .tag-retargeting { background: rgba(229,62,62,0.2); color: #fc8181; }
+  .audience-card ul { list-style: none; }
+  .audience-card ul li { font-size: 13px; color: var(--gray-6); padding: 5px 0; padding-left: 16px; position: relative; }
+  .audience-card ul li::before { content: '→'; position: absolute; left: 0; color: var(--gold); font-size: 11px; }
+
+  /* ── KPIs ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .kpi-card { background: var(--gray-2); border-radius: 12px; padding: 24px; border: 1px solid var(--gray-3); text-align: center; }
+  .kpi-val { font-family:'Syne',sans-serif; font-size: 36px; font-weight: 800; color: var(--gold); }
+  .kpi-name { font-size: 11px; color: var(--gray-5); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  .kpi-ref { font-size: 12px; color: var(--gray-4); margin-top: 8px; }
+
+  /* ── Imagens ── */
+  .img-directive { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .img-card { background: var(--gray-2); border-radius: 12px; padding: 24px; border: 1px solid var(--gray-3); }
+  .img-preview {
+    height: 140px; border-radius: 8px; margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--gray-5); letter-spacing: 1px;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .img-preview.dark { background: linear-gradient(135deg, #0d0d0d, #1a1a1a); border: 1px dashed var(--gray-4); }
+  .img-preview.bright { background: linear-gradient(135deg, #f5f5f0, #e0e0d8); color: #999; border: 1px dashed #ccc; }
+  .img-preview.studio { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px dashed #2a2a5e; }
+  .img-preview.lifestyle { background: linear-gradient(135deg, #1a2a1a, #0d1a0d); border: 1px dashed #2a5e2a; }
+  .img-tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+  .tag-use { background: rgba(46,125,50,0.3); color: #66bb6a; }
+  .tag-avoid { background: rgba(229,62,62,0.2); color: #fc8181; }
+  .img-card ul { list-style: none; }
+  .img-card ul li { font-size: 12px; color: var(--gray-6); padding: 4px 0; padding-left: 14px; position: relative; }
+  .img-card ul li::before { position: absolute; left: 0; font-size: 10px; }
+  .img-card.use-card ul li::before { content: '✓'; color: #66bb6a; }
+  .img-card.avoid-card ul li::before { content: '✗'; color: #fc8181; }
+
+  /* ── Rodapé ── */
+  footer { padding: 40px 0; text-align: center; }
+  footer p { color: var(--gray-5); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+  footer strong { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-tag">⚡ V4 Company Method</div>
+    <h1 class="hero-title">Guia de Marketing Digital<br><span>Baragão Veículos</span></h1>
+    <p class="hero-sub">Diretrizes de criação, segmentação e mensuração para campanhas de médio ticket no Meta Ads — padrão V4 Company.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><div class="val">R$50k–120k</div><div class="lbl">Ticket Médio</div></div>
+      <div class="hero-meta-item"><div class="val">Meta Ads</div><div class="lbl">Canal Principal</div></div>
+      <div class="hero-meta-item"><div class="val">AIDA</div><div class="lbl">Framework Copy</div></div>
+      <div class="hero-meta-item"><div class="val">ROI</div><div class="lbl">Métrica Central</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 01 FUNDAMENTO V4 ── -->
+<section>
+  <div class="container">
+    <div class="section-sub">01 — Fundamento</div>
+    <h2>O método <span>V4</span> aplicado</h2>
+    <p style="color:var(--gray-5);max-width:560px;margin-bottom:48px;">A V4 Company opera sobre 4 alavancas de crescimento. Cada decisão de criativo, segmentação e orçamento deve estar conectada a uma dessas alavancas.</p>
+    <div class="card-grid card-grid-2" style="margin-bottom:40px;">
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h3>1. Tráfego Qualificado</h3>
+        <p>Atrair <span class="highlight">o público certo</span> com o criativo certo. Para médio ticket automotivo: homens e mulheres 28–50 anos, classe A/B, com interesse em automóveis, financiamento e lifestyle urbano.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <h3>2. Conversão</h3>
+        <p>Transformar clique em lead e lead em visita. <span class="highlight">Landing page + WhatsApp</span> são o par ideal. Meta: CPL abaixo de R$35 para campanha de geração de lead automotivo médio ticket.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔁</div>
+        <h3>3. Recorrência & LTV</h3>
+        <p>O cliente que comprou um Hyundai hoje pode comprar o próximo daqui a 3–4 anos. <span class="highlight">Nutrição por WhatsApp/e-mail</span> mantém a marca presente e reduz CAC futuro.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>4. ROI Mensurável</h3>
+        <p>Todo real investido deve ser rastreado. <span class="highlight">Pixel + API de Conversões Meta</span> + UTMs em cada link. Relatório semanal de CPL, CTR, ROAS e custo por visita à loja.</p>
+      </div>
+    </div>
+
+    <!-- Funil -->
+    <h3 style="text-align:center;margin-bottom:32px;color:var(--gray-6);letter-spacing:2px;font-size:12px;text-transform:uppercase;">Funil de Compra — Médio Ticket Automotivo</h3>
+    <div class="funnel">
+      <div class="funnel-stage fs-1"><h3>Consciência</h3><p>Alcance frio — vídeo 6s, imagem impactante</p></div>
+      <div class="funnel-stage fs-2"><h3>Interesse</h3><p>Engajamento — carousel de benefícios, prova social</p></div>
+      <div class="funnel-stage fs-3"><h3>Desejo</h3><p>Consideração — oferta, condições, urgência</p></div>
+      <div class="funnel-stage fs-4"><h3>Ação</h3><p>Conversão — CTA direto para WhatsApp ou formulário</p></div>
+      <div class="funnel-stage fs-5"><h3>Retenção</h3><p>Pós-venda — CRM, indicação, recompra futura</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 02 PALETA DE CORES ── -->
+<section>
+  <div class="container">
+    <div class="section-sub">02 — Identidade Visual</div>
+    <h2>Paleta de <span>Cores</span></h2>
+    <p style="color:var(--gray-5);max-width:560px;margin-bottom:40px;">Para médio ticket, a paleta deve comunicar <strong style="color:var(--white)">confiança e aspiração</strong> — sem parecer popular demais (amarelo neon) nem inacessível demais (branco puro minimalista).</p>
+
+    <div class="palette-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0C0C0C;"></div>
+        <div class="swatch-info"><div class="swatch-name">Obsidian</div><div class="swatch-hex">#0C0C0C</div><div class="swatch-role">Fundo principal</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1F1F1F;border:1px solid #333"></div>
+        <div class="swatch-info"><div class="swatch-name">Carbon</div><div class="swatch-hex">#1F1F1F</div><div class="swatch-role">Fundo cards</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#C9A227;"></div>
+        <div class="swatch-info"><div class="swatch-name">Gold</div><div class="swatch-hex">#C9A227</div><div class="swatch-role">Acento principal</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E3C06A;"></div>
+        <div class="swatch-info"><div class="swatch-name">Gold Lt</div><div class="swatch-hex">#E3C06A</div><div class="swatch-role">Hover / destaque</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1B3A6B;"></div>
+        <div class="swatch-info"><div class="swatch-name">Trust Navy</div><div class="swatch-hex">#1B3A6B</div><div class="swatch-role">Credibilidade</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F4F4F0;"></div>
+        <div class="swatch-info"><div class="swatch-name">Ivory</div><div class="swatch-hex">#F4F4F0</div><div class="swatch-role">Texto principal</div></div>
+      </div>
+    </div>
+
+    <div class="palette-rules">
+      <div class="rule-card do">
+        <div class="rule-label">✓ Use</div>
+        <ul>
+          <li>Dourado <strong>#C9A227</strong> como acento — não como cor de fundo</li>
+          <li>Fundo escuro (#0C0C0C / #1F1F1F) para transmitir premium</li>
+          <li>Navy (#1B3A6B) em selos de confiança e certificações</li>
+          <li>Alto contraste: texto claro em fundo escuro</li>
+          <li>Máximo 3 cores por peça criativa</li>
+        </ul>
+      </div>
+      <div class="rule-card dont">
+        <div class="rule-label">✗ Evite</div>
+        <ul>
+          <li>Amarelo neon (#FFFF00) — comunica mercado popular</li>
+          <li>Gradientes coloridos tipo arco-íris</li>
+          <li>Fundo branco puro com texto preto — parece classificado</li>
+          <li>Mais de 4 cores em uma mesma peça</li>
+          <li>Vermelho como cor principal — gera ansiedade</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 03 DIRETRIZES DE IMAGEM ── -->
+<section>
+  <div class="container">
+    <div class="section-sub">03 — Fotografia & Imagem</div>
+    <h2>Diretrizes de <span>Imagem Real</span></h2>
+    <p style="color:var(--gray-5);max-width:600px;margin-bottom:40px;">Imagens reais convertem 2–3x mais que ilustrações em campanhas de produto físico de médio ticket. O padrão fotográfico precisa comunicar o mesmo valor que o veículo representa.</p>
+
+    <div class="img-directive">
+      <div class="img-card use-card">
+        <div class="img-preview studio">Foto Studio Dark</div>
+        <div class="img-tag tag-use">✓ Use — Studio</div>
+        <h3 style="margin-bottom:12px;">Estúdio / Fundo Escuro</h3>
+        <ul>
+          <li>Fundo preto ou cinza escuro neutro</li>
+          <li>Iluminação direcional com reflexo no capô</li>
+          <li>Ângulo 3/4 frontal (mais vendedor)</li>
+          <li>Resolução mínima 2000px largura</li>
+          <li>Sem sombras duras no veículo</li>
+        </ul>
+      </div>
+      <div class="img-card use-card">
+        <div class="img-preview lifestyle">Foto Lifestyle</div>
+        <div class="img-tag tag-use">✓ Use — Lifestyle</div>
+        <h3 style="margin-bottom:12px;">Lifestyle Urbano</h3>
+        <ul>
+          <li>Carro em movimento em cidade ou rodovia</li>
+          <li>Hora dourada (golden hour) — 6h ou 18h</li>
+          <li>Motorista visível mas não identificável</li>
+          <li>Ambiente aspiracional: prédios, estradas limpas</li>
+          <li>Sensação de liberdade e conquista</li>
+        </ul>
+      </div>
+      <div class="img-card avoid-card">
+        <div class="img-preview bright">Fundo Branco Puro</div>
+        <div class="img-tag tag-avoid">✗ Evite — Catálogo</div>
+        <h3 style="margin-bottom:12px;">Foto de Catálogo Fria</h3>
+        <ul>
+          <li>Fundo branco puro tipo catálogo técnico</li>
+          <li>Foto frontal perfeita sem ângulo</li>
+          <li>Sem contexto ou ambiente</li>
+          <li>Imagens de banco genéricas de outro país</li>
+          <li>Watermark ou logo de outra loja visível</li>
+        </ul>
+      </div>
+      <div class="img-card avoid-card">
+        <div class="img-preview dark" style="background:linear-gradient(135deg,#2a0000,#1a0000)">Selfie / Amador</div>
+        <div class="img-tag tag-avoid">✗ Evite — Amador</div>
+        <h3 style="margin-bottom:12px;">Foto Amadora / Celular</h3>
+        <ul>
+          <li>Foto tirada no estoque com fundo bagunçado</li>
+          <li>Reflexo de pessoas/câmera no veículo</li>
+          <li>Iluminação fluorescente de galpão</li>
+          <li>Imagem escura, granulada ou desfocada</li>
+          <li>Carro parcialmente visível ou cortado</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px;border-left:3px solid var(--gold);">
+      <h3 style="color:var(--gold);margin-bottom:12px;">📸 Fontes de Imagem Recomendadas</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <div>
+          <p style="font-size:12px;color:var(--gray-5);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Gratuitas</p>
+          <p style="font-size:13px;color:var(--gray-6);">Unsplash.com (buscar: "car dealership", "hyundai", "urban car")<br>Pexels.com — seção automotiva</p>
+        </div>
+        <div>
+          <p style="font-size:12px;color:var(--gray-5);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Press Kit Oficial</p>
+          <p style="font-size:13px;color:var(--gray-6);">newsroom.hyundai.com — imagens oficiais de alta resolução do i30 em HD, liberadas para uso comercial</p>
+        </div>
+        <div>
+          <p style="font-size:12px;color:var(--gray-5);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Produção Própria</p>
+          <p style="font-size:13px;color:var(--gray-6);">Sessão de fotos mensal com veículos do estoque. Custo: R$400–800 por sessão com fotógrafo local. ROI: 10–15 peças criativas por sessão.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 04 COPY FRAMEWORK ── -->
+<section>
+  <div class="container">
+    <div class="section-sub">04 — Copy & Mensagem</div>
+    <h2>Framework de <span>Copy</span></h2>
+    <p style="color:var(--gray-5);max-width:560px;margin-bottom:40px;">Para médio ticket, o copy não vende o carro — vende a <strong style="color:var(--white)">transformação e a facilidade</strong>. A objeção principal é financeira, não de desejo.</p>
+
+    <div class="copy-block">
+      <div class="copy-header">
+        <span class="copy-type">Topo de Funil — Consciência</span>
+        <span class="copy-format">Feed / Reels 15s</span>
+      </div>
+      <div class="copy-body">
+        <div class="copy-line"><div class="copy-label">Hook</div><div class="copy-text"><strong>"Seu próximo carro já está aqui."</strong><br>Ou: <strong>"i30 novinho, parcela menor do que você imagina."</strong></div></div>
+        <div class="copy-line"><div class="copy-label">Visual</div><div class="copy-text">Carro em movimento, golden hour, câmera lenta. Sem texto na imagem além da marca.</div></div>
+        <div class="copy-line"><div class="copy-label">Objetivo</div><div class="copy-text">Parar o scroll. Gerar curiosidade. NÃO vender ainda.</div></div>
+      </div>
+    </div>
+
+    <div class="copy-block">
+      <div class="copy-header">
+        <span class="copy-type">Meio de Funil — Consideração</span>
+        <span class="copy-format">Carousel / Imagem com Copy</span>
+      </div>
+      <div class="copy-body">
+        <div class="copy-line"><div class="copy-label">Headline</div><div class="copy-text"><strong>"Hyundai i30 2024 — 0km com entrada facilitada e aprovação rápida"</strong></div></div>
+        <div class="copy-line"><div class="copy-label">Body</div><div class="copy-text">✅ Score baixo? A gente tem solução.<br>✅ Sem entrada? Consulte condições.<br>✅ Entrega rápida. Documentação por conta da loja.<br>📍 Baragão Veículos — [Cidade]</div></div>
+        <div class="copy-line"><div class="copy-label">CTA</div><div class="copy-text"><strong>"Simule agora pelo WhatsApp →"</strong></div></div>
+      </div>
+    </div>
+
+    <div class="copy-block">
+      <div class="copy-header">
+        <span class="copy-type">Fundo de Funil — Conversão (Retargeting)</span>
+        <span class="copy-format">Stories / Feed — Audiência Quente</span>
+      </div>
+      <div class="copy-body">
+        <div class="copy-line"><div class="copy-label">Urgência</div><div class="copy-text"><strong>"Último i30 disponível nesta condição"</strong> — use com moderação (máx 2x/mês para não desgastar)</div></div>
+        <div class="copy-line"><div class="copy-label">Prova Social</div><div class="copy-text"><strong>"Mais de 200 famílias realizaram o sonho do carro novo com a gente"</strong> + depoimento real em vídeo</div></div>
+        <div class="copy-line"><div class="copy-label">Objeção</div><div class="copy-text"><strong>"Não sabe se aprova? Nossa equipe resolve em 24h."</strong> — endereça a maior dor do médio ticket</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--red-err);margin-top:8px;">
+      <h3 style="color:var(--red-err);margin-bottom:10px;">🚫 Palavras a Evitar no Copy</h3>
+      <p style="font-size:13px;color:var(--gray-6);">"O melhor preço da cidade" · "Qualidade inigualável" · "Não perca essa oportunidade única" (sem contexto) · "Super promoção imperdível" · "O carro dos seus sonhos" (clichê). Essas frases aumentam o CPM e reduzem a taxa de conversão — o algoritmo do Meta também penaliza copy genérico.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 05 SEGMENTAÇÃO ── -->
+<section>
+  <div class="container">
+    <div class="section-sub">05 — Segmentação Meta Ads</div>
+    <h2>Audiências por <span>Etapa</span></h2>
+    <div class="audience-grid">
+      <div class="audience-card">
+        <div class="aud-tag tag-topo">Topo — Frio</div>
+        <h3>Interesse Amplo</h3>
+        <ul>
+          <li>Interesse: Automóveis, Hyundai, Financiamento</li>
+          <li>Idade: 28–50 | Sexo: Todos</li>
+          <li>Renda estimada: classes A e B</li>
+          <li>Localização: raio de 30–50km da loja</li>
+          <li>Lookalike 1–3% de compradores anteriores</li>
+        </ul>
+      </div>
+      <div class="audience-card">
+        <div class="aud-tag tag-meio">Meio — Morno</div>
+        <h3>Engajamento Recente</h3>
+        <ul>
+          <li>Engajaram com página/perfil nos últimos 30 dias</li>
+          <li>Visualizaram vídeo 50%+ nos últimos 14 dias</li>
+          <li>Visitaram site (com Pixel instalado)</li>
+          <li>Lookalike 1–5% de leads gerados</li>
+          <li>Budget: 30% do investimento total</li>
+        </ul>
+      </div>
+      <div class="audience-card">
+        <div class="aud-tag tag-fundo">Fundo — Quente</div>
+        <h3>Alta Intenção</h3>
+        <ul>
+          <li>Visitaram página de produto específico</li>
+          <li>Iniciaram formulário mas não concluíram</li>
+          <li>Clicaram no link de WhatsApp</li>
+          <li>Janela de retargeting: 7 dias (urgência)</li>
+          <li>Budget: 20% — maior CPM, maior conversão</li>
+        </ul>
+      </div>
+      <div class="audience-card">
+        <div class="aud-tag tag-retargeting">Retenção — Base</div>
+        <h3>Clientes & Leads Frios</h3>
+        <ul>
+          <li>Lista de clientes anteriores (Custom Audience)</li>
+          <li>Leads que não compraram nos últimos 90 dias</li>
+          <li>Segmentação por modelo de interesse declarado</li>
+          <li>Oferta de indicação (referral) e próxima troca</li>
+          <li>Budget: 10% — alto LTV potencial</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 06 KPIs ── -->
+<section>
+  <div class="container">
+    <div class="section-sub">06 — Métricas & KPIs</div>
+    <h2>Benchmarks para <span>Médio Ticket</span></h2>
+    <p style="color:var(--gray-5);max-width:560px;margin-bottom:40px;">Referências do mercado automotivo médio ticket no Brasil via Meta Ads (2024). Use como baseline para otimização.</p>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-val">&lt;R$35</div><div class="kpi-name">CPL</div><div class="kpi-ref">Custo por Lead qualificado</div></div>
+      <div class="kpi-card"><div class="kpi-val">&gt;2%</div><div class="kpi-name">CTR</div><div class="kpi-ref">Taxa de clique no criativo</div></div>
+      <div class="kpi-card"><div class="kpi-val">&lt;R$150</div><div class="kpi-name">CPV</div><div class="kpi-ref">Custo por visita à loja</div></div>
+      <div class="kpi-card"><div class="kpi-val">8–12x</div><div class="kpi-name">ROAS</div><div class="kpi-ref">Retorno sobre investimento</div></div>
+    </div>
+    <div class="card" style="margin-top:24px;">
+      <h3 style="margin-bottom:12px;">Frequência de Análise</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+        <div><p style="color:var(--gold);font-weight:700;margin-bottom:6px;">Diário</p><p style="font-size:13px;color:var(--gray-6);">CPL · CTR · Gastos · Leads recebidos · Velocidade de resposta do time comercial</p></div>
+        <div><p style="color:var(--gold);font-weight:700;margin-bottom:6px;">Semanal</p><p style="font-size:13px;color:var(--gray-6);">Frequência · CPM · Score do criativo · Taxa de conversão lead → visita · A/B de criativos</p></div>
+        <div><p style="color:var(--gold);font-weight:700;margin-bottom:6px;">Mensal</p><p style="font-size:13px;color:var(--gray-6);">ROAS · CAC · LTV · Análise por modelo · Realocação de orçamento · Novos criativos</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container">
+    <p><strong>Baragão Veículos</strong> · Guia Estratégico V4 Company · Gerado em Abril 2026</p>
+    <p style="margin-top:8px;">Marketing de Performance · Meta Ads · Médio Ticket Automotivo</p>
+  </div>
+</footer>
+
+</body>
+</html>

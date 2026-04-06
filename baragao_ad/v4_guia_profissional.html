@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magister Tech — Estratégia Comercial | Grupo Baragão</title>
+  <meta name="description" content="Apresentação estratégica completa da Magister Tech para o Grupo Baragão com funil de vendas, cronograma, mídia paga, campanhas por veículo e vagas de contratação." />
+  <style>
+    :root {
+      /* Paleta Corporativa Sofisticada */
+      --bg-body: #f4f7fa;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --brand-dark: #0f172a; /* Azul Marinho Profundo (Hero) */
+      --brand-primary: #1e3a8a; /* Azul Corporativo */
+      --brand-secondary: #3b82f6; /* Azul Destaque */
+      --accent: #d97706; /* Âmbar/Dourado Executivo */
+      --accent-light: #fef3c7;
+      
+      /* Estrutura e Linhas */
+      --border: #e2e8f0;
+      --border-dark: rgba(255, 255, 255, 0.1);
+      
+      /* Sombras Sutis e Refinadas (Destaque sem exagero) */
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+      --shadow-premium: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+      
+      /* Bordas Menores para visual mais sério */
+      --radius-xl: 16px;
+      --radius-lg: 12px;
+      --radius-md: 8px;
+      --radius-sm: 6px;
+      
+      --max: 1200px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-body);
+      line-height: 1.6;
+    }
+
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+    .section { padding: 80px 0; }
+    .section-tight { padding: 60px 0; }
+    
+    /* Tipografia e Títulos */
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(30, 58, 138, 0.08);
+      color: var(--brand-primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .section h2 {
+      margin: 0 0 16px;
+      font-size: clamp(28px, 3vw, 42px);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      font-weight: 800; /* Títulos ligeiramente mais pesados para destaque */
+    }
+    .section p.lead {
+      margin: 0 0 40px;
+      max-width: 800px;
+      color: var(--text-muted);
+      font-size: clamp(16px, 2vw, 18px);
+      line-height: 1.7;
+    }
+
+    /* Hero Executivo e Destaque */
+    .hero {
+      background-color: var(--brand-dark);
+      background-image: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      padding: 24px 0 80px;
+      border-bottom: 4px solid var(--accent);
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-dark);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      font-size: 18px;
+    }
+    .brand-badge {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-md);
+      background: var(--brand-primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3); /* Destaque sutil no badge */
+    }
+    .brand small {
+      display: block;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .eyebrow-hero {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      border: 1px solid var(--border-dark);
+    }
+
+    .hero-content {
+      margin-top: 64px;
+      max-width: 900px;
+    }
+    .hero-content h1 {
+      margin: 0;
+      font-size: clamp(40px, 6vw, 72px);
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .hero-content h1 span { color: var(--accent); }
+    .hero-content p {
+      margin-top: 24px;
+      font-size: clamp(16px, 2vw, 20px);
+      color: #cbd5e1;
+      max-width: 760px;
+      line-height: 1.6;
+    }
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    .hero-tag {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: #f8fafc;
+      letter-spacing: 0.02em;
+    }
+
+    /* Destaque nos Premium Cards */
+    .premium-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-top: 64px;
+    }
+    .premium-card {
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-dark);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-md); /* Sombras para destacar do fundo dark */
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .premium-card:hover {
+      transform: translateY(-4px); /* Efeito sutil de hover */
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(217, 119, 6, 0.3); /* Borda acentua no hover */
+    }
+    .premium-card .label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+    .premium-card .value {
+      font-size: 32px;
+      font-weight: 800;
+      margin: 8px 0;
+      color: #ffffff;
+      line-height: 1;
+    }
+    .premium-card .desc {
+      font-size: 13px;
+      color: #cbd5e1;
+      margin: 0;
+    }
+
+    /* Utilitários de Grid */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+
+    /* Cards Básicos e Destaque nas Estatísticas */
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+      box-shadow: var(--shadow-md); /* Destaque ao passar o mouse */
+    }
+    .stat-card .kicker {
+      font-size: 12px;
+      color: var(--brand-primary);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+    .stat-card p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Destaque no Funil de Vendas */
+    .funnel-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 32px;
+      align-items: start;
+    }
+    .funnel-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg); /* Sombras mais fortes para destacar a caixa principal */
+    }
+    .funnel-step {
+      position: relative;
+      padding: 20px 24px;
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+      border-left: 4px solid transparent;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      transition: background-color 0.2s ease;
+    }
+    .funnel-step:hover {
+      background-color: #fff; /* Destaque sutil no hover */
+    }
+    .funnel-step:last-child { margin-bottom: 0; }
+    .funnel-step h4 { margin: 0 0 6px; font-size: 16px; color: var(--text-main); font-weight: 700; }
+    .funnel-step p { margin: 0; color: var(--text-muted); font-size: 14px; max-width: 85%; }
+    .funnel-step .budget {
+      position: absolute;
+      right: 24px;
+      top: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    
+    .step-1 { border-left-color: #3b82f6; }
+    .step-2 { border-left-color: #2563eb; }
+    .step-3 { border-left-color: #1d4ed8; }
+    .step-4 { border-left-color: #1e3a8a; }
+
+    .funnel-side { display: grid; gap: 16px; }
+    .mini-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .mini-card h4 { margin: 0 0 8px; font-size: 16px; color: var(--brand-primary); font-weight: 700; }
+    .mini-card p { margin: 0; color: var(--text-muted); font-size: 13px; }
+
+    /* Destaque nos Canais */
+    .channels {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+    .channel-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-md); /* Destaque maior nos canais */
+      transition: transform 0.2s ease;
+    }
+    .channel-card:hover {
+      transform: translateY(-2px);
+    }
+    .channel-card h3 { margin: 0 0 16px; font-size: 22px; color: var(--text-main); font-weight: 700; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .tag {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .list { display: grid; gap: 16px; }
+    .list-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 8px;
+    }
+
+    /* Destaque no Orçamento e Tabela */
+    .budget-board {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 32px;
+      align-items: start;
+    }
+    .budget-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg); /* Mais destaque na tabela de orçamento */
+    }
+    .budget-card h3 { margin: 0 0 24px; font-size: 24px; font-weight: 700; }
+    .budget-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .budget-table th, .budget-table td {
+      text-align: left;
+      padding: 16px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    .budget-table th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      background: var(--surface-alt);
+    }
+    .budget-table tr:last-child td { border-bottom: 0; }
+    .budget-table tr:hover td {
+      background-color: rgba(30, 58, 138, 0.02); /* Destaque sutil na linha */
+    }
+    .price { font-weight: 700; color: var(--brand-primary); white-space: nowrap; }
+
+    /* Destaque no Callout (Visão Dark) */
+    .callout {
+      background: var(--brand-dark);
+      background-image: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      padding: 32px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-premium); /* Destaque premium e sofisticado */
+      border: 1px solid var(--border-dark);
+    }
+    .callout .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--accent);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+    .callout p { color: #cbd5e1; font-size: 14px; margin: 0 0 16px; }
+    .callout p:last-child { margin-bottom: 0; }
+    .callout strong { color: #fff; font-weight: 700; }
+
+    /* Showcase de Criativos e Destaque */
+    .creative-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .creative-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .creative-top {
+      background-color: var(--surface-alt);
+      border-bottom: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 140px;
+    }
+    .creative-top .chip {
+      width: fit-content;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--brand-primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+    .creative-top h4 {
+      margin: 0;
+      font-size: 20px;
+      color: var(--text-main);
+      line-height: 1.2;
+      font-weight: 700;
+    }
+    .creative-body { padding: 24px; flex-grow: 1; display: flex; flex-direction: column; }
+    .creative-body p { margin: 0 0 20px; color: var(--text-muted); font-size: 14px; flex-grow: 1; }
+    .creative-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-main);
+      font-weight: 600;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    /* Destaque nos Veículos */
+    .vehicle-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s ease;
+    }
+    .vehicle-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    .vehicle-head {
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-alt);
+    }
+    .vehicle-head h3 { margin: 0; font-size: 18px; color: var(--text-main); font-weight: 700; }
+    .priority-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.1); /* Destaque sutil no badge */
+    }
+    .priority-hot { background: #fee2e2; color: #991b1b; }
+    .priority-fast { background: #fef3c7; color: #92400e; }
+    .priority-base { background: #e0e7ff; color: #3730a3; }
+    
+    .vehicle-body { padding: 24px; }
+    .vehicle-body .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .metric {
+      padding: 12px 16px;
+      background: var(--bg-body);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+    .metric b {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .metric span { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .vehicle-body ul { margin: 0; padding-left: 16px; color: var(--text-muted); font-size: 14px; }
+    .vehicle-body li { margin-bottom: 8px; }
+    .vehicle-body li:last-child { margin-bottom: 0; }
+
+    /* Destaque na Timeline */
+    .timeline { display: grid; gap: 16px; }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .timeline-item:hover {
+      transform: translateX(4px); /* Destaque lateral sutil */
+      box-shadow: var(--shadow-md);
+    }
+    .week {
+      padding: 8px 0;
+      border-bottom: 2px solid var(--brand-primary);
+      color: var(--brand-primary);
+      font-weight: 800;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .timeline-item h4 { margin: 0 0 8px; font-size: 18px; color: var(--text-main); font-weight: 700; }
+    .timeline-item p { margin: 0 0 12px; color: var(--text-muted); font-size: 14px; }
+    .timeline-item ul { margin: 0; padding-left: 16px; color: var(--text-muted); font-size: 14px; }
+    .timeline-item li { margin-bottom: 6px; }
+
+    /* Vagas / Contratação e Destaque */
+    .hiring-section { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .job-card {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+    .job-card:hover {
+      box-shadow: var(--shadow-md);
+      background-color: #fff;
+    }
+    .job-card .job-tag {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--brand-primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+    }
+    .job-card h3 { margin: 0 0 12px; font-size: 22px; color: var(--text-main); font-weight: 700; }
+    .job-card p { margin: 0 0 20px; color: var(--text-muted); font-size: 14px; }
+    .job-card ul { margin: 0 0 24px; padding-left: 16px; color: var(--text-muted); font-size: 14px; }
+    .job-card li { margin-bottom: 8px; }
+    .job-budget {
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Destaque nos KPIs */
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      box-shadow: var(--shadow-md); /* Destaque maior nos KPIs finais */
+      transition: transform 0.2s ease;
+    }
+    .kpi:hover {
+      transform: scale(1.02); /* Destaque sutil de tamanho */
+    }
+    .kpi span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .kpi strong {
+      display: block;
+      font-size: 28px;
+      color: var(--brand-primary);
+      margin-bottom: 12px;
+      line-height: 1;
+      font-weight: 800;
+    }
+    .kpi p { margin: 0; color: var(--text-muted); font-size: 13px; }
+
+    /* Footer */
+    .footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      margin-top: 40px;
+    }
+    .footer-wrap {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+    .footer h3 { margin: 0 0 8px; font-size: 18px; color: var(--text-main); font-weight: 700; }
+    .footer p { margin: 0; color: var(--text-muted); font-size: 14px; }
+    .footer-badge {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 1024px) {
+      .funnel-layout, .budget-board { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .section { padding: 48px 0; }
+      .section-tight { padding: 40px 0; }
+      .nav, .footer-wrap { flex-direction: column; align-items: flex-start; }
+      .grid-2, .grid-3, .grid-4, .channels, .vehicle-grid { grid-template-columns: 1fr; }
+      .timeline-item { grid-template-columns: 1fr; gap: 12px; }
+      .vehicle-body .row { grid-template-columns: 1fr; }
+      .hero-content h1 { font-size: 32px; }
+      .hero-content p { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="brand-badge">MT</div>
+          <div>
+            Magister Tech
+            <small>Estratégia Comercial • Grupo Baragão</small>
+          </div>
+        </div>
+        <div class="eyebrow eyebrow-hero">Plano de Crescimento 2026</div>
+      </div>
+
+      <div class="hero-content">
+        <h1>
+          Sistema de Vendas<br>
+          <span>Grupo Baragão</span>
+        </h1>
+        <p>
+          Estrutura completa de tráfego pago, funil comercial e execução estratégica para acelerar vendas de veículos e gerar previsibilidade de faturamento.
+        </p>
+        <div class="hero-tags">
+          <div class="hero-tag">Meta Ads</div>
+          <div class="hero-tag">Google Ads</div>
+          <div class="hero-tag">Funil de vendas</div>
+          <div class="hero-tag">Escala comercial</div>
+        </div>
+      </div>
+
+      <div class="premium-grid">
+        <div class="premium-card">
+          <div class="label">Investimento</div>
+          <div class="value">R$ 150/dia</div>
+          <div class="desc">Estrutura base de tráfego</div>
+        </div>
+        <div class="premium-card">
+          <div class="label">Criativos</div>
+          <div class="value">10+</div>
+          <div class="desc">Carrosséis de alta conversão</div>
+        </div>
+        <div class="premium-card">
+          <div class="label">Canais</div>
+          <div class="value">2</div>
+          <div class="desc">Meta + Google integrados</div>
+        </div>
+        <div class="premium-card">
+          <div class="label">Objetivo</div>
+          <div class="value">Venda</div>
+          <div class="desc">Giro e escala de estoque</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section hiring-section">
+    <div class="container">
+      <div style="max-width:800px; margin-bottom: 40px;">
+        <div class="eyebrow">Prioridade estratégica</div>
+        <h2>Estruturação do Time Comercial</h2>
+        <p class="lead">
+          A performance das campanhas está diretamente ligada à qualidade do time de vendas. Neste projeto, a contratação de vendedores experientes não é suporte — é parte central da estratégia de crescimento.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <article class="job-card" style="background: var(--surface);">
+          <div class="job-tag" style="background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border);">Vaga estratégica</div>
+          <h3>Vendedor de Carros</h3>
+          <p>Profissional com experiência comprovada em vendas, com foco em negociação, atendimento consultivo e fechamento.</p>
+          <ul>
+            <li>Experiência sólida em vendas automotivas ou comerciais</li>
+            <li>Perfil agressivo em fechamento e geração de oportunidade</li>
+            <li>Capacidade de atendimento rápido e condução de lead</li>
+          </ul>
+          <div class="job-budget">Campanha ativa: R$ 20/dia durante 5 dias</div>
+        </article>
+
+        <article class="job-card" style="background: var(--surface);">
+          <div class="job-tag" style="background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border);">Vaga estratégica</div>
+          <h3>Vendedor de Motos</h3>
+          <p>Profissional com experiência sólida em vendas, perfil comercial ativo e facilidade em negociação direta com cliente.</p>
+          <ul>
+            <li>Vivência com vendas e abordagem ativa</li>
+            <li>Capacidade de conversão e disciplina comercial</li>
+            <li>Perfil competitivo e orientado a metas</li>
+          </ul>
+          <div class="job-budget">Campanha ativa: R$ 20/dia durante 5 dias</div>
+        </article>
+      </div>
+
+      <div class="stat-card" style="margin-top: 32px; background: var(--surface-alt); box-shadow: var(--shadow-md);">
+        <h4 style="margin: 0 0 12px; font-size: 18px; font-weight: 700;">Por que isso é prioridade?</h4>
+        <p style="color: var(--text-muted); font-size: 14px; max-width: 900px; margin: 0;">
+          Sem um time comercial preparado, o tráfego perde eficiência. A estratégia da Magister Tech considera mídia + operação comercial como um único sistema. Leads gerados precisam ser rapidamente convertidos — e isso depende diretamente da qualidade dos vendedores.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="eyebrow">Visão estratégica</div>
+        <h2>Objetivo central da operação</h2>
+        <p class="lead">Gerar volume qualificado de leads para veículos do estoque, acelerar a saída dos carros prioritários, manter presença digital consistente e transformar o tráfego pago em rotina comercial previsível para o Grupo Baragão.</p>
+
+        <div class="grid-4">
+          <article class="stat-card">
+            <div class="kicker">Meta principal</div>
+            <div class="value">Vender</div>
+            <p>Foco total em giro de estoque com campanhas orientadas por intenção, urgência e argumento certo para cada carro.</p>
+          </article>
+          <article class="stat-card">
+            <div class="kicker">Canal de conversão</div>
+            <div class="value">WhatsApp</div>
+            <p>Leads indo para atendimento rápido, triagem, oferta de troca, financiamento e agendamento de visita.</p>
+          </article>
+          <article class="stat-card">
+            <div class="kicker">Modelo criativo</div>
+            <div class="value">Cards + Vídeo</div>
+            <p>Carrosséis com preço e condição visual forte, mais vídeo de barganhão para aquecer e ampliar alcance.</p>
+          </article>
+          <article class="stat-card">
+            <div class="kicker">Critério de sucesso</div>
+            <div class="value">Lead qualificado</div>
+            <p>Não basta clique. A régua mede volume de conversa útil, visita agendada e potencial real de compra.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tight" style="background: var(--surface);">
+      <div class="container">
+        <div class="eyebrow">Funil comercial</div>
+        <h2>Desenho do funil de vendas para o Grupo Baragão</h2>
+        <p class="lead">A estrutura abaixo organiza como vamos atrair, qualificar, reimpactar e fechar vendas com Meta Ads, Google Ads e operação comercial integrada.</p>
+
+        <div class="funnel-layout">
+          <div class="funnel-box">
+            <div class="funnel-step step-1">
+              <div class="budget">Topo</div>
+              <h4>1. Atenção e descoberta</h4>
+              <p>Vídeo Barganhão, liquidação de carros e criativos de estoque para gerar reconhecimento e trazer público novo para a marca.</p>
+            </div>
+            <div class="funnel-step step-2">
+              <div class="budget">Meio</div>
+              <h4>2. Interesse e comparação</h4>
+              <p>Carrosséis segmentados por modelo, preço e perfil de compra, levando para clique em WhatsApp ou formulário rápido.</p>
+            </div>
+            <div class="funnel-step step-3">
+              <div class="budget">Fundo</div>
+              <h4>3. Intenção de compra</h4>
+              <p>Google Ads com termos de alta intenção, busca por modelo/ano e remarketing para quem já visitou, clicou ou engajou.</p>
+            </div>
+            <div class="funnel-step step-4">
+              <div class="budget">Fechamento</div>
+              <h4>4. Conversão e retomada</h4>
+              <p>Atendimento consultivo, follow-up em até 5 minutos, prova social, condições, troca, financiamento e campanha de reimpacto.</p>
+            </div>
+          </div>
+
+          <div class="funnel-side">
+            <div class="mini-card">
+              <h4>Regra de operação</h4>
+              <p>Cada lead precisa entrar em uma cadência clara: contato imediato, qualificação, objeção, proposta e reativação.</p>
+            </div>
+            <div class="mini-card">
+              <h4>Meta Ads</h4>
+              <p>Responsável por escala visual, descoberta, remarketing e geração de conversas com criativos de estoque e ofertas.</p>
+            </div>
+            <div class="mini-card">
+              <h4>Google Ads</h4>
+              <p>Responsável por capturar demanda pronta, principalmente usuários pesquisando modelo específico, preço e condição.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="eyebrow">Canais de tráfego</div>
+        <h2>Como vamos atuar em Meta Ads e Google Ads</h2>
+        <p class="lead">A estratégia é separar função por canal. Meta gera percepção, desejo e remarketing. Google captura quem já está buscando o carro ou a condição.</p>
+
+        <div class="channels">
+          <article class="channel-card">
+            <h3>Meta Ads</h3>
+            <div class="tag-row">
+              <span class="tag">Carrossel</span>
+              <span class="tag">Vídeo</span>
+              <span class="tag">Remarketing</span>
+              <span class="tag">WhatsApp</span>
+            </div>
+            <div class="list">
+              <div class="list-item"><span class="dot"></span><div><strong>Campanhas de estoque:</strong> 10 carrosséis com layout novo, preço forte, CTA claro e leitura rápida no mobile.</div></div>
+              <div class="list-item"><span class="dot"></span><div><strong>Campanha Liquida Carros:</strong> criativo guarda-chuva para acelerar giro e criar senso de urgência.</div></div>
+              <div class="list-item"><span class="dot"></span><div><strong>Vídeo Barganhão:</strong> criativo de alcance e consideração para aquecer público e gerar lembrança da oferta.</div></div>
+              <div class="list-item"><span class="dot"></span><div><strong>Remarketing:</strong> usuários que assistiram vídeo, engajaram com perfil e clicaram para WhatsApp.</div></div>
+            </div>
+          </article>
+
+          <article class="channel-card">
+            <h3>Google Ads</h3>
+            <div class="tag-row">
+              <span class="tag">Rede de Pesquisa</span>
+              <span class="tag">Alta intenção</span>
+              <span class="tag">Marca + modelo</span>
+              <span class="tag">Fundo do funil</span>
+            </div>
+            <div class="list">
+              <div class="list-item"><span class="dot"></span><div><strong>Busca por modelo:</strong> campanhas com termos como “Etios 2017”, “Corolla 2019”, “Tiguan 2019” e variações com cidade.</div></div>
+              <div class="list-item"><span class="dot"></span><div><strong>Busca por necessidade:</strong> usados, seminovos, financiamento, troca com troco, loja confiável e SUV usado.</div></div>
+              <div class="list-item"><span class="dot"></span><div><strong>Extensões:</strong> WhatsApp, chamada, localização e destaques de credibilidade.</div></div>
+              <div class="list-item"><span class="dot"></span><div><strong>Prioridade:</strong> campanhas específicas para veículos que queremos vender primeiro.</div></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="budget-board">
+          <article class="budget-card">
+            <div class="eyebrow">Divisão de verba</div>
+            <h3>Plano-base de mídia diária</h3>
+            <table class="budget-table">
+              <thead>
+                <tr>
+                  <th>Campanha</th>
+                  <th>Canal</th>
+                  <th>Objetivo</th>
+                  <th>Verba</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Carros do estoque</td>
+                  <td>Meta + Google</td>
+                  <td>Leads e conversas</td>
+                  <td class="price">R$ 100/dia</td>
+                </tr>
+                <tr>
+                  <td>Vídeo Barganhão</td>
+                  <td>Meta Ads</td>
+                  <td>Alcance e aquecimento</td>
+                  <td class="price">R$ 50/dia</td>
+                </tr>
+                <tr>
+                  <td>Vaga vendedor carros</td>
+                  <td>Meta Ads</td>
+                  <td>Recrutamento</td>
+                  <td class="price">R$ 20/dia (5 dias)</td>
+                </tr>
+                <tr>
+                  <td>Vaga vendedor motos</td>
+                  <td>Meta Ads</td>
+                  <td>Recrutamento</td>
+                  <td class="price">R$ 20/dia (5 dias)</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="callout">
+            <span class="badge">Recomendação de alocação</span>
+            <p><strong>Dos R$ 100/dia dos carros:</strong> 70% em Meta Ads para carrosséis, remarketing e liquidação. 30% em Google Ads para capturar busca por modelo e intenção de compra.</p>
+            <p><strong>Dos R$ 50/dia do vídeo:</strong> 100% em Meta, com foco em alcance local, visualizações e públicos semelhantes baseados em engajamento.</p>
+            <p><strong>Estratégia tática:</strong> concentrar mais verba nos carros prioritários e redistribuir semanalmente conforme CPL, qualidade do lead e interesse real.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tight" style="background: var(--surface);">
+      <div class="container">
+        <div class="eyebrow">Direção criativa</div>
+        <h2>Novo layout dos cards para os 10 carrosséis</h2>
+        <p class="lead">O card precisa ser visualmente forte no feed e extremamente legível no celular. O novo formato prioriza carro, preço, chamada curta e CTA imediato.</p>
+
+        <div class="grid-3">
+          <article class="creative-card">
+            <div class="creative-top">
+              <span class="chip">Modelo 01</span>
+              <h4>Carro + preço em destaque</h4>
+            </div>
+            <div class="creative-body">
+              <p>Imagem dominante do veículo, preço grande, ano/modelo no topo e CTA “Chame agora no WhatsApp”. Ideal para feed, stories e remarketing.</p>
+              <div class="creative-meta"><span>Foco: conversão</span><span>Leitura rápida</span></div>
+            </div>
+          </article>
+
+          <article class="creative-card">
+            <div class="creative-top">
+              <span class="chip">Modelo 02</span>
+              <h4>Liquida carros</h4>
+            </div>
+            <div class="creative-body">
+              <p>Faixa promocional, urgência visual, selo de oportunidade e organização por lote. Excelente para campanhas com mais pressão comercial.</p>
+              <div class="creative-meta"><span>Foco: urgência</span><span>Baixa de estoque</span></div>
+            </div>
+          </article>
+
+          <article class="creative-card">
+            <div class="creative-top">
+              <span class="chip">Modelo 03</span>
+              <h4>Barganhão em vídeo</h4>
+            </div>
+            <div class="creative-body">
+              <p>Abertura forte, fala comercial objetiva, cortes rápidos, identidade da loja e fechamento chamando o lead para conversar no WhatsApp.</p>
+              <div class="creative-meta"><span>Foco: topo e meio</span><span>Engajamento local</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="eyebrow">Estratégia por veículo</div>
+        <h2>Plano de tráfego e abordagem comercial para cada carro</h2>
+        <p class="lead">Cada veículo precisa de uma narrativa própria. Abaixo está a linha de atuação para anúncio, argumento de venda, prioridade e execução.</p>
+
+        <div class="grid-2 vehicle-grid">
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Toyota Etios 2017</h3>
+              <span class="priority-badge priority-base">Giro de entrada</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Econômico e urbano</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Meta carrossel + Google</span></div>
+              </div>
+              <ul>
+                <li>Usar copy focada em economia, manutenção acessível e confiança Toyota.</li>
+                <li>Segmentar público que busca primeiro carro, troca de popular e uso diário.</li>
+                <li>No Google, ativar palavras ligadas a Etios 2017, usado econômico e carro para trabalhar.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Jeep Renegade 2016</h3>
+              <span class="priority-badge priority-fast">SUV de desejo</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>SUV urbano c/ apelo</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Meta vídeo/carrossel</span></div>
+              </div>
+              <ul>
+                <li>Explorar design, altura, presença e percepção de status no anúncio.</li>
+                <li>Segmentar público de SUV compacto, casais e famílias pequenas.</li>
+                <li>Remarketing forte para quem interagir com conteúdos de SUV.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Peugeot 3008</h3>
+              <span class="priority-badge priority-base">Oferta de valor</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Conforto e custo-benefício</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Carrossel comparativo</span></div>
+              </div>
+              <ul>
+                <li>Trabalhar a percepção de “mais carro pelo valor” para quem compara opções.</li>
+                <li>Criativo com preço muito visível e destaque para espaço, conforto e acabamento.</li>
+                <li>Ideal para campanha de liquidação com CTA direto.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Toyota Corolla 2019</h3>
+              <span class="priority-badge priority-hot">Queremos vender</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Sedã desejado e confiável</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Google intenção + Meta</span></div>
+              </div>
+              <ul>
+                <li>Veículo prioritário. Criar campanha exclusiva com verba destacada e grupo próprio.</li>
+                <li>Google Ads com termos de busca por Corolla 2019, XEi/GLi/Altis e variações locais.</li>
+                <li>Na Meta, usar criativo premium com ângulos, acabamento interno e argumento forte.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Pajero TR4 2012</h3>
+              <span class="priority-badge priority-fast">Nicho aventureiro</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>4x4 robusta e raiz</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Meta nichado + busca</span></div>
+              </div>
+              <ul>
+                <li>Apelo para quem busca robustez, estrada ruim, sítio, interior e perfil off-road.</li>
+                <li>Criativo com linguagem mais forte: resistência, altura e tradição Pajero.</li>
+                <li>Importante trabalhar palavras-chave ligadas a 4x4 usada e SUV robusto.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Renault Kardian 2025</h3>
+              <span class="priority-badge priority-hot">Queremos vender</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Atual e moderno</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Meta premium + Google</span></div>
+              </div>
+              <ul>
+                <li>Tratar como carro vitrine. Criativo elegante, moderno e com percepção de novidade.</li>
+                <li>Separar verba e rotina de otimização própria devido ao alto potencial comercial.</li>
+                <li>Campanha com linguagem de oportunidade para veículo novo/seminovo recente.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Kombi 1995 • 9 lugares</h3>
+              <span class="priority-badge priority-fast">Nicho utilitário</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Trabalho e turismo</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Meta segmentado</span></div>
+              </div>
+              <ul>
+                <li>Usar criativos para público de transporte, projeto, lazer, eventos e colecionadores.</li>
+                <li>Explorar o diferencial dos 9 lugares, utilidade e versatilidade.</li>
+                <li>Bom candidato para conteúdo orgânico com apoio de impulsionamento.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Saveiro 2018</h3>
+              <span class="priority-badge priority-fast">Utilitário comercial</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Trabalho e versatilidade</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Google serviço + Meta</span></div>
+              </div>
+              <ul>
+                <li>Foco em autônomos, pequenos empresários, entregas, obra e trabalho diário.</li>
+                <li>Copys com “ideal para trabalhar”, economia e praticidade.</li>
+                <li>Campanha com forte apelo racional, menos aspiracional.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Tiguan 2019</h3>
+              <span class="priority-badge priority-fast">SUV premium</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Família premium</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Meta premium + busca</span></div>
+              </div>
+              <ul>
+                <li>Mostrar interior, conforto, sofisticação e sensação de carro de categoria superior.</li>
+                <li>Campanha para público de maior ticket e comparadores de SUVs médios.</li>
+                <li>Remarketing com prova social e argumentos de credibilidade da loja.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="vehicle-card">
+            <div class="vehicle-head">
+              <h3>Dodge Journey 2012</h3>
+              <span class="priority-badge priority-base">Família e espaço</span>
+            </div>
+            <div class="vehicle-body">
+              <div class="row">
+                <div class="metric"><b>Posicionamento</b><span>Espaço e perfil familiar</span></div>
+                <div class="metric"><b>Mídia ideal</b><span>Meta comparativo</span></div>
+              </div>
+              <ul>
+                <li>Foco em espaço, conforto para família, viagens e custo-benefício pelo porte.</li>
+                <li>Boa peça para carrossel de oportunidades e lote de liquidação.</li>
+                <li>Usar abordagem objetiva para reduzir objeção e destacar benefício real.</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tight" style="background: var(--surface);">
+      <div class="container">
+        <div class="eyebrow">Cronograma de tráfego</div>
+        <h2>Plano de execução em 4 semanas</h2>
+        <p class="lead">O cronograma abaixo organiza implantação, aprendizado, ajuste criativo e escala de campanhas com uma rotina simples e prática.</p>
+
+        <div class="timeline">
+          <article class="timeline-item">
+            <div class="week">Semana 1</div>
+            <div>
+              <h4>Estrutura e lançamento</h4>
+              <p>Configuração da conta, organização das campanhas, instalação de eventos e publicação dos primeiros criativos.</p>
+              <ul>
+                <li>Subir campanha de estoque com carrosséis e liquida carros.</li>
+                <li>Subir vídeo Barganhão em Meta Ads.</li>
+                <li>Subir campanhas de Google Ads para modelos prioritários.</li>
+                <li>Definir atendimento, mensagem inicial e tempo máximo de resposta.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <div class="week">Semana 2</div>
+            <div>
+              <h4>Leitura de dados e primeiros cortes</h4>
+              <p>Avaliar CTR, custo por conversa, qualidade do lead e veículos com maior interesse.</p>
+              <ul>
+                <li>Redistribuir verba entre os carros conforme resposta do mercado.</li>
+                <li>Cortar anúncios fracos e reforçar os melhores criativos.</li>
+                <li>Ativar remarketing com base em engajamento e cliques.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <div class="week">Semana 3</div>
+            <div>
+              <h4>Escala tática e pressão nos prioritários</h4>
+              <p>Foco em Corolla 2019 e Kardian 2025, sem perder tração dos veículos de entrada e utilitários.</p>
+              <ul>
+                <li>Ampliar orçamento dos grupos vencedores.</li>
+                <li>Lançar novas variações de copy e abertura do vídeo.</li>
+                <li>Fortalecer liquidação com urgência visual e prova social.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="timeline-item">
+            <div class="week">Semana 4</div>
+            <div>
+              <h4>Otimização fina e relatório comercial</h4>
+              <p>Fechamento do primeiro ciclo com visão de vendas, aprendizado e próximos movimentos.</p>
+              <ul>
+                <li>Comparar origem dos leads por canal e por veículo.</li>
+                <li>Identificar gargalos no atendimento e objeções recorrentes.</li>
+                <li>Planejar segundo mês com foco nas oportunidades validadas.</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="eyebrow">Contratação com tráfego</div>
+        <h2>2 campanhas de recrutamento para vendedores</h2>
+        <p class="lead">Além das campanhas de venda, vamos rodar duas ações de contratação com tráfego pago para reforçar o time comercial do grupo.</p>
+
+        <div class="grid-2">
+          <article class="job-card">
+            <span class="job-tag">Vaga 01</span>
+            <h3>Vendedor de Carros</h3>
+            <p>Campanha com foco em profissionais com experiência em venda sólida, perfil comercial forte, disciplina de atendimento e capacidade de fechamento.</p>
+            <ul>
+              <li>Segmentar por interesse em vendas, veículos, concessionárias, seminovos e atuação comercial.</li>
+              <li>Criativo direto com promessa clara: oportunidade real, estrutura e ambiente de alta performance.</li>
+              <li>Formulário simples com nome, telefone, experiência e histórico em vendas.</li>
+            </ul>
+            <div class="job-budget">Investimento: R$ 20 por dia durante 5 dias</div>
+          </article>
+
+          <article class="job-card">
+            <span class="job-tag">Vaga 02</span>
+            <h3>Vendedor de Motos</h3>
+            <p>Campanha separada para atrair profissionais com experiência sólida em vendas, vivência com atendimento consultivo e rotina comercial ativa.</p>
+            <ul>
+              <li>Segmentar por vendas, motos, lojas de motos, marketplace e atuação comercial local.</li>
+              <li>Falar em crescimento, comissão, metas e perfil de vendedor que gosta de negociação.</li>
+              <li>Captação via formulário ou WhatsApp com triagem rápida da experiência.</li>
+            </ul>
+            <div class="job-budget">Investimento: R$ 20 por dia durante 5 dias</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tight" style="background: var(--surface);">
+      <div class="container">
+        <div class="eyebrow">Métricas de gestão</div>
+        <h2>Indicadores para acompanhar a operação</h2>
+        <p class="lead">O acompanhamento não deve ser só de clique. O que importa é a qualidade do lead, a velocidade da resposta e a evolução comercial por veículo.</p>
+
+        <div class="grid-4">
+          <article class="kpi">
+            <span>CPL / conversa</span>
+            <strong>Meta-chave</strong>
+            <p>Acompanhar custo por conversa iniciada e custo por lead aproveitável.</p>
+          </article>
+          <article class="kpi">
+            <span>Tempo de resposta</span>
+            <strong>Até 5 min</strong>
+            <p>Velocidade de atendimento influencia diretamente o fechamento.</p>
+          </article>
+          <article class="kpi">
+            <span>Taxa de visita</span>
+            <strong>Escalada</strong>
+            <p>Mensurar quantos leads agendam ou comparecem à loja.</p>
+          </article>
+          <article class="kpi">
+            <span>Venda por veículo</span>
+            <strong>Prioridade</strong>
+            <p>Separar performance dos carros estratégicos dos demais anúncios.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-wrap">
+        <div>
+          <h3>Magister Tech</h3>
+          <p>Estratégia de performance, tráfego pago e estrutura comercial para o Grupo Baragão.</p>
+        </div>
+        <div class="footer-badge">Apresentação Estratégica • 2026</div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
