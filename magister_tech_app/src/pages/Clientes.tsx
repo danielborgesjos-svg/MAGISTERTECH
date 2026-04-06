@@ -17,7 +17,7 @@ const SEGMENTS = ['Software', 'Gestão', 'E-commerce', 'Consultoria', 'Saúde', 
 const ORIGINS = ['Indicação', 'LinkedIn', 'Google Ads', 'Cold Outreach', 'Evento', 'Site', 'Outro'];
 
 export default function Clientes() {
-  const { clients, contracts, projects, addClient, updateClient, addClientNote } = useData();
+  const { clients, contracts, projects, addClient, updateClient, addClientNote, pipeline, addPipelineDeal } = useData();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
@@ -334,10 +334,29 @@ export default function Clientes() {
                      </div>
                    </div>
 
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 12, marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
                      <button className="btn btn-primary" onClick={() => { setForm({ name: selectedClient.name, company: selectedClient.company, email: selectedClient.email, phone: selectedClient.phone, segment: selectedClient.segment, status: selectedClient.status, origin: selectedClient.origin }); setIsEditingForm(true); setShowForm(true); }}>
                         Editar Dados Cadastrais
                      </button>
+                     {selectedClient.status === 'prospect' && (
+                        <button className="btn btn-primary" style={{ background: 'var(--indigo)' }} onClick={() => {
+                           // Procura a coluna "Novos Leads" ou a primeira coluna
+                           if (pipeline.length > 0) {
+                             addPipelineDeal(pipeline[0].id, {
+                               title: selectedClient.company,
+                               value: 0,
+                               tag: selectedClient.segment,
+                               priority: 'medium',
+                               phone: selectedClient.phone,
+                               description: `Lead gerado automaticamente pelo CRM Hub.\nOrigem: ${selectedClient.origin}`,
+                               assignee: 'CRM'
+                             });
+                             alert('Lead transferido para o Pipeline Comercial com sucesso!');
+                           }
+                        }}>
+                           Transferir para Painel Pipeline
+                        </button>
+                     )}
                     {selectedClient.status !== 'ativo' && (
                        <button className="btn btn-outline" onClick={() => updateClient(selectedClient.id, { status: 'ativo' })} style={{ color: 'var(--success)', borderColor: 'var(--success)' }}>
                           <CheckCircle size={16} /> Coverter para Conta Ativa

@@ -22,17 +22,21 @@ const fmt = (iso: string) => {
     d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 };
 
-function FeedCard({ post, onDelete, onPin, onReact, currUser }: {
+function FeedCard({ post, onDelete, onPin, onReact, onComment, currUser }: {
   post: FeedPost;
   onDelete: (id: string) => void;
   onPin: (id: string) => void;
   onReact: (id: string, emoji: string) => void;
+  onComment: (id: string, text: string, parentId?: string) => void;
   currUser: string;
 }) {
   const cfg = TYPE_CONFIG[post.type];
   const Icon = cfg.icon;
   const liked = post.reactions?.find(r => r.emoji === '👍')?.users.includes(currUser);
   const likeCount = post.reactions?.find(r => r.emoji === '👍')?.users.length ?? 0;
+  const [commentText, setCommentText] = useState('');
+  const [showComments, setShowComments] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   return (
     <div className="card" style={{ marginBottom: 16, borderLeft: `3px solid ${cfg.color}`, transition: 'all 0.2s' }}>
@@ -71,11 +75,15 @@ function FeedCard({ post, onDelete, onPin, onReact, currUser }: {
       <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, lineHeight: 1.4 }}>{post.title}</h3>
       <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{post.content}</p>
 
-      {/* Image preview */}
+      {/* Media preview */}
       {(post as any).imageUrl && (
         <div style={{ marginTop: 14, borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
-          <img src={(post as any).imageUrl} alt="Anexo" style={{ width: '100%', maxHeight: 400, objectFit: 'cover', display: 'block' }}
-            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+          {((post as any).imageUrl.includes('.mp4') || (post as any).imageUrl.includes('video')) ? (
+             <video src={(post as any).imageUrl} controls style={{ width: '100%', maxHeight: 400, display: 'block', background: '#000' }} />
+          ) : (
+             <img src={(post as any).imageUrl} alt="Anexo" style={{ width: '100%', maxHeight: 400, objectFit: 'cover', display: 'block' }}
+                onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+          )}
         </div>
       )}
 
@@ -108,7 +116,94 @@ function FeedCard({ post, onDelete, onPin, onReact, currUser }: {
           <Heart size={13} />
           {post.reactions?.find(r => r.emoji === '❤️')?.users.length ?? 0}
         </button>
+        <button onClick={() => setShowComments(!showComments)}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 100, border: '1.5px solid var(--border)', background: 'transparent', cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)' }}>
+          <MessageCircle size={13} />
+          {post.comments?.length || 0}
+        </button>
       </div>
+
+      {/* Comments Area */}
+      {showComments && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px dashed var(--border)' }}>
+           {post.comments && post.comments.length > 0 && (
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+                {post.comments.filter(c => !(c as any).parentId).map(c => (
+                   <div key={c.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800 }}>
+                           {c.authorInitials}
+                        </div>
+                        <div style={{ flex: 1, background: 'var(--bg-subtle)', padding: '10px 14px', borderRadius: '0 12px 12px 12px' }}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 12, fontWeight: 800 }}>{c.authorName}</span>
+                              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{new Date(c.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                           </div>
+                           <p style={{ fontSize: 13, margin: 0, color: 'var(--text-main)' }}>{c.text}</p>
+                           <button 
+                             onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                             style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: 10, fontWeight: 800, cursor: 'pointer', marginTop: 6, padding: 0 }}
+                           >
+                             RESPONDER
+                           </button>
+                        </div>
+                      </div>
+                      
+                      {/* Nested Replies */}
+                      <div style={{ paddingLeft: 38, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                         {(post.comments || []).filter(reply => (reply as any).parentId === c.id).map(reply => (
+                           <div key={reply.id} style={{ display: 'flex', gap: 8 }}>
+                              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800 }}>
+                                {reply.authorInitials}
+                              </div>
+                              <div style={{ flex: 1, background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '0 10px 10px 10px', border: '1px solid var(--border)' }}>
+                                 <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--primary)', marginRight: 6 }}>{reply.authorName}</span>
+                                 <span style={{ fontSize: 12, color: 'var(--text-sec)' }}>{reply.text}</span>
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+                   </div>
+                ))}
+             </div>
+           )}
+           <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
+              {replyingTo && (
+                <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 700, display: 'flex', justifyContent: 'space-between' }}>
+                  Respondendo para {post.comments?.find(c => c.id === replyingTo)?.authorName}...
+                  <button onClick={() => setReplyingTo(null)} style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: 10, cursor: 'pointer' }}>Cancelar</button>
+                </div>
+              )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                <input 
+                  className="input" 
+                  placeholder={replyingTo ? "Escrever resposta..." : "Comentar..."} 
+                  value={commentText} 
+                  onChange={e => setCommentText(e.target.value)} 
+                  onKeyDown={e => { 
+                    if (e.key === 'Enter' && commentText.trim()) { 
+                      onComment(post.id, commentText, replyingTo || undefined); 
+                      setCommentText(''); 
+                      setReplyingTo(null);
+                    } 
+                  }} 
+                  style={{ flex: 1, padding: '8px 12px', fontSize: 13, height: 36, minHeight: 36 }} 
+                />
+                <button 
+                  className="btn btn-primary btn-sm" 
+                  disabled={!commentText.trim()} 
+                  onClick={() => { 
+                    onComment(post.id, commentText, replyingTo || undefined); 
+                    setCommentText(''); 
+                    setReplyingTo(null);
+                  }}
+                >
+                  <Send size={14}/>
+                </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -234,6 +329,22 @@ export default function Feed() {
           onDelete={(id) => { if (confirm('Excluir publicação?')) deleteFeedPost(id); }}
           onPin={pinFeedPost}
           onReact={handleReact}
+          onComment={(id: string, text: string, parentId?: string) => {
+             const post = feed.find(p => p.id === id);
+             if (post) {
+                const newComment = { 
+                  id: Date.now().toString(), 
+                  text, 
+                  parentId,
+                  authorId: user?.id || 'admin', 
+                  authorName: user?.name || 'Membro', 
+                  authorInitials: user?.name?.substring(0,2).toUpperCase() || 'ME', 
+                  date: new Date().toISOString() 
+                };
+                deleteFeedPost(id);
+                addFeedPost({ ...post, comments: [...(post.comments || []), newComment] });
+             }
+          }}
         />
       ))}
 
@@ -284,12 +395,12 @@ export default function Feed() {
                   value={form.content} onChange={e => setForm(p => ({ ...p, content: e.target.value }))} />
               </div>
 
-              {/* Image URL */}
+              {/* Media URL */}
               <div>
                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <ImageIcon size={13} /> Imagem (URL ou cole link direto)
+                  <ImageIcon size={13} /> Mídia Opcional (URL de Foto ou Vídeo .mp4)
                 </label>
-                <input className="input" placeholder="https://exemplo.com/imagem.jpg" value={form.imageUrl}
+                <input className="input" placeholder="https://exemplo.com/imagem.jpg ou video.mp4" value={form.imageUrl}
                   onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))} />
                 {form.imageUrl && (
                   <img src={form.imageUrl} alt="Preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', marginTop: 8, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}

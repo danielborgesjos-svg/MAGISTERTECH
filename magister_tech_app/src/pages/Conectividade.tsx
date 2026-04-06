@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Wifi, WifiOff, RefreshCw, Users, Download, Phone, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 type WAStatus = 'disconnected' | 'qr_ready' | 'connecting' | 'connected' | 'auth_failure';
 
@@ -19,6 +20,7 @@ const STATUS_CONFIG: Record<WAStatus, { label: string; color: string; icon: Reac
 };
 
 export default function Conectividade() {
+  const { addPipelineDeal } = useData();
   const [wa, setWa] = useState<WAState>({ status: 'disconnected', qrDataUrl: null, phone: null, contacts: [] });
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ created: number; skipped: number } | null>(null);
@@ -227,20 +229,36 @@ export default function Conectividade() {
                     Prévia de Contatos
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
-                    {wa.contacts.slice(0, 10).map(c => (
-                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-subtle)', borderRadius: 8 }}>
-                        <div className="avatar" style={{ width: 28, height: 28, fontSize: 11, background: `hsl(${c.name.charCodeAt(0) * 30}, 60%, 50%)`, color: '#fff', fontWeight: 800 }}>
+                    {wa.contacts.slice(0, 15).map(c => (
+                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--bg-subtle)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                        <div className="avatar" style={{ width: 32, height: 32, fontSize: 12, background: `hsl(${c.name.charCodeAt(0) * 45}, 70%, 45%)`, color: '#fff', fontWeight: 800 }}>
                           {c.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{c.name}</p>
+                          <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>{c.name}</p>
                           <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>+{c.phone}</p>
                         </div>
+                        <button 
+                          className="btn btn-primary btn-sm" 
+                          style={{ padding: '6px 10px', fontSize: 10, background: 'linear-gradient(135deg, #ff4d4d, #f81ce5)', border: 'none' }}
+                          onClick={() => {
+                            addPipelineDeal('lead', {
+                              title: `Lead: ${c.name}`,
+                              assignee: 'Sem Atribuir',
+                              priority: 'high',
+                              tag: 'WhatsApp',
+                              phone: c.phone
+                            });
+                            alert(`${c.name} movido para o Pipeline! 🔥`);
+                          }}
+                        >
+                          🔥 QUENTE
+                        </button>
                       </div>
                     ))}
-                    {wa.contacts.length > 10 && (
+                    {wa.contacts.length > 15 && (
                       <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', padding: '8px 0' }}>
-                        +{wa.contacts.length - 10} contatos adicionais disponíveis
+                        +{wa.contacts.length - 15} contatos adicionais disponíveis
                       </p>
                     )}
                   </div>

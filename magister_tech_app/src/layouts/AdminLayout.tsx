@@ -65,6 +65,7 @@ const AdminLayout = () => {
       label: 'Comercial',
       items: [
         { to: '/admin/pipeline', icon: Target, label: 'Pipeline', module: 'pipeline' },
+        { to: '/admin/inbox', icon: MessageCircle, label: 'Inbox N1', module: 'crm' },
         { to: '/admin/crm', icon: Users, label: 'CRM — Clientes', module: 'crm' },
         { to: '/admin/contratos', icon: FileText, label: 'Contratos', module: 'contratos' },
       ]

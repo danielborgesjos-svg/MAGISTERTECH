@@ -23,6 +23,7 @@ export default function Equipe() {
 
   const [selected, setSelected] = useState(team[0] || null);
   const [activeTab, setActiveTab] = useState<'team' | 'feed'>('team');
+  const [profileTab, setProfileTab] = useState<'perfil' | 'contrato'>('perfil');
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [saved, setSaved] = useState(false);
@@ -235,18 +236,60 @@ export default function Equipe() {
                   </div>
                 </div>
 
-                <div className="card" style={{ padding: 24 }}>
-                  <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Avaliação de Desempenho</h4>
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <Star key={star} size={28} onMouseEnter={() => setHoverStar(star)} onMouseLeave={() => setHoverStar(0)} onClick={() => setRating(star)} fill={(hoverStar || rating) >= star ? 'var(--warning)' : 'transparent'} color={(hoverStar || rating) >= star ? 'var(--warning)' : 'var(--text-muted)'} style={{ cursor: 'pointer' }} />
-                    ))}
-                  </div>
-                  <textarea className="input" style={{ width: '100%', minHeight: 80 }} placeholder="Feedback..." value={feedback} onChange={e => setFeedback(e.target.value)} />
-                  <button className="btn btn-primary" onClick={handleSubmit} disabled={rating === 0 || !feedback.trim() || saved} style={{ width: '100%', marginTop: 12 }}>
-                    {saved ? 'Avaliação Salva!' : 'Gravar Avaliação'}
-                  </button>
+                <div style={{ display: 'flex', gap: 24, marginTop: 16, marginBottom: 16, padding: '0 8px', borderBottom: '1px solid var(--border)' }}>
+                  <button onClick={() => setProfileTab('perfil')} style={{ background: 'none', border: 'none', color: profileTab === 'perfil' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 800, borderBottom: profileTab === 'perfil' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: 8, cursor: 'pointer' }}>Avaliações</button>
+                  <button onClick={() => setProfileTab('contrato')} style={{ background: 'none', border: 'none', color: profileTab === 'contrato' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 800, borderBottom: profileTab === 'contrato' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: 8, cursor: 'pointer' }}>Contrato de Trabalho</button>
                 </div>
+
+                {profileTab === 'perfil' ? (
+                  <div className="card" style={{ padding: 24 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Avaliação de Desempenho</h4>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <Star key={star} size={28} onMouseEnter={() => setHoverStar(star)} onMouseLeave={() => setHoverStar(0)} onClick={() => setRating(star)} fill={(hoverStar || rating) >= star ? 'var(--warning)' : 'transparent'} color={(hoverStar || rating) >= star ? 'var(--warning)' : 'var(--text-muted)'} style={{ cursor: 'pointer' }} />
+                      ))}
+                    </div>
+                    <textarea className="input" style={{ width: '100%', minHeight: 80 }} placeholder="Feedback..." value={feedback} onChange={e => setFeedback(e.target.value)} />
+                    <button className="btn btn-primary" onClick={handleSubmit} disabled={rating === 0 || !feedback.trim() || saved} style={{ width: '100%', marginTop: 12 }}>
+                      {saved ? 'Avaliação Salva!' : 'Gravar Avaliação'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="card" style={{ padding: 24 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                      <h4 style={{ fontSize: 14, fontWeight: 800 }}>Contrato & Vínculo</h4>
+                      <span className="badge badge-success">Ativo</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div>
+                        <label className="form-label" style={{ fontSize: 11 }}>Tipo de Vínculo</label>
+                        <select className="input" style={{ width: '100%' }}>
+                          <option>PJ (Prestação de Serviços)</option>
+                          <option>CLT</option>
+                          <option>Estágio</option>
+                          <option>Freelancer (Demanda)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: 11 }}>Carga Horária / Escopo</label>
+                        <input className="input" placeholder="Ex: 40h semanais" style={{ width: '100%' }} />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: 11 }}>Remuneração Base</label>
+                        <input className="input" placeholder="R$ 0,00" style={{ width: '100%' }} />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: 11 }}>Data de Início</label>
+                        <input type="date" className="input" style={{ width: '100%' }} />
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 24 }}>
+                      <label className="form-label" style={{ fontSize: 11 }}>Acordos Específicos & Bônus</label>
+                      <textarea className="input" rows={3} style={{ width: '100%' }} placeholder="Regras de comissão, metas, equipamentos cedidos..."></textarea>
+                    </div>
+                    <button className="btn btn-primary" style={{ width: '100%', marginTop: 20 }}>Atualizar Contrato</button>
+                  </div>
+                )}
               </>
             ) : null}
           </div>

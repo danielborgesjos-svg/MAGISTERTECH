@@ -21,6 +21,7 @@ import Configuracoes from './pages/Configuracoes';
 import ClienteHub from './pages/ClienteHub';
 import KanbanCliente from './pages/KanbanCliente';
 import ClientesAPI from './pages/ClientesAPI';
+import Inbox from './pages/Inbox';
 
 import { AuthContext } from './contexts/AuthContext';
 import { useContext } from 'react';
@@ -54,6 +55,7 @@ function App() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="kanban" element={<ProtectedRoute module="kanban"><Kanban /></ProtectedRoute>} />
               <Route path="crm" element={<ProtectedRoute module="crm"><Clientes /></ProtectedRoute>} />
+              <Route path="inbox" element={<ProtectedRoute module="crm"><Inbox /></ProtectedRoute>} />
               <Route path="contratos" element={<ProtectedRoute module="contratos"><Contratos /></ProtectedRoute>} />
               <Route path="pipeline" element={<ProtectedRoute module="pipeline"><Pipeline /></ProtectedRoute>} />
               <Route path="projetos" element={<ProtectedRoute module="projetos"><Projetos /></ProtectedRoute>} />

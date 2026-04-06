@@ -39,13 +39,15 @@ export default function Conteudo() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleForm, setScheduleForm] = useState<{ days: string[], defaultAssigneeId: string }>({ days: [], defaultAssigneeId: '' });
   const [newComment, setNewComment] = useState('');
-  
+  const [activeDay, setActiveDay] = useState<{ date: string; dayNum: number } | null>(null);
+
   const selectedClient = clients.find(c => c.id === selectedClientId);
   const [editingPlan, setEditingPlan] = useState('');
   
   const [form, setForm] = useState({
     clientId: '', platform: 'Instagram', date: new Date().toISOString().split('T')[0],
-    caption: '', status: 'ideia' as ContentPost['status']
+    caption: '', status: 'ideia' as ContentPost['status'],
+    media: '', mediaType: 'image' as 'image' | 'video'
   });
 
   const handleAdd = () => {
@@ -56,9 +58,11 @@ export default function Conteudo() {
       date: form.date, 
       caption: form.caption, 
       status: form.status,
+      media: form.media,
+      mediaType: form.mediaType,
       assignedTo: clients.find(c => c.id === form.clientId)?.contentSchedule?.defaultAssigneeId
     });
-    setForm({ clientId: '', platform: 'Instagram', date: new Date().toISOString().split('T')[0], caption: '', status: 'ideia' });
+    setForm({ clientId: '', platform: 'Instagram', date: new Date().toISOString().split('T')[0], caption: '', status: 'ideia', media: '', mediaType: 'image' });
     setShowForm(false);
   };
 
@@ -218,21 +222,26 @@ export default function Conteudo() {
                       const dayOfWeek = new Date(year, month, i + 1).toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase();
                       const isScheduledDay = selectedClient?.contentSchedule?.days.some(d => dayOfWeek.includes(d.toLowerCase()));
                       
+                      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`;
+                      
                       return (
-                        <div key={i} style={{ 
+                        <div key={i} onClick={() => setActiveDay({ date: dateStr, dayNum: i + 1 })} style={{ 
                           minHeight: 80, 
                           border: isScheduledDay ? '2px solid var(--primary)' : '1px solid var(--border)', 
                           borderRadius: 12, 
                           padding: 8, 
                           background: dayPosts.length > 0 ? 'var(--primary-glow)' : 'var(--bg-subtle)', 
-                          position: 'relative' 
+                          position: 'relative',
+                          cursor: 'pointer'
                         }}>
                           <span style={{ fontSize: 11, fontWeight: 800, color: isScheduledDay ? 'var(--primary)' : 'var(--text-muted)' }}>{i+1}</span>
-                          {isScheduledDay && dayPosts.length === 0 && (
-                            <div style={{ position: 'absolute', top: 8, right: 8, fontSize: 10, color: 'var(--primary)', fontWeight: 800 }}>⚡ FIXO</div>
+                          {isScheduledDay && (
+                            <div style={{ position: 'absolute', top: 6, right: 6, fontSize: 9, background: 'var(--primary)', color: 'white', padding: '1px 4px', borderRadius: 4, fontWeight: 900 }}>ESTRATÉGIA</div>
                           )}
-                          <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', marginTop: 4 }}>
-                            {dayPosts.map(p => <div key={p.id} title={p.caption} style={{ width: 8, height: 8, borderRadius: '50%', background: STATUS_CONFIG[p.status].color }} />)}
+                          <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', marginTop: 12 }}>
+                            {dayPosts.map(p => (
+                              <div key={p.id} title={p.caption} style={{ width: 10, height: 10, borderRadius: 3, background: STATUS_CONFIG[p.status].color, border: '1px solid var(--border)' }} />
+                            ))}
                           </div>
                         </div>
                       );
@@ -279,6 +288,45 @@ export default function Conteudo() {
       )}
 
       {/* MODALS */}
+      {activeDay && (
+        <div className="modal-overlay" onClick={() => setActiveDay(null)}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
+               <div>
+                  <h3 style={{ fontSize: 20, fontWeight: 900 }}>Agenda Diária · Dia {activeDay.dayNum}</h3>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Gerencie postagens e eventos deste dia.</p>
+               </div>
+               <button className="btn btn-primary btn-sm" onClick={() => { setActiveDay(null); setForm(p => ({ ...p, date: activeDay.date })); setShowForm(true); }}>
+                  <Plus size={14}/> Agendar Post/Evento
+               </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '50vh', overflowY: 'auto' }}>
+               {filteredContent.filter(p => p.date === activeDay.date).length === 0 ? (
+                  <div className="empty-state" style={{ padding: '30px 0' }}>Sem atividades para este dia.</div>
+               ) : (
+                  filteredContent.filter(p => p.date === activeDay.date).map(post => (
+                     <div key={post.id} className="card" style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                           <span style={{ fontSize: 24 }}>{PLATFORM_ICON[post.platform]}</span>
+                           <div>
+                              <p style={{ fontSize: 14, fontWeight: 800, margin: 0 }}>{post.caption.substring(0, 60)}{post.caption.length > 60 ? '...' : ''}</p>
+                              <span className={`badge ${STATUS_CONFIG[post.status].badge}`} style={{ marginTop: 6, display: 'inline-block' }}>{STATUS_CONFIG[post.status].label}</span>
+                           </div>
+                        </div>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setViewPost(post)}>Editar</button>
+                     </div>
+                  ))
+               )}
+            </div>
+            
+            <div style={{ marginTop: 24, textAlign: 'right' }}>
+               <button className="btn btn-ghost" onClick={() => setActiveDay(null)}>Voltar para Calendário</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {viewPost && (
         <div className="modal-overlay" onMouseDown={() => setViewPost(null)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div className="card" style={{ width: '100%', maxWidth: 800, padding: 32 }} onMouseDown={e => e.stopPropagation()}>
@@ -310,17 +358,44 @@ export default function Conteudo() {
                       </div>
                       
                       <div>
-                         <label className="form-label">Texto / Legenda</label>
-                         <textarea className="input" style={{ width: '100%', minHeight: 200 }} value={viewPost.caption} onChange={e => setViewPost({ ...viewPost, caption: e.target.value })} />
-                      </div>
+                          <label className="form-label">Texto / Legenda</label>
+                          <textarea className="input" style={{ width: '100%', minHeight: 120 }} value={viewPost.caption} onChange={e => setViewPost({ ...viewPost, caption: e.target.value })} />
+                       </div>
 
-                      <div style={{ display: 'flex', gap: 10 }}>
-                        <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setViewPost(null)}>Cancelar</button>
-                        <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => { 
-                          updateContent(viewPost.id, { caption: viewPost.caption, status: viewPost.status, assignedTo: viewPost.assignedTo }); 
-                          setViewPost(null); 
-                        }}>Salvar Alterações</button>
-                      </div>
+                       <div>
+                          <label className="form-label">Link da Mídia (Imagem/Vídeo)</label>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <input className="input" style={{ flex: 1 }} placeholder="https://..." value={viewPost.media || ''} onChange={e => setViewPost({ ...viewPost, media: e.target.value })} />
+                            <select className="input" style={{ width: 100 }} value={viewPost.mediaType || 'image'} onChange={e => setViewPost({ ...viewPost, mediaType: e.target.value as any })}>
+                               <option value="image">Imagem</option>
+                               <option value="video">Vídeo</option>
+                            </select>
+                          </div>
+                       </div>
+
+                       {viewPost.media && (
+                         <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', background: '#000' }}>
+                            {viewPost.mediaType === 'video' ? (
+                              <video src={viewPost.media} controls style={{ width: '100%', maxHeight: 200, display: 'block' }} />
+                            ) : (
+                              <img src={viewPost.media} style={{ width: '100%', maxHeight: 200, objectFit: 'contain', display: 'block' }} />
+                            )}
+                         </div>
+                       )}
+
+                       <div style={{ display: 'flex', gap: 10 }}>
+                         <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setViewPost(null)}>Cancelar</button>
+                         <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => { 
+                           updateContent(viewPost.id, { 
+                             caption: viewPost.caption, 
+                             status: viewPost.status, 
+                             assignedTo: viewPost.assignedTo,
+                             media: viewPost.media,
+                             mediaType: viewPost.mediaType
+                           }); 
+                           setViewPost(null); 
+                         }}>Salvar Alterações</button>
+                       </div>
                    </div>
                 </div>
 
@@ -425,10 +500,20 @@ export default function Conteudo() {
                       </select>
                    </div>
                 </div>
-                <div>
-                   <label className="form-label">Texto / Legenda</label>
-                   <textarea className="input" style={{ width: '100%', minHeight: 100 }} placeholder="Digite aqui o conteúdo do post..." value={form.caption} onChange={e => setForm({ ...form, caption: e.target.value })} />
-                </div>
+                 <div>
+                    <label className="form-label">Texto / Legenda</label>
+                    <textarea className="input" style={{ width: '100%', minHeight: 80 }} placeholder="Digite aqui o conteúdo do post..." value={form.caption} onChange={e => setForm({ ...form, caption: e.target.value })} />
+                 </div>
+                 <div>
+                    <label className="form-label">Link da Mídia (Opcional)</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                       <input className="input" style={{ flex: 1 }} placeholder="https://..." value={form.media} onChange={e => setForm({ ...form, media: e.target.value })} />
+                       <select className="input" style={{ width: 100 }} value={form.mediaType} onChange={e => setForm({ ...form, mediaType: e.target.value as any })}>
+                          <option value="image">Img</option>
+                          <option value="video">Vid</option>
+                       </select>
+                    </div>
+                 </div>
                 <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
                    <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowForm(false)}>Cancelar</button>
                    <button className="btn btn-primary" style={{ flex: 2 }} onClick={handleAdd} disabled={!form.caption || !form.clientId}>Criar Rascunho</button>

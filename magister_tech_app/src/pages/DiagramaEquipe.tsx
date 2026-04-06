@@ -1,144 +1,186 @@
 import { useState } from 'react';
-import { Network, ArrowRight, ShieldCheck, Hexagon, Component, Hash, Eye, MonitorPlay } from 'lucide-react';
+import { Network, Crown, Briefcase, LayoutGrid, X, FileText, Calendar, DollarSign, User } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import type { TeamMember } from '../contexts/DataContext';
 
 export default function DiagramaEquipe() {
-  const { team, projects } = useData();
-  const [activeProject, setActiveProject] = useState<string | null>(null);
+  const { team, updateTeamMember } = useData();
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Mapear quem está alocado em quais projetos pelas Tasks
-  // Mas como não temos relations profundos carregados aqui, fingiremos um organograma vivo
-  const activeProj = projects.find(p => p.id === activeProject) || projects[0];
+  const cLevel = team.filter(t => t.role === 'CEO' || t.role === 'ADMIN' || t.sector === 'Diretoria');
+  const middleManagement = team.filter(t => t.role === 'MANAGER' || t.sector === 'Comercial' || t.sector === 'RH');
+  const operational = team.filter(t => !cLevel.includes(t) && !middleManagement.includes(t));
+
+  const sectors = [...new Set(operational.map(t => t.sector))].filter(Boolean);
 
   return (
     <div className="animate-in" style={{ paddingBottom: 40, maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Network /> Diagrama de Responsabilidades
+            <Network /> Organograma Master da Empresa
           </h1>
-          <p style={{ color: 'var(--text-muted)' }}>Mapeamento visual de processos, equipe e escopo corporativo</p>
+          <p style={{ color: 'var(--text-muted)' }}>Mapeamento hierárquico dinâmico gerado a partir do quadro de funcionários</p>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 320px) 1fr', gap: 24, alignItems: 'flex-start' }}>
+      <div className="card" style={{ minHeight: 600, padding: 40, position: 'relative', overflowX: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
-        {/* Painel Lateral: Seleção de Escopo */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Selecionar Escopo</h3>
-          <div className="card" style={{ padding: 16 }}>
-            {projects.length === 0 ? (
-               <p style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum projeto escopado</p>
-            ) : (
-              projects.map(p => (
-                <button 
-                  key={p.id}
-                  onClick={() => setActiveProject(p.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px',
-                    width: '100%', background: activeProject === p.id || (!activeProject && projects[0].id === p.id) ? 'var(--primary-glow)' : 'transparent',
-                    border: '1px solid', borderColor: activeProject === p.id || (!activeProject && projects[0].id === p.id) ? 'var(--primary)' : 'transparent',
-                    borderRadius: 12, color: 'var(--text-main)', textAlign: 'left', cursor: 'pointer', marginBottom: 8, transition: 'all 0.2s'
-                  }}
+        {/* Nível 1: C-Level / Diretoria */}
+        <div style={{ display: 'flex', gap: 24, justifyContent: 'center', position: 'relative', zIndex: 10 }}>
+          {cLevel.map(user => (
+            <div key={user.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <div 
+                  onClick={() => setSelectedMember(user)}
+                  style={{ padding: '16px 24px', background: 'var(--danger-glow)', border: '2px solid var(--danger)', borderRadius: 16, textAlign: 'center', minWidth: 220, boxShadow: 'var(--shadow-md)', cursor: 'pointer', transition: 'var(--transition)' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                 >
-                   <span style={{ fontWeight: 800, fontSize: 13 }}>{p.name}</span>
-                   <ArrowRight size={14} color={activeProject === p.id || (!activeProject && projects[0].id === p.id) ? 'var(--primary)' : 'var(--text-muted)'} />
-                </button>
-              ))
-            )}
-          </div>
-          
-          <div className="card" style={{ padding: 16, background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
-             <h3 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-sec)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14}/> Legenda Hierárquica</h3>
-             <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-               <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width:10, height:10, borderRadius:2, background:'var(--danger)'}}/> <strong>Diretoria / C-Level</strong></li>
-               <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width:10, height:10, borderRadius:2, background:'var(--primary)'}}/> <strong>Gestor de Conta</strong></li>
-               <li style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width:10, height:10, borderRadius:2, background:'var(--warning)'}}/> <strong>Executores (Design/Tráfego)</strong></li>
-             </ul>
-          </div>
+                  <Crown size={20} color="var(--danger)" style={{ marginBottom: 8 }}/>
+                  <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: 1 }}>{user.role} · {user.sector}</p>
+                  <p style={{ fontSize: 16, fontWeight: 900, color: '#fff', margin: '4px 0' }}>{user.name}</p>
+               </div>
+            </div>
+          ))}
         </div>
 
-        {/* View do Diagrama */}
-        <div className="card" style={{ minHeight: 600, padding: 32, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {!activeProj ? (
-             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Selecione um projeto para ver o organograma.</div>
-          ) : (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40, borderBottom: '1px solid var(--border)', paddingBottom: 24 }}>
-                <div>
-                  <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 8 }}>Escopo: {activeProj.name}</h2>
-                  <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: 500 }}>
-                    {(activeProj as any).resumo || 'Nenhum resumo comercial no momento.'}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <span className="badge badge-primary"><MonitorPlay size={12}/> {activeProj.type}</span>
-                  <span className="badge badge-success"><Eye size={12}/> {activeProj.status}</span>
-                </div>
-              </div>
+        {/* Linha Conectora Nível 1 pro Nível 2 */}
+        {middleManagement.length > 0 && (
+          <div style={{ width: 2, height: 40, background: 'var(--border)' }} />
+        )}
 
-              {/* Informações Extraídas do "Briefing Master" (Tabela Project modificada) */}
-              <div style={{ display: 'flex', gap: 16, marginBottom: 40 }}>
-                <div style={{ flex: 1, padding: 16, background: 'var(--bg-card)', border: '1px dashed var(--border)', borderRadius: 12 }}>
-                   <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}><Hexagon size={12} style={{ display:'inline', marginBottom:-2}}/> Core Colors</p>
-                   <div style={{ display: 'flex', gap: 6 }}>
-                     {((activeProj as any).coreColors || '#1E1E2E,#6366F1').split(',').map((h:string) => (
-                       <div key={h} style={{ width: 24, height: 24, borderRadius: '50%', background: h.trim(), border: '2px solid rgba(255,255,255,0.1)' }} title={h.trim()} />
-                     ))}
-                   </div>
-                </div>
-                <div style={{ flex: 1, padding: 16, background: 'var(--bg-card)', border: '1px dashed var(--border)', borderRadius: 12 }}>
-                   <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}><Hash size={12} style={{ display:'inline', marginBottom:-2}}/> FontFamily</p>
-                   <p style={{ fontSize: 14, fontWeight: 800 }}>{(activeProj as any).fontFamily || 'Inter, Sans-serif'}</p>
-                </div>
-                <div style={{ flex: 2, padding: 16, background: 'var(--bg-card)', border: '1px dashed var(--border)', borderRadius: 12 }}>
-                   <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}><Component size={12} style={{ display:'inline', marginBottom:-2}}/> Regras Obrigatórias</p>
-                   <p style={{ fontSize: 12, color: 'var(--text-sec)' }}>{(activeProj as any).mandatoryRules || 'Nenhuma regra estrita definida no briefing.'}</p>
-                </div>
-              </div>
+        {/* Nível 2: Middle Management (Sócios, Gestão) */}
+        {middleManagement.length > 0 && (
+          <div style={{ display: 'flex', gap: 40, justifyContent: 'center', position: 'relative' }}>
+             <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 200px)', height: 2, background: 'var(--border)' }} />
+            
+             {middleManagement.map(user => (
+               <div key={user.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ width: 2, height: 20, background: 'var(--border)' }} />
+                  <div 
+                     onClick={() => setSelectedMember(user)}
+                     style={{ padding: '12px 20px', background: 'var(--primary-glow)', border: '2px solid var(--primary)', borderRadius: 12, textAlign: 'center', minWidth: 180, zIndex: 10, cursor: 'pointer', transition: 'var(--transition)' }}
+                     onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
+                     onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                   >
+                     <Briefcase size={16} color="var(--primary)" style={{ marginBottom: 6 }}/>
+                     <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>{user.role} · {user.sector}</p>
+                     <p style={{ fontSize: 14, fontWeight: 900, color: '#fff', margin: '4px 0' }}>{user.name}</p>
+                  </div>
+                  {/* Conector para Operacional, se houver o mesmo setor */}
+                  <div style={{ width: 2, height: 20, background: 'var(--border)' }} />
+               </div>
+             ))}
+          </div>
+        )}
 
-              {/* Árvore de Responsabilidade Simulada */}
-              <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: 40 }}>
-                 
-                 {/* Master Node */}
-                 <div style={{ padding: '12px 24px', background: 'var(--danger-glow)', border: '2px solid var(--danger)', borderRadius: 12, textAlign: 'center', zIndex: 2 }}>
-                    <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--danger)', textTransform: 'uppercase' }}>Account Manager (Master)</p>
-                    <p style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>Admin Master</p>
-                 </div>
+        {/* Linha Conectora Central se Nível 2 não existir */}
+        {middleManagement.length === 0 && operational.length > 0 && (
+          <div style={{ width: 2, height: 40, background: 'var(--border)' }} />
+        )}
 
-                 {/* Linha Central */}
-                 <div style={{ width: 2, height: 40, background: 'var(--border)' }} />
+        {/* Nível 3: Operacional Agrupado por Setor */}
+        <div style={{ display: 'flex', gap: 32, justifyContent: 'center', flexWrap: 'wrap', position: 'relative', marginTop: middleManagement.length > 0 ? -20 : 0 }}>
+             {/* Linha base para Operacional caso venha do topo (simplificado) */}
+             {middleManagement.length === 0 && operational.length > 0 && (
+                <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '80%', height: 2, background: 'var(--border)' }} />
+             )}
 
-                 {/* Gestão Nível 2 */}
-                 <div style={{ display: 'flex', gap: 60, position: 'relative' }}>
-                    {/* Linha Horizontal distribuidora */}
-                    <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 100px)', height: 2, background: 'var(--border)' }} />
-
-                    {/* Node 1 */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                       <div style={{ width: 2, height: 20, background: 'var(--border)' }} />
-                       <div style={{ padding: '12px 24px', background: 'var(--primary-glow)', border: '2px solid var(--primary)', borderRadius: 12, textAlign: 'center', zIndex: 2, minWidth: 160 }}>
-                          <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>Atendimento N1 / Estratégia</p>
-                          <p style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{team.find(t => t.sector === 'Comercial')?.name || 'Designar'}</p>
-                       </div>
-                    </div>
-
-                    {/* Node 2 */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                       <div style={{ width: 2, height: 20, background: 'var(--border)' }} />
-                       <div style={{ padding: '12px 24px', background: 'var(--warning-glow)', border: '2px solid var(--warning)', borderRadius: 12, textAlign: 'center', zIndex: 2, minWidth: 160 }}>
-                          <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--warning)', textTransform: 'uppercase' }}>Execução Técnica / Tráfego</p>
-                          <p style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{team.find(t => t.sector === 'Marketing')?.name || 'Equipe Ágil'}</p>
-                       </div>
+             {sectors.map(sector => {
+               const sectorTeam = operational.filter(t => t.sector === sector);
+               return (
+                 <div key={sector} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--bg-subtle)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
+                    <h4 style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 12, letterSpacing: 1 }}><LayoutGrid size={12} style={{display:'inline'}}/> SETOR: {sector}</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {sectorTeam.map(user => (
+                         <div 
+                             key={user.id} 
+                             onClick={() => setSelectedMember(user)}
+                             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: 'var(--bg-card)', borderRadius: 8, boxShadow: 'var(--shadow-sm)', cursor: 'pointer', transition: 'var(--transition)', border: '1px solid transparent' }}
+                             onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+                             onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.transform = 'translateX(0)'; }}
+                          >
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: user.profileColor || 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 800 }}>
+                               {user.initials}
+                            </div>
+                            <div>
+                               <p style={{ fontSize: 13, fontWeight: 800, margin: 0 }}>{user.name}</p>
+                               <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{user.role}</span>
+                            </div>
+                         </div>
+                      ))}
                     </div>
                  </div>
-
-              </div>
-            </>
-          )}
+               )
+             })}
         </div>
+
 
       </div>
+
+      {/* MODAL GESTÃO HR / CONTRATO */}
+      {selectedMember && (
+        <div className="modal-overlay" onClick={() => { setSelectedMember(null); setIsEditing(false); }}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 500, padding: 0, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '24px 32px', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: selectedMember.profileColor || 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 800 }}>
+                    {selectedMember.initials}
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>{selectedMember.name}</h2>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{selectedMember.role} · {selectedMember.sector}</p>
+                  </div>
+               </div>
+               <button className="btn-icon" onClick={() => { setSelectedMember(null); setIsEditing(false); }}><X size={18} /></button>
+            </div>
+
+            <div style={{ padding: 32 }}>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  
+                  {/* Info Section */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                     <div className="card" style={{ padding: 16, background: 'var(--bg-subtle)' }}>
+                        <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}><FileText size={10}/> Tipo de Contrato</p>
+                        <p style={{ fontSize: 14, fontWeight: 800 }}>PJ / Assessor</p>
+                     </div>
+                     <div className="card" style={{ padding: 16, background: 'var(--bg-subtle)' }}>
+                        <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={10}/> Admissão</p>
+                        <p style={{ fontSize: 14, fontWeight: 800 }}>{selectedMember.joinedAt || '01/01/2026'}</p>
+                     </div>
+                  </div>
+
+                  {/* Financial Section (HR Only) */}
+                  <div className="card" style={{ padding: 24, border: '1px dashed var(--primary)', background: 'var(--primary-glow)' }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h4 style={{ fontSize: 13, fontWeight: 900, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                           <DollarSign size={14} /> Dados Financeiros HR
+                        </h4>
+                        <span className="badge badge-success">ATIVO</span>
+                     </div>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <div>
+                           <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4 }}>Custo Mensal (Fixo)</p>
+                           <p style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>R$ 4.500,00</p>
+                        </div>
+                        <button className="btn btn-primary btn-sm" style={{ padding: '8px 16px' }}>Ver Holerite</button>
+                     </div>
+                  </div>
+
+                  {/* Contact Methods */}
+                  <div style={{ display: 'flex', gap: 12 }}>
+                     <button className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                        <User size={14} /> Perfil Completo
+                     </button>
+                     <button className="btn btn-ghost" style={{ flex: 1, color: 'var(--danger)' }}>Encerrar Contrato</button>
+                  </div>
+
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

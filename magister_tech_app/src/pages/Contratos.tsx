@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import {
   Plus, RefreshCw, X, Zap, AlertTriangle, CheckCircle,
   FileText, Calendar, DollarSign, Activity, Eye
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { AuthContext } from '../contexts/AuthContext';
 import type { Contract } from '../contexts/DataContext';
 
 const fmt = (n: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
@@ -30,8 +31,33 @@ const RECURRENCE_LABELS: Record<string, string> = {
 
 export default function Contratos() {
   const { contracts, clients, addContract, updateContractStatus } = useData();
+  const { user } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+
+  if (!user) return <div style={{ padding: 40 }}>Carregando permissões...</div>;
+
+  const hasAccess = user.accessLevel === 'ADMIN' || user.role === 'CEO' || user.role === 'FINANCEIRO';
+  
+  if (!hasAccess) {
+    return (
+      <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70vh', textAlign: 'center' }}>
+         <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--danger-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+            <AlertTriangle size={40} color="var(--danger)" />
+         </div>
+         <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 12 }}>Acesso Restrito</h1>
+         <p style={{ color: 'var(--text-muted)', maxWidth: 450, fontSize: 15, lineHeight: 1.6 }}>
+            Esta área contém dados sensíveis (SLAs e Faturamento). <br/> 
+            Sua conta não possui nível de acesso <strong>Diretoria</strong> ou <strong>Financeiro</strong>.
+         </p>
+         <button className="btn btn-primary" style={{ marginTop: 32, padding: '12px 32px' }} onClick={() => window.history.back()}>
+            Voltar para o Painel
+         </button>
+      </div>
+    );
+  }
+
+  const canManageContracts = user.accessLevel === 'ADMIN' || user.role === 'CEO';
   const [filterStatus, setFilterStatus] = useState<'all' | 'ativo' | 'vencendo' | 'encerrado'>('all');
   const [form, setForm] = useState({
     title: '',
@@ -85,9 +111,11 @@ export default function Contratos() {
             Controle de SLAs, vigências, recorrências e automação financeira.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-          <Plus size={16} /> Novo Contrato
-        </button>
+        {canManageContracts && (
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <Plus size={16} /> Novo Contrato
+          </button>
+        )}
       </div>
 
       {/* ─── KPI STRIP ─────────────────────────────────────────────────────── */}
@@ -160,9 +188,13 @@ export default function Contratos() {
                     <div className="empty-state" style={{ padding: '60px 0' }}>
                       <FileText size={48} color="var(--text-muted)" style={{ marginBottom: 16 }} />
                       <p style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>Nenhum contrato encontrado</p>
-                      <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-                        <Plus size={14} /> Criar primeiro contrato
-                      </button>
+                      {canManageContracts ? (
+                        <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+                          <Plus size={14} /> Criar primeiro contrato
+                        </button>
+                      ) : (
+                        <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Você não possui permissão para criar contratos.</p>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -230,9 +262,11 @@ export default function Contratos() {
                         <button className="btn-icon" title="Visualizar" onClick={() => setSelectedContract(contract)}>
                           <Eye size={15} />
                         </button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => updateContractStatus(contract.id, 'ativo')} title="Renovar/Reativar" style={{ fontSize: 12, fontWeight: 700 }}>
-                          <RefreshCw size={13} /> Renovar
-                        </button>
+                        {canManageContracts && (
+                          <button className="btn btn-ghost btn-sm" onClick={() => updateContractStatus(contract.id, 'ativo')} title="Renovar/Reativar" style={{ fontSize: 12, fontWeight: 700 }}>
+                            <RefreshCw size={13} /> Renovar
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -285,9 +319,11 @@ export default function Contratos() {
               </div>
             </div>
             <div className="modal-footer" style={{ padding: '20px 32px', background: 'var(--bg-card)', justifyContent: 'space-between' }}>
-              <button className="btn btn-secondary" onClick={() => { updateContractStatus(selectedContract.id, 'ativo'); setSelectedContract(null); }}>
-                <RefreshCw size={14} /> Renovar Contrato
-              </button>
+              {canManageContracts ? (
+                <button className="btn btn-secondary" onClick={() => { updateContractStatus(selectedContract.id, 'ativo'); setSelectedContract(null); }}>
+                  <RefreshCw size={14} /> Renovar Contrato
+                </button>
+              ) : <div/>}
               <button className="btn btn-outline" onClick={() => setSelectedContract(null)}>Fechar</button>
             </div>
           </div>
