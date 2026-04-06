@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { startWhatsApp, disconnectWhatsApp, getWAState, addWAListener, removeWAListener } from './whatsapp';
+import { startWhatsApp, disconnectWhatsApp, getWAState, addWAListener, removeWAListener, sendWAMessage } from './whatsapp';
 
 dotenv.config();
 
@@ -16,6 +16,24 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 app.use(cors());
 app.use(express.json());
+
+// =====================================================
+// AUDIT LOG HELPER
+// =====================================================
+async function logAudit(userId: string, action: string, systemModule: string, details: any) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+        module: systemModule,
+        details: JSON.stringify(details)
+      }
+    });
+  } catch (err) {
+    console.error('[AuditLog] Erro ao registrar:', err);
+  }
+}
 
 // =====================================================
 // MIDDLEWARE DE AUTENTICAÇÃO
@@ -651,7 +669,46 @@ app.post('/api/whatsapp/sync-contacts', authMiddleware, requireRole('ADMIN', 'CE
     created++;
   }
 
-  res.json({ ok: true, created, skipped, total: contacts.length });
+  res.json({ ok: true, created, skipped, message: `Sincronização concluída: ${created} criados, ${skipped} ignorados.` });
+});
+
+// Envia mensagem pelo WhatsApp (Atendimento N1 CRM)
+app.post('/api/whatsapp/send', authMiddleware, async (req: any, res: any) => {
+  const { phone, message } = req.body;
+  if (!phone || !message) {
+    return res.status(400).json({ error: 'Telefone e mensagem são obrigatórios.' });
+  }
+
+  const { status } = getWAState();
+  if (status !== 'connected') {
+    return res.status(409).json({ error: 'Motor do WhatsApp não está conectado.' });
+  }
+
+  try {
+    const formattedMessage = `*${req.user.name} diz:*\n\n${message}`;
+    await sendWAMessage(phone, formattedMessage);
+    
+    // Registrar na auditoria
+    await logAudit(req.user.id, 'MENSAGEM_ENVIADA', 'WHATSAPP', { phone, message: formattedMessage });
+    
+    res.json({ ok: true, message: 'Mensagem enviada com sucesso!' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Falha ao enviar mensagem', details: err.message });
+  }
+});
+
+// Listar Logs de Auditoria (Apenas ADMIN/CEO)
+app.get('/api/audit', authMiddleware, requireRole('ADMIN', 'CEO'), async (_req: any, res: any) => {
+  try {
+    const logs = await prisma.auditLog.findMany({
+      include: { user: { select: { name: true, role: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 200
+    });
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar auditoria' });
+  }
 });
 
 // =====================================================

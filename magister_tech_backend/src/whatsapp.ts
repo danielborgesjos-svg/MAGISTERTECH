@@ -127,3 +127,23 @@ export async function disconnectWhatsApp() {
 export function getClient() {
   return clientInstance;
 }
+
+export async function sendWAMessage(phone: string, text: string): Promise<boolean> {
+  if (!clientInstance || state.status !== 'connected') {
+    throw new Error('WhatsApp não está conectado.');
+  }
+  
+  try {
+    // Formata o número (exige DDI e sufiro @c.us)
+    let sanitized = phone.replace(/\D/g, '');
+    if (!sanitized.startsWith('55') && sanitized.length <= 11) {
+      sanitized = '55' + sanitized; // assume BR fallback
+    }
+    const chatId = `${sanitized}@c.us`;
+    await clientInstance.sendMessage(chatId, text);
+    return true;
+  } catch (err) {
+    console.error('[WhatsApp] Erro ao enviar mensagem:', err);
+    throw err;
+  }
+}

@@ -79,6 +79,10 @@ export interface Project {
   reunioes?: Meeting[];
   postagens?: string;
   atribuicoes?: string;
+  coreColors?: string;
+  fontFamily?: string;
+  mandatoryRules?: string;
+  organogramData?: string;
 }
 
 export interface Task {
@@ -116,6 +120,9 @@ export interface Transaction {
   recurrence?: 'mensal' | 'unico';
   contractId?: string;
   clientId?: string;
+  isFixedExpense?: boolean;
+  employeeId?: string;
+  recurringType?: string;
 }
 
 export interface CalendarEvent {

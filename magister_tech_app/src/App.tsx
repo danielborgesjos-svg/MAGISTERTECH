@@ -14,6 +14,8 @@ import Financeiro from './pages/Financeiro';
 import Agenda from './pages/Agenda';
 import Conteudo from './pages/Conteudo';
 import Equipe from './pages/Equipe';
+import DiagramaEquipe from './pages/DiagramaEquipe';
+import AuditLog from './pages/AuditLog';
 import Feed from './pages/Feed';
 import Configuracoes from './pages/Configuracoes';
 import ClienteHub from './pages/ClienteHub';
@@ -59,6 +61,8 @@ function App() {
               <Route path="conteudo" element={<ProtectedRoute module="conteudo"><Conteudo /></ProtectedRoute>} />
               <Route path="financeiro" element={<ProtectedRoute module="financeiro"><Financeiro /></ProtectedRoute>} />
               <Route path="equipe" element={<ProtectedRoute module="equipe"><Equipe /></ProtectedRoute>} />
+              <Route path="team/diagrama" element={<ProtectedRoute module="projetos"><DiagramaEquipe /></ProtectedRoute>} />
+              <Route path="audit" element={<ProtectedRoute module="dashboard"><AuditLog /></ProtectedRoute>} />
               <Route path="feed" element={<ProtectedRoute module="feed"><Feed /></ProtectedRoute>} />
               <Route path="config" element={<Configuracoes />} />
               <Route path="conectividade" element={<ProtectedRoute module="dashboard"><Conectividade /></ProtectedRoute>} />

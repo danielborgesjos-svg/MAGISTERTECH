@@ -22,7 +22,7 @@ const PRIORITY_CONFIG = {
 };
 
 // ─── DEAL CARD ─────────────────────────────────────────────────────────────
-function DealCard({ task, isOverlay, onEdit }: { task: Task; isOverlay?: boolean; onEdit: (t: Task) => void }) {
+function DealCard({ task, isOverlay, onEdit, onWAClick }: { task: Task; isOverlay?: boolean; onEdit: (t: Task) => void; onWAClick?: (t: Task) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: { type: 'Task', task },
@@ -63,9 +63,9 @@ function DealCard({ task, isOverlay, onEdit }: { task: Task; isOverlay?: boolean
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
              {task.phone && (
-               <a href={`https://wa.me/${task.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" title="Mandar WhatsApp" className="btn-icon" style={{ background: 'var(--success-glow)', color: 'var(--success)', width: 28, height: 28, border: '1px solid rgba(37,211,102,0.3)' }} onClick={e => e.stopPropagation()}>
+               <button title="Conversa N1 CRM" className="btn-icon" style={{ background: 'var(--success-glow)', color: 'var(--success)', width: 28, height: 28, border: '1px solid rgba(37,211,102,0.3)' }} onClick={e => { e.stopPropagation(); if (onWAClick) onWAClick(task); }}>
                  <MessageSquare size={14} />
-               </a>
+               </button>
              )}
              {(task.value || 0) > 0 && (
                 <span style={{ fontSize: 15, fontWeight: 900, color: 'var(--success)' }}>{fmt(task.value || 0)}</span>
@@ -78,11 +78,12 @@ function DealCard({ task, isOverlay, onEdit }: { task: Task; isOverlay?: boolean
 }
 
 // ─── PIPELINE COLUMN ────────────────────────────────────────────────────────
-function PipelineColumn({ col, total, onAddDeal, onEdit }: {
+function PipelineColumn({ col, total, onAddDeal, onEdit, onWAClick }: {
   col: { id: string; title: string; tasks: Task[]; color?: string };
   total: number;
   onAddDeal: () => void;
   onEdit: (t: Task) => void;
+  onWAClick: (t: Task) => void;
 }) {
   const { attributes, listeners, setNodeRef: setColumnRef, transform, transition, isDragging } = useSortable({
     id: col.id,
@@ -122,7 +123,7 @@ function PipelineColumn({ col, total, onAddDeal, onEdit }: {
         <div style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
           <SortableContext items={taskIds}>
             {col.tasks.map(task => (
-              <DealCard key={task.id} task={task} onEdit={onEdit} />
+              <DealCard key={task.id} task={task} onEdit={onEdit} onWAClick={onWAClick} />
             ))}
           </SortableContext>
           {col.tasks.length === 0 && (
@@ -146,6 +147,11 @@ export default function Pipeline() {
   const [showAddForm, setShowAddForm] = useState<string | null>(null); // column id
   const [form, setForm] = useState({ title: '', value: '', phone: '', tag: 'Lead', priority: 'medium' as Task['priority'], description: '', assignee: 'DB' });
   const [isEdit, setIsEdit] = useState(false);
+
+  // WhatsApp N1 Native State
+  const [waModal, setWaModal] = useState<{ phone: string; title: string } | null>(null);
+  const [waMessage, setWaMessage] = useState('');
+  const [isSendingWA, setIsSendingWA] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -238,6 +244,31 @@ export default function Pipeline() {
     }
   };
 
+  const sendWA = async () => {
+    if (!waModal || !waMessage) return;
+    setIsSendingWA(true);
+    try {
+      const token = localStorage.getItem('magister_token');
+      const res = await fetch('http://localhost:3001/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ phone: waModal.phone, message: waMessage })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert('Mensagem N1 enviada para o lead!');
+        setWaModal(null);
+        setWaMessage('');
+      } else {
+        alert(data.error || 'Erro ao enviar mensagem pela engine.');
+      }
+    } catch (err) {
+      alert('Falha na comunicação com o motor do WhatsApp.');
+    } finally {
+      setIsSendingWA(false);
+    }
+  };
+
   return (
     <div className="animate-fade-up" style={{ paddingBottom: 40 }}>
       {/* ─── HEADER COCKPIT ────────────────────────────────────────────────── */}
@@ -280,6 +311,7 @@ export default function Pipeline() {
                 total={col.tasks.reduce((a, t) => a + (t.value || 0), 0)}
                 onAddDeal={() => openAdd(col.id)}
                 onEdit={openEdit}
+                onWAClick={(t) => t.phone && setWaModal({ phone: t.phone, title: t.title })}
               />
             ))}
           </SortableContext>
@@ -376,6 +408,37 @@ export default function Pipeline() {
                   {isEdit ? <><CheckCircle size={16} /> Salvar Ficha Comercial</> : <><CheckCircle size={16} /> Injetar no Pipeline</>}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── WHATSAPP MODAL ───────────────────────────────────────────────── */}
+      {waModal && (
+        <div className="modal-overlay" onClick={() => setWaModal(null)}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+               <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--success-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MessageSquare size={20} color="var(--success)"/>
+               </div>
+               <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 900 }}>WhatsApp N1</h3>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>Lead: {waModal.title} · {waModal.phone}</p>
+               </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+               <div>
+                  <label className="form-label">Sua Mensagem</label>
+                  <textarea className="input" rows={5} placeholder="Olá! Sou da Magister..." value={waMessage} onChange={e => setWaMessage(e.target.value)} autoFocus />
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>Sistemas anexará automaticamente o prefixo <i>'*Nome_Autor* diz:'</i> antes da sua mensagem.</p>
+               </div>
+               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+                  <button className="btn btn-ghost" onClick={() => setWaModal(null)}>Cancelar</button>
+                  <button className="btn btn-primary" style={{ background: 'var(--success)' }} onClick={sendWA} disabled={!waMessage || isSendingWA}>
+                     {isSendingWA ? 'Enviando...' : <><MessageSquare size={16}/> Enviar Mensagem</>}
+                  </button>
+               </div>
             </div>
           </div>
         </div>

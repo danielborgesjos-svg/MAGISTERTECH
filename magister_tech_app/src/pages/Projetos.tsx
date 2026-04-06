@@ -24,6 +24,7 @@ const EMPTY_FORM = {
   team: [] as string[], budget: '',
   responsavelInterno: '', responsavelCliente: '', emailCliente: '',
   whatsappCliente: '', plano: '', objetivos: '', metas: '', resumo: '', postagens: '', atribuicoes: '',
+  coreColors: '#1E1E2E, #6366F1', fontFamily: 'Inter, Sans-serif', mandatoryRules: '',
 };
 
 const EMPTY_MEETING: Omit<Meeting, 'id'> = {
@@ -62,6 +63,7 @@ export default function Projetos() {
       emailCliente: form.emailCliente, whatsappCliente: form.whatsappCliente,
       plano: form.plano, objetivos: form.objetivos, metas: form.metas,
       resumo: form.resumo, postagens: form.postagens, atribuicoes: form.atribuicoes,
+      coreColors: form.coreColors, fontFamily: form.fontFamily, mandatoryRules: form.mandatoryRules,
     };
     if (isEditingForm && selected) {
       updateProject(selected.id, payload);
@@ -285,6 +287,32 @@ export default function Projetos() {
                               )}
                            </div>
                         )}
+
+                        <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: 0 }}/>
+
+                        {/* BRIEFING TÉCNICO VIRTUAL */}
+                        <div>
+                           <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: 16 }}>Briefing de Identidade Visual</h4>
+                           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 16, marginBottom: 20 }}>
+                              <div className="card" style={{ padding: 16, background: 'var(--bg-subtle)' }}>
+                                 <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 8 }}>PALETA DE CORES ATIVA (CORE)</p>
+                                 <div style={{ display: 'flex', gap: 6 }}>
+                                    {(selected.coreColors || '#1E1E2E,#6366F1').split(',').map((h: string) => (
+                                       <div key={h} style={{ width: 32, height: 32, borderRadius: '50%', background: h.trim(), border: '2px solid rgba(255,255,255,0.1)' }} title={h.trim()}/>
+                                    ))}
+                                 </div>
+                              </div>
+                              <div className="card" style={{ padding: 16, background: 'var(--bg-subtle)' }}>
+                                 <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 8 }}>GUIDE TIPOGRÁFICO</p>
+                                 <p style={{ fontSize: 18, fontWeight: 800 }}>{selected.fontFamily || 'Inter, Sans-serif'}</p>
+                              </div>
+                           </div>
+                           <div className="card" style={{ padding: 16, background: 'var(--bg-subtle)', border: '1px dashed var(--danger)' }}>
+                              <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--danger)', marginBottom: 8 }}>REGRAS OBRIGATÓRIAS DE MARCA (NÃO VIOLAR)</p>
+                              <p style={{ fontSize: 13, color: 'var(--text-sec)', lineHeight: 1.6 }}>{selected.mandatoryRules || 'Nenhuma regra restritiva incluída no momento.'}</p>
+                           </div>
+                        </div>
+
                         <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: 0 }}/>
                         <div>
                            <h4 style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: 12 }}>Controle de Status</h4>
@@ -479,6 +507,7 @@ export default function Projetos() {
                      emailCliente: selected.emailCliente || '', whatsappCliente: selected.whatsappCliente || '',
                      plano: selected.plano || '', objetivos: selected.objetivos || '', metas: selected.metas || '',
                      resumo: selected.resumo || '', postagens: selected.postagens || '', atribuicoes: selected.atribuicoes || '',
+                     coreColors: selected.coreColors || '', fontFamily: selected.fontFamily || '', mandatoryRules: selected.mandatoryRules || '',
                    });
                    setIsEditingForm(true);
                    setShowForm(true);
@@ -571,6 +600,23 @@ export default function Projetos() {
                 <div>
                   <label className="form-label">Metas de Conclusão (O.K.Rs)</label>
                   <textarea className="input" rows={2} placeholder="Ex: Conversão crescer 20%" value={form.metas} onChange={e => setForm(p => ({ ...p, metas: e.target.value }))} style={{ width: '100%' }} />
+                </div>
+
+                <div style={{ gridColumn: '1/-1' }}>
+                   <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: 0.5, margin: '16px 0 8px' }}>Arquitetura Visual e Restrições (Brand Guidelines)</p>
+                </div>
+
+                <div>
+                  <label className="form-label">Core Colors (Hex, separados com vírgula)</label>
+                  <input className="input" placeholder="#FFFFFF, #000000" value={form.coreColors} onChange={e => setForm(p => ({ ...p, coreColors: e.target.value }))} style={{ width: '100%' }} />
+                </div>
+                <div>
+                  <label className="form-label">Font Family Principal</label>
+                  <input className="input" placeholder="Ex: Inter, Montserrat" value={form.fontFamily} onChange={e => setForm(p => ({ ...p, fontFamily: e.target.value }))} style={{ width: '100%' }} />
+                </div>
+                <div style={{ gridColumn: '1/-1' }}>
+                  <label className="form-label">Proibições Técnicas (O que NÃO fazer)</label>
+                  <textarea className="input" rows={2} placeholder="Ex: Nunca usar formato circular para a logo. Nunca usar sombra." value={form.mandatoryRules} onChange={e => setForm(p => ({ ...p, mandatoryRules: e.target.value }))} style={{ width: '100%' }} />
                 </div>
 
                 <div style={{ gridColumn: '1/-1' }}>

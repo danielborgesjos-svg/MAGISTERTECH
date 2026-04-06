@@ -4,7 +4,7 @@ import {
   LayoutDashboard, KanbanSquare, Users, FileText,
   LogOut, Terminal, Calendar, PenTool,
   Briefcase, Landmark, Moon, Sun, Target, UserCircle,
-  Bell, Search, ChevronRight, Settings, X, Rss, Activity, Wifi, MessageCircle
+  Bell, Search, ChevronRight, Settings, X, Rss, Activity, Wifi, MessageCircle, Network, Fingerprint
 } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 import { usePermission } from '../hooks/usePermission';
@@ -75,6 +75,7 @@ const AdminLayout = () => {
         { to: '/admin/projetos', icon: Briefcase, label: 'Projetos', module: 'projetos' },
         { to: '/admin/conteudo', icon: PenTool, label: 'Conteúdo', module: 'conteudo' },
         { to: '/admin/hub-clientes', icon: Activity, label: 'Hub de Clientes', module: 'cliente-hub' },
+        { to: '/admin/team/diagrama', icon: Network, label: 'Diagrama de Resp.', module: 'projetos' },
       ]
     },
     {
@@ -83,6 +84,7 @@ const AdminLayout = () => {
         { to: '/admin/financeiro', icon: Landmark, label: 'Financeiro', module: 'financeiro' },
         { to: '/admin/equipe', icon: UserCircle, label: 'Equipe / RH', module: 'equipe' },
         { to: '/admin/conectividade', icon: Wifi, label: 'WhatsApp', module: 'dashboard' },
+        { to: '/admin/audit', icon: Fingerprint, label: 'Logs Master', module: 'dashboard' },
       ]
     },
   ];

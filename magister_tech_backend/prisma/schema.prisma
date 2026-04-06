@@ -27,6 +27,7 @@ model User {
   comments     Comment[]
   interactions Interaction[]
   notifications Notification[]
+  auditLogs    AuditLog[]
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -75,6 +76,12 @@ model Project {
   description  String?
   deliverables String?
   observations String?
+  // NOVOS CAMPOS: Briefing Profundo
+  coreColors   String?
+  fontFamily   String?
+  socialMediaLinks String?
+  mandatoryRules String?
+  organogramData String?
   clientId     String
   client       Client    @relation(fields: [clientId], references: [id])
   tasks        Task[]
@@ -99,6 +106,7 @@ model Task {
   order       Int       @default(0)
   // Tipo de conteúdo: post | stories | video | trafego | tarefa
   tipo        String    @default("tarefa")
+  masterSeen  Boolean   @default(false)
   assigneeId  String?
   assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
   projectId   String?
@@ -226,6 +234,9 @@ model Transaction {
   category    String?
   costCenter  String?
   recurrence  Boolean   @default(false)
+  recurringType String? // mensal, anual, semestral
+  isFixedExpense Boolean @default(false)
+  employeeId  String?   // Para despesas atreladas a colaboradores na folha
   observations String?
   clientId    String?
   client      Client?   @relation(fields: [clientId], references: [id])
@@ -260,6 +271,19 @@ model Notification {
   type      String   @default("info")
   read      Boolean  @default(false)
   link      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ============================================================
+// AUDIT LOGING (Monitoramento Master do Sistema)
+// ============================================================
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // EX: "MENSAGEM_ENVIADA", "DESPESA_CRIADA", "ACESSO_GESTOR"
+  module    String   // CRM, FINANCEIRO, PIPELINE, WHATSAPP
+  details   String   // JSON com payload para histórico
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())

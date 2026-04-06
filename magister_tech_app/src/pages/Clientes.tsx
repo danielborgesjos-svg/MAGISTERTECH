@@ -33,6 +33,11 @@ export default function Clientes() {
   });
   const [isEditingForm, setIsEditingForm] = useState(false);
 
+  // WhatsApp N1 Native State
+  const [waModal, setWaModal] = useState<{ phone: string; title: string } | null>(null);
+  const [waMessage, setWaMessage] = useState('');
+  const [isSendingWA, setIsSendingWA] = useState(false);
+
   const filtered = clients.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.company.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,6 +65,31 @@ export default function Clientes() {
     addClientNote(selectedClient.id, noteText, 'Sistema');
     setNoteText('');
     setSelectedClient(clients.find(c => c.id === selectedClient.id) || selectedClient);
+  };
+
+  const sendWA = async () => {
+    if (!waModal || !waMessage) return;
+    setIsSendingWA(true);
+    try {
+      const token = localStorage.getItem('magister_token');
+      const res = await fetch('http://localhost:3001/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ phone: waModal.phone, message: waMessage })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert('Mensagem N1 enviada para o cliente!');
+        setWaModal(null);
+        setWaMessage('');
+      } else {
+        alert(data.error || 'Erro ao enviar mensagem pela engine.');
+      }
+    } catch (err) {
+      alert('Falha interna ao contatar WhatsApp Engine.');
+    } finally {
+      setIsSendingWA(false);
+    }
   };
 
   const clientContracts = selectedClient ? contracts.filter(c => c.clientId === selectedClient.id) : [];
@@ -150,7 +180,14 @@ export default function Clientes() {
                   </td>
                   <td>
                     <p style={{ fontSize: 13, fontWeight: 700 }}>{client.name}</p>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{client.email}</p>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                       <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{client.email}</p>
+                       {client.phone && (
+                         <button className="btn-icon" style={{ padding: 2, background: 'var(--success-glow)', color: 'var(--success)', border: '1px solid rgba(37,211,102,0.3)', width: 22, height: 22 }} onClick={e => { e.stopPropagation(); setWaModal({ phone: client.phone, title: client.company }); }}>
+                            <MessageSquare size={12}/>
+                         </button>
+                       )}
+                    </div>
                   </td>
                   <td>
                      <span className="badge" style={{ background: 'var(--bg-subtle)', color: 'var(--text-main)', border: '1px solid var(--border)' }}>{client.segment}</span>
@@ -265,7 +302,16 @@ export default function Clientes() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Phone size={14} color="var(--primary)"/></div>
-                           <div><p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Telefone / WhatsApp</p><p style={{ fontSize: 14, fontWeight: 700 }}>{selectedClient.phone}</p></div>
+                           <div><p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Telefone / WhatsApp</p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <p style={{ fontSize: 14, fontWeight: 700 }}>{selectedClient.phone}</p>
+                                {selectedClient.phone && (
+                                   <button className="btn-icon" style={{ background: 'var(--success-glow)', color: 'var(--success)', width: 24, height: 24 }} onClick={() => setWaModal({ phone: selectedClient.phone, title: selectedClient.company })}>
+                                     <MessageSquare size={12}/>
+                                   </button>
+                                )}
+                              </div>
+                           </div>
                         </div>
                      </div>
                    </div>
@@ -438,6 +484,37 @@ export default function Clientes() {
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancelar</button>
               <button className="btn btn-primary" onClick={handleAdd} disabled={!form.name || !form.company}>{isEditingForm ? 'Salvar Modificações' : <><Plus size={16}/> Inserir no CRM</>}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── WHATSAPP MODAL ───────────────────────────────────────────────── */}
+      {waModal && (
+        <div className="modal-overlay" onClick={() => setWaModal(null)}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+               <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--success-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MessageSquare size={20} color="var(--success)"/>
+               </div>
+               <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 900 }}>Chat de Conta (WhatsApp)</h3>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>Contato: {waModal.title} · {waModal.phone}</p>
+               </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+               <div>
+                  <label className="form-label">Conteúdo da Mensagem (N1)</label>
+                  <textarea className="input" rows={5} placeholder="Olá! Aqui é a Magister..." value={waMessage} onChange={e => setWaMessage(e.target.value)} autoFocus />
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>A IA/Sistema assinará o seu nome antes do texto. Sujeito à auditoria visual dos líderes.</p>
+               </div>
+               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+                  <button className="btn btn-ghost" onClick={() => setWaModal(null)}>Cancelar</button>
+                  <button className="btn btn-primary" style={{ background: 'var(--success)' }} onClick={sendWA} disabled={!waMessage || isSendingWA}>
+                     {isSendingWA ? 'Transmitindo...' : <><MessageSquare size={16}/> Enviar Mensagem</>}
+                  </button>
+               </div>
             </div>
           </div>
         </div>
