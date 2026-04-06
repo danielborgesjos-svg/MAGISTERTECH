@@ -7,7 +7,7 @@ import type { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Plus, X, GripVertical, TrendingUp, Trash2, CheckCircle, Flame, User, DollarSign, AlignLeft, Tags, ArrowRight
+  Plus, X, GripVertical, TrendingUp, Trash2, CheckCircle, Flame, User, DollarSign, AlignLeft, Tags, ArrowRight, MessageSquare, Phone
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import type { Task, KanbanColumn } from '../contexts/DataContext';
@@ -61,9 +61,16 @@ function DealCard({ task, isOverlay, onEdit }: { task: Task; isOverlay?: boolean
              </div>
              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Proprietário</span>
           </div>
-          {(task.value || 0) > 0 && (
-             <span style={{ fontSize: 15, fontWeight: 900, color: 'var(--success)' }}>{fmt(task.value || 0)}</span>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+             {task.phone && (
+               <a href={`https://wa.me/${task.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" title="Mandar WhatsApp" className="btn-icon" style={{ background: 'var(--success-glow)', color: 'var(--success)', width: 28, height: 28, border: '1px solid rgba(37,211,102,0.3)' }} onClick={e => e.stopPropagation()}>
+                 <MessageSquare size={14} />
+               </a>
+             )}
+             {(task.value || 0) > 0 && (
+                <span style={{ fontSize: 15, fontWeight: 900, color: 'var(--success)' }}>{fmt(task.value || 0)}</span>
+             )}
+          </div>
         </div>
       </div>
     </div>
@@ -137,7 +144,7 @@ export default function Pipeline() {
   const [activeDeal, setActiveDeal] = useState<Task | null>(null);
   const [modalDeal, setModalDeal] = useState<Task | null>(null);
   const [showAddForm, setShowAddForm] = useState<string | null>(null); // column id
-  const [form, setForm] = useState({ title: '', value: '', tag: 'Lead', priority: 'medium' as Task['priority'], description: '', assignee: 'DB' });
+  const [form, setForm] = useState({ title: '', value: '', phone: '', tag: 'Lead', priority: 'medium' as Task['priority'], description: '', assignee: 'DB' });
   const [isEdit, setIsEdit] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -191,7 +198,7 @@ export default function Pipeline() {
 
   const openEdit = (task: Task) => {
     setModalDeal(task);
-    setForm({ title: task.title, value: String(task.value || ''), tag: task.tag, priority: task.priority, description: task.description || '', assignee: task.assignee });
+    setForm({ title: task.title, value: String(task.value || ''), phone: task.phone || '', tag: task.tag, priority: task.priority, description: task.description || '', assignee: task.assignee });
     setIsEdit(true);
     setShowAddForm(null);
   };
@@ -200,16 +207,25 @@ export default function Pipeline() {
     setShowAddForm(colId);
     setModalDeal(null);
     setIsEdit(false);
-    setForm({ title: '', value: '', tag: 'Lead', priority: 'medium', description: '', assignee: 'DB' });
+    setForm({ title: '', value: '', phone: '', tag: 'Lead', priority: 'medium', description: '', assignee: 'DB' });
   };
 
   const handleSave = () => {
     if (!form.title) return;
+    const taskData = { 
+      title: form.title, 
+      value: parseFloat(form.value) || 0, 
+      phone: form.phone || undefined,
+      tag: form.tag, 
+      priority: form.priority, 
+      description: form.description, 
+      assignee: form.assignee 
+    };
     if (isEdit && modalDeal) {
-      updatePipelineDeal(modalDeal.id, { title: form.title, value: parseFloat(form.value) || 0, tag: form.tag, priority: form.priority, description: form.description, assignee: form.assignee });
+      updatePipelineDeal(modalDeal.id, taskData);
       setModalDeal(null);
     } else if (showAddForm) {
-      addPipelineDeal(showAddForm, { title: form.title, value: parseFloat(form.value) || 0, tag: form.tag, priority: form.priority, description: form.description, assignee: form.assignee });
+      addPipelineDeal(showAddForm, taskData);
       setShowAddForm(null);
     }
   };
@@ -302,6 +318,14 @@ export default function Pipeline() {
                   <div style={{ position: 'relative' }}>
                      <DollarSign size={16} color="var(--success)" style={{ position: 'absolute', top: 12, left: 12 }}/>
                      <input className="input" type="number" style={{ paddingLeft: 36, fontSize: 16, fontWeight: 700, color: 'var(--success)' }} placeholder="0,00" value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontWeight: 800 }}>WhatsApp (Opcional)</label>
+                  <div style={{ position: 'relative' }}>
+                     <Phone size={16} color="var(--text-muted)" style={{ position: 'absolute', top: 12, left: 12 }}/>
+                     <input className="input" style={{ paddingLeft: 36 }} placeholder="5511999999999" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
                   </div>
                 </div>
 

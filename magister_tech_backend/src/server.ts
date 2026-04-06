@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { startWhatsApp, disconnectWhatsApp, getWAState, addWAListener, removeWAListener } from './whatsapp';
 
 dotenv.config();
 
@@ -574,6 +575,83 @@ app.get('/api/dashboard/kpis', authMiddleware, blockCliente, async (_req: any, r
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar KPIs.' });
   }
+});
+
+// =====================================================
+// WHATSAPP ENGINE ROUTES
+// =====================================================
+
+// SSE stream: tempo real de QR Code e status
+app.get('/api/whatsapp/stream', authMiddleware, requireRole('ADMIN', 'CEO'), (req: any, res: any) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const send = (data: any) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  // Envia estado atual imediatamente
+  send(getWAState());
+
+  addWAListener(send);
+
+  req.on('close', () => {
+    removeWAListener(send);
+  });
+});
+
+// Status simples (polling)
+app.get('/api/whatsapp/status', authMiddleware, requireRole('ADMIN', 'CEO'), (_req: any, res: any) => {
+  res.json(getWAState());
+});
+
+// Iniciar conexão (gera QR Code)
+app.post('/api/whatsapp/start', authMiddleware, requireRole('ADMIN', 'CEO'), (_req: any, res: any) => {
+  startWhatsApp().catch(err => console.error('[WA Start]', err));
+  res.json({ ok: true, message: 'Iniciando conexão WhatsApp...' });
+});
+
+// Desconectar sessão
+app.post('/api/whatsapp/disconnect', authMiddleware, requireRole('ADMIN', 'CEO'), async (_req: any, res: any) => {
+  await disconnectWhatsApp();
+  res.json({ ok: true, message: 'WhatsApp desconectado.' });
+});
+
+// Listar contatos sincronizados
+app.get('/api/whatsapp/contacts', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'COMERCIAL'), (_req: any, res: any) => {
+  const { contacts, status } = getWAState();
+  if (status !== 'connected') {
+    return res.status(409).json({ error: 'WhatsApp não está conectado.' });
+  }
+  res.json(contacts);
+});
+
+// Sincronizar contatos do WA → Clientes no Prisma (importa como PROSPECT)
+app.post('/api/whatsapp/sync-contacts', authMiddleware, requireRole('ADMIN', 'CEO'), async (_req: any, res: any) => {
+  const { contacts, status } = getWAState();
+  if (status !== 'connected') {
+    return res.status(409).json({ error: 'WhatsApp não conectado.' });
+  }
+
+  let created = 0;
+  let skipped = 0;
+
+  for (const contact of contacts) {
+    if (!contact.phone) continue;
+    const existing = await prisma.client.findFirst({ where: { phone: contact.phone } });
+    if (existing) { skipped++; continue; }
+    await prisma.client.create({
+      data: {
+        name: contact.name,
+        phone: contact.phone,
+        status: 'PROSPECT',
+        segment: 'WhatsApp Import',
+      }
+    });
+    created++;
+  }
+
+  res.json({ ok: true, created, skipped, total: contacts.length });
 });
 
 // =====================================================

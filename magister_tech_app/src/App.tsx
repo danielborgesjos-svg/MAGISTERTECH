@@ -23,6 +23,7 @@ import ClientesAPI from './pages/ClientesAPI';
 import { AuthContext } from './contexts/AuthContext';
 import { useContext } from 'react';
 import { usePermission } from './hooks/usePermission';
+import Conectividade from './pages/Conectividade';
 
 function ProtectedRoute({ children, module }: { children: React.ReactNode, module: string }) {
   const { canViewModule } = usePermission();
@@ -60,6 +61,7 @@ function App() {
               <Route path="equipe" element={<ProtectedRoute module="equipe"><Equipe /></ProtectedRoute>} />
               <Route path="feed" element={<ProtectedRoute module="feed"><Feed /></ProtectedRoute>} />
               <Route path="config" element={<Configuracoes />} />
+              <Route path="conectividade" element={<ProtectedRoute module="dashboard"><Conectividade /></ProtectedRoute>} />
 
               {/* ─── FASE 1: Hub de Clientes (backend) ─── */}
               <Route

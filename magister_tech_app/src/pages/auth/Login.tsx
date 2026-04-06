@@ -2,30 +2,17 @@ import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../../contexts/AuthContext';
-import { Loader2, Zap } from 'lucide-react';
+import { Loader2, Lock, Mail } from 'lucide-react';
 
-// Permissões completas incluindo as da Fase 1
 const ALL_PERMISSIONS = [
   'dashboard', 'kanban', 'crm', 'pipeline', 'contratos',
   'projetos', 'financeiro', 'agenda', 'conteudo', 'equipe',
-  'chat', 'config', 'feed',
-  'cliente-hub', 'kanban-cliente',
+  'chat', 'config', 'feed', 'cliente-hub', 'kanban-cliente',
 ];
 
-const DEMO_USER = {
-  id: 'demo-1',
-  name: 'Daniel Borges',
-  email: 'admin@magistertech.com.br',
-  role: 'CEO',
-  avatar: null as null,
-  accessLevel: 'ADMIN' as const,
-  permissions: ALL_PERMISSIONS,
-};
-const DEMO_TOKEN = 'demo-offline-token';
-
 const Login = () => {
-  const [email, setEmail] = useState('admin@magistertech.com.br');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -34,156 +21,151 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError('Preencha e-mail e senha.');
+      return;
+    }
     setLoading(true);
     setError('');
 
     try {
-      // 1. Tenta autenticar no backend real
       const { data } = await axios.post('/api/auth/login', {
         email: email.trim().toLowerCase(),
         password,
       });
 
-      // Backend respondeu: salva token JWT real e usuário
       login(data.token, {
         ...data.user,
-        accessLevel: 'ADMIN',
+        accessLevel: data.user.role === 'ADMIN' || data.user.role === 'CEO' ? 'ADMIN' : 'EDITOR',
         permissions: ALL_PERMISSIONS,
       });
       navigate('/admin/dashboard');
-    } catch (backendErr: any) {
-      const status = backendErr?.response?.status;
-
+    } catch (err: any) {
+      const status = err?.response?.status;
       if (status === 401) {
-        // Credenciais inválidas
         setError('E-mail ou senha incorretos.');
-        return;
+      } else {
+        setError('Serviço temporariamente indisponível. Tente novamente.');
       }
-
-      // Backend indisponível — tenta modo offline
-      const inputEmail = email.trim().toLowerCase();
-      if (inputEmail === 'admin@magistertech.com.br' && password === 'admin123') {
-        login(DEMO_TOKEN, DEMO_USER);
-        navigate('/admin/dashboard');
-        return;
-      }
-
-      // Verifica equipe registrada no localStorage (modo offline)
-      const teamRaw = localStorage.getItem('mstr_team');
-      if (teamRaw) {
-        const team = JSON.parse(teamRaw);
-        const member = team.find((m: any) => m.email?.toLowerCase() === inputEmail);
-        if (member) {
-          const validPasswords = ['admin123', 'magister123', '123456'];
-          const isValid = (member.password && member.password === password) || (!member.password && validPasswords.includes(password));
-          if (isValid) {
-            login(DEMO_TOKEN, {
-              id: member.id,
-              name: member.name,
-              email: member.email,
-              role: member.role,
-              avatar: null,
-              accessLevel: member.accessLevel || 'VIEWER',
-              permissions: member.permissions || [],
-            });
-            navigate('/admin/dashboard');
-            return;
-          }
-          setError('Senha incorreta.');
-          return;
-        }
-      }
-
-      setError('Backend indisponível e usuário não encontrado no modo offline.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDemoAccess = () => {
-    login(DEMO_TOKEN, DEMO_USER);
-    navigate('/admin/dashboard');
-  };
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F8FAFC', padding: '20px', overflow: 'hidden', position: 'relative' }}>
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', padding: '20px', position: 'relative', overflow: 'hidden',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)'
+    }}>
+      {/* Glow orbs */}
+      <div style={{ position: 'absolute', top: '20%', left: '15%', width: 500, height: 500, background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 65%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: 600, height: 600, background: 'radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
-      <div style={{ position: 'absolute', top: 24, left: 24, zIndex: 10 }}>
-        <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', color: '#64748B', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'color 0.2s' }}
-          onMouseEnter={e => e.currentTarget.style.color = '#2563EB'}
-          onMouseLeave={e => e.currentTarget.style.color = '#64748B'}>
-          <Zap size={16} /> Voltar para o Site
-        </button>
-      </div>
-
-      <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '800px', height: '800px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 60%)', pointerEvents: 'none' }} />
-
-      <div className="animate-in" style={{ width: '100%', maxWidth: '440px', background: '#FFFFFF', borderRadius: '16px', padding: '48px 40px', boxShadow: '0 20px 40px -10px rgba(15, 23, 42, 0.1), 0 10px 15px -3px rgba(15, 23, 42, 0.05)', position: 'relative', zIndex: 1, border: '1px solid #E2E8F0' }}>
-
+      <div style={{
+        width: '100%', maxWidth: 440, position: 'relative', zIndex: 1,
+        background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(20px)',
+        borderRadius: 20, padding: '48px 40px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 25px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.1)',
+      }}>
+        {/* Logo / Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-            <img src="https://i.imgur.com/jqwwNLv.png" alt="Magister Tech" style={{ height: 44 }} />
+          <div style={{
+            width: 64, height: 64, borderRadius: 18, margin: '0 auto 20px',
+            background: 'linear-gradient(135deg, #4f46e5, #2563eb)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 32px rgba(79,70,229,0.4)'
+          }}>
+            <Lock size={28} color="#fff" />
           </div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 6, letterSpacing: '-0.02em', fontFamily: "'Inter', sans-serif" }}>Acesso Restrito</h2>
-          <p style={{ fontSize: 14, color: '#64748B', fontFamily: "'Inter', sans-serif" }}>Painel corporativo e gestão interna.</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#f8fafc', marginBottom: 6, letterSpacing: '-0.02em' }}>
+            Acesso Restrito
+          </h1>
+          <p style={{ fontSize: 14, color: 'rgba(148,163,184,0.8)' }}>
+            Magister Tech · Painel Corporativo
+          </p>
         </div>
 
         {error && (
-          <div style={{ background: '#FEF2F2', color: '#EF4444', padding: '12px 16px', borderRadius: '8px', fontSize: 13, marginBottom: 24, border: '1px solid #FCA5A5' }}>
+          <div style={{
+            background: 'rgba(239,68,68,0.12)', color: '#fca5a5',
+            padding: '12px 16px', borderRadius: 10, fontSize: 13, marginBottom: 24,
+            border: '1px solid rgba(239,68,68,0.3)', textAlign: 'center'
+          }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8, fontFamily: "'Inter', sans-serif" }}>E-mail corporativo</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="admin@magistertech.com.br"
-              required
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: 15, transition: 'border 0.2s', background: '#F8FAFC', color: '#0F172A', fontFamily: "'Inter', sans-serif" }}
-              onFocus={e => e.target.style.borderColor = '#6366F1'}
-              onBlur={e => e.target.style.borderColor = '#CBD5E1'}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8, fontFamily: "'Inter', sans-serif" }}>Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: 15, transition: 'border 0.2s', background: '#F8FAFC', color: '#0F172A', fontFamily: "'Inter', sans-serif" }}
-              onFocus={e => e.target.style.borderColor = '#6366F1'}
-              onBlur={e => e.target.style.borderColor = '#CBD5E1'}
-            />
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(148,163,184,0.9)', marginBottom: 8 }}>
+              E-mail corporativo
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={16} color="rgba(148,163,184,0.5)" style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)' }} />
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+                required
+                autoComplete="email"
+                style={{
+                  width: '100%', padding: '13px 16px 13px 44px', borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.1)', outline: 'none',
+                  fontSize: 15, background: 'rgba(255,255,255,0.05)',
+                  color: '#f8fafc', fontFamily: "'Inter', sans-serif", transition: 'border 0.2s', boxSizing: 'border-box'
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.7)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+            </div>
           </div>
 
-          <button type="submit"
-            style={{ width: '100%', height: 50, marginTop: 12, fontSize: 15, fontWeight: 600, fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #2563EB, #6366F1)', color: '#FFFFFF', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px 0 rgba(37, 99, 235, 0.2)', transition: 'all 0.2s' }}
-            disabled={loading}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'rgba(148,163,184,0.9)', marginBottom: 8 }}>
+              Senha
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={16} color="rgba(148,163,184,0.5)" style={{ position: 'absolute', top: '50%', left: 14, transform: 'translateY(-50%)' }} />
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+                style={{
+                  width: '100%', padding: '13px 16px 13px 44px', borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.1)', outline: 'none',
+                  fontSize: 15, background: 'rgba(255,255,255,0.05)',
+                  color: '#f8fafc', fontFamily: "'Inter', sans-serif", transition: 'border 0.2s', boxSizing: 'border-box'
+                }}
+                onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.7)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%', height: 52, marginTop: 8, fontSize: 15, fontWeight: 700,
+              background: loading ? 'rgba(79,70,229,0.5)' : 'linear-gradient(135deg, #4f46e5, #2563eb)',
+              color: '#fff', border: 'none', borderRadius: 10, cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: '0 4px 20px rgba(79,70,229,0.3)', transition: 'all 0.2s',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
             {loading ? <Loader2 className="animate-spin" size={20} /> : 'Entrar no Sistema'}
           </button>
         </form>
 
-        <div style={{ position: 'relative', margin: '32px 0' }}>
-          <div style={{ height: '1px', background: '#E2E8F0', width: '100%' }} />
-          <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#FFFFFF', padding: '0 16px', fontSize: 11, color: '#94A3B8', fontWeight: 600, letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>MODO DESENVOLVEDOR</span>
-        </div>
-
-        <button type="button" onClick={handleDemoAccess}
-          style={{ width: '100%', height: 46, fontSize: 14, fontWeight: 600, fontFamily: "'Inter', sans-serif", background: '#FFFFFF', color: '#0F172A', border: '1px solid #E2E8F0', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s', boxShadow: '0 1px 2px 0 rgba(15, 23, 42, 0.05)' }}
-          onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-          onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}>
-          <Zap size={16} color="#6366F1" /> Acesso Bypass (Local)
-        </button>
-
-        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: '#94A3B8', fontFamily: "'Inter', sans-serif" }}>
-          Suporte: <code style={{ background: '#F1F5F9', padding: '2px 6px', borderRadius: 4, color: '#475569' }}>admin@magistertech.com.br</code>
+        <p style={{ textAlign: 'center', marginTop: 28, fontSize: 12, color: 'rgba(100,116,139,0.7)' }}>
+          Acesso exclusivo à equipe autorizada · Magister Tech
         </p>
       </div>
     </div>

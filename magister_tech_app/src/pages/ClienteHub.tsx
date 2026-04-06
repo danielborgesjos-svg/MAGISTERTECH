@@ -1,82 +1,10 @@
-import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import {
-  ArrowLeft, FileText, Briefcase, Receipt,
-  CheckSquare, PenTool, AlertCircle, Calendar, User,
-  TrendingUp, CheckCircle2, Clock, XCircle, Activity,
-  KanbanSquare
+  ArrowLeft, FileText, Briefcase, Receipt, Phone, Mail,
+  CheckSquare, PenTool, UserCircle, MessageSquare,
+  CheckCircle2, Clock, XCircle, MapPin
 } from 'lucide-react';
-
-// ─── TIPOS ────────────────────────────────────────────────────────────────────
-interface ClienteHubData {
-  cliente: {
-    id: string;
-    name: string;
-    company?: string;
-    email?: string;
-    phone?: string;
-    segment?: string;
-    status: string;
-    healthScore: number;
-    responsible?: string;
-  };
-  contratoAtivo: {
-    id: string;
-    title: string;
-    value: number;
-    recurrence?: string;
-    startDate: string;
-    endDate?: string;
-    status: string;
-  } | null;
-  projetos: {
-    id: string;
-    name: string;
-    status: string;
-    startDate: string;
-    endDate?: string;
-  }[];
-  faturas: {
-    id: string;
-    valor: number;
-    vencimento: string;
-    status: string;
-    paidAt?: string;
-    descricao?: string;
-  }[];
-  tarefas: {
-    id: string;
-    title: string;
-    status: string;
-    priority: string;
-    deadline?: string;
-    tipo: string;
-    assignee?: { name: string; avatar?: string };
-  }[];
-  conteudos: {
-    id: string;
-    title: string;
-    platform: string;
-    status: string;
-    versao: number;
-    publishAt?: string;
-    author: { name: string };
-  }[];
-}
-
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-const PRIORITY_COLOR: Record<string, string> = {
-  ALTA: 'var(--danger)',
-  MEDIA: 'var(--warning)',
-  BAIXA: 'var(--success)',
-};
-
-const STATUS_FATURA: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  PAGO: { label: 'Pago', color: 'var(--success)', icon: <CheckCircle2 size={13} /> },
-  PENDENTE: { label: 'Pendente', color: 'var(--warning)', icon: <Clock size={13} /> },
-  VENCIDO: { label: 'Vencido', color: 'var(--danger)', icon: <XCircle size={13} /> },
-};
+import { useData } from '../contexts/DataContext';
 
 function fmt(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -85,18 +13,6 @@ function fmt(value: number) {
 function fmtDate(dateStr?: string) {
   if (!dateStr) return '—';
   return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function HealthBar({ score }: { score: number }) {
-  const color = score >= 70 ? 'var(--success)' : score >= 40 ? 'var(--warning)' : 'var(--danger)';
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ flex: 1, height: 8, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
-        <div style={{ width: `${score}%`, height: '100%', background: color, borderRadius: 99, transition: 'width 0.6s ease' }} />
-      </div>
-      <span style={{ fontSize: 13, fontWeight: 700, color, minWidth: 36 }}>{score}%</span>
-    </div>
-  );
 }
 
 function SectionHeader({ icon, title, count }: { icon: React.ReactNode; title: string; count?: number }) {
@@ -123,270 +39,181 @@ function EmptyState({ message }: { message: string }) {
   );
 }
 
-// ─── COMPONENT ────────────────────────────────────────────────────────────────
 export default function ClienteHub() {
   const { clienteId } = useParams<{ clienteId: string }>();
   const navigate = useNavigate();
-  const [data, setData] = useState<ClienteHubData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { clients, contracts, projects, transactions, kanban, content } = useData();
 
-  useEffect(() => {
-    if (!clienteId) return;
-    const token = localStorage.getItem('magister_token');
-    setLoading(true);
-    axios
-      .get(`/api/clients/${clienteId}/hub`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => setData(r.data))
-      .catch(() => setError('Não foi possível carregar os dados do cliente.'))
-      .finally(() => setLoading(false));
-  }, [clienteId]);
+  const cliente = clients.find(c => c.id === clienteId);
 
-  if (loading) {
+  if (!cliente) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-        <div style={{ textAlign: 'center' }}>
-          <Activity size={28} color="var(--primary)" style={{ marginBottom: 12 }} />
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Carregando hub do cliente...</p>
-        </div>
+      <div style={{ padding: 40, textAlign: 'center' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 10 }}>Cliente não encontrado</h2>
+        <button className="btn btn-secondary" onClick={() => navigate('/admin/crm')}>Voltar ao CRM</button>
       </div>
     );
   }
 
-  if (error || !data) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-        <div style={{ textAlign: 'center' }}>
-          <AlertCircle size={28} color="var(--danger)" style={{ marginBottom: 12 }} />
-          <p style={{ color: 'var(--danger)', fontSize: 13 }}>{error || 'Cliente não encontrado.'}</p>
-          <button className="btn btn-secondary" style={{ marginTop: 16 }} onClick={() => navigate('/admin/crm')}>
-            Voltar ao CRM
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Related data
+  const clienteContracts = contracts.filter(c => c.clientId === clienteId);
+  const contratoAtivo = clienteContracts.find(c => c.status === 'ativo' || c.status === 'vencendo') || null;
+  const clienteProjects = projects.filter(p => p.clientId === clienteId);
+  
+  // Transactions associated with the active contract
+  const faturas = transactions.filter(t => t.type === 'income' && t.category === 'Contrato' && (!t.contractId || t.contractId === contratoAtivo?.id));
+  
+  // Tasks from kanban associated with the client's projects or named with the client's name (approximate)
+  const projIds = clienteProjects.map(p => p.id);
+  const tarefas = kanban.flatMap(c => c.tasks).filter(t => t.projectId && projIds.includes(t.projectId));
 
-  const { cliente, contratoAtivo, projetos, faturas, tarefas, conteudos } = data;
+  // Content related to client
+  const conteudos = content.filter(c => c.clientId === clienteId);
+
+  const hue = (cliente.name.charCodeAt(0) * 40) % 360;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* ─── HEADER ─── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin/crm')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <ArrowLeft size={14} /> Voltar
-        </button>
+    <div className="animate-in" style={{ paddingBottom: 40, maxWidth: 1100, margin: '0 auto' }}>
+      {/* ─── HEADER HUB ──────────────────────────────────────────────────────── */}
+      <button 
+        className="btn-icon" 
+        style={{ marginBottom: 20, display: 'inline-flex', gap: 6, width: 'auto', padding: '0 12px' }}
+        onClick={() => navigate('/admin/crm')}
+      >
+        <ArrowLeft size={16} /> Voltar ao CRM
+      </button>
 
-        <div className="card" style={{ flex: 1, padding: '20px 24px', minWidth: 300 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-            <div className="avatar" style={{ width: 52, height: 52, fontSize: 18, fontWeight: 800, background: 'var(--primary)', color: '#fff', borderRadius: 14, flexShrink: 0 }}>
+      <div className="card" style={{ padding: '0', overflow: 'hidden', marginBottom: 24, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: 120, background: `linear-gradient(135deg, hsl(${hue}, 60%, 40%) 0%, var(--indigo) 100%)`, position: 'relative' }}>
+           <div style={{ position: 'absolute', bottom: -40, left: 32, width: 80, height: 80, borderRadius: '50%', background: `hsl(${hue}, 60%, 50%)`, border: '4px solid var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 24, fontWeight: 900, boxShadow: 'var(--shadow-md)' }}>
               {cliente.name.substring(0, 2).toUpperCase()}
+           </div>
+        </div>
+        <div style={{ padding: '48px 32px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24 }}>
+          <div>
+            <h1 style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 4 }}>{cliente.company || cliente.name}</h1>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+               <UserCircle size={14} /> Contato: {cliente.name} · Desde {fmtDate(cliente.createdAt)}
+            </p>
+            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+               {cliente.whatsapp ? (
+                 <a href={`https://wa.me/${cliente.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="badge" style={{ background: 'var(--success-glow)', color: 'var(--success)', border: '1px solid rgba(37,211,102,0.3)' }}><MessageSquare size={12}/> WhatsApp</a>
+               ) : cliente.phone ? (
+                 <span className="badge" style={{ background: 'var(--bg-subtle)' }}><Phone size={12}/> {cliente.phone}</span>
+               ) : null}
+               {cliente.email && <span className="badge" style={{ background: 'var(--bg-subtle)' }}><Mail size={12}/> {cliente.email}</span>}
+               {cliente.segment && <span className="badge" style={{ background: 'var(--purple-glow)', color: 'var(--purple)' }}><MapPin size={12}/> {cliente.segment}</span>}
             </div>
-            <div style={{ flex: 1 }}>
-              <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 2 }}>{cliente.name}</h1>
-              {cliente.company && <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{cliente.company}</p>}
-              <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                <span className="badge" style={{ background: cliente.status === 'ATIVO' ? 'var(--success-glow)' : 'var(--bg-subtle)', color: cliente.status === 'ATIVO' ? 'var(--success)' : 'var(--text-muted)', fontWeight: 700 }}>
-                  {cliente.status}
-                </span>
-                {cliente.segment && <span className="badge" style={{ background: 'var(--indigo-glow)', color: 'var(--indigo)' }}>{cliente.segment}</span>}
-              </div>
-            </div>
-            <button
-              className="btn btn-primary btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-              onClick={() => navigate(`/admin/clientes/${clienteId}/kanban`)}
-            >
-              <KanbanSquare size={14} /> Kanban Interno
-            </button>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-            {cliente.email && (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                <span style={{ display: 'block', fontWeight: 700, color: 'var(--text-main)', marginBottom: 2 }}>E-mail</span>
-                {cliente.email}
-              </div>
-            )}
-            {cliente.phone && (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                <span style={{ display: 'block', fontWeight: 700, color: 'var(--text-main)', marginBottom: 2 }}>Telefone</span>
-                {cliente.phone}
-              </div>
-            )}
-            {cliente.responsible && (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                <span style={{ display: 'block', fontWeight: 700, color: 'var(--text-main)', marginBottom: 2 }}>Responsável</span>
-                {cliente.responsible}
-              </div>
-            )}
-            <div style={{ fontSize: 12 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: 'var(--text-main)', marginBottom: 6 }}>
-                <TrendingUp size={12} /> Health Score
-              </span>
-              <HealthBar score={cliente.healthScore} />
-            </div>
+          <div style={{ background: 'var(--bg-subtle)', padding: '16px 24px', borderRadius: 16, border: '1px solid var(--border)', minWidth: 200 }}>
+             <p style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>Status do Cliente</p>
+             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: cliente.status === 'ativo' ? 'var(--success)' : cliente.status === 'prospect' ? 'var(--warning)' : 'var(--danger)' }} />
+                 <span style={{ fontSize: 16, fontWeight: 900, textTransform: 'capitalize' }}>{cliente.status}</span>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* ─── GRID PRINCIPAL ─── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20 }}>
-
-        {/* CONTRATO ATIVO */}
-        <div className="card" style={{ padding: 20 }}>
-          <SectionHeader icon={<FileText size={16} />} title="Contrato Ativo" />
-          {!contratoAtivo ? (
-            <EmptyState message="Nenhum contrato vigente" />
+      {/* ─── GRID DE MÓDULOS ─────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+        
+        {/* Contrato e Faturamento */}
+        <div className="card" style={{ padding: 24 }}>
+          <SectionHeader icon={<FileText size={18} />} title="Contrato Vigente" />
+          {contratoAtivo ? (
+            <div style={{ border: '1px solid var(--primary-glow)', background: 'var(--bg-subtle)', borderRadius: 12, padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontWeight: 800 }}>{contratoAtivo.title}</span>
+                <span className="badge badge-success">{contratoAtivo.status}</span>
+              </div>
+              <p style={{ fontSize: 22, fontWeight: 900, color: 'var(--primary)', marginBottom: 12 }}>{fmt(contratoAtivo.value)} <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>/ {contratoAtivo.recurrence || 'mês'}</span></p>
+              <div style={{ fontSize: 12, color: 'var(--text-sec)', display: 'flex', justifyContent: 'space-between' }}>
+                <span>Início: {fmtDate(contratoAtivo.startDate)}</span>
+                {contratoAtivo.endDate && <span>Fim: {fmtDate(contratoAtivo.endDate)}</span>}
+              </div>
+            </div>
           ) : (
+             <EmptyState message="Nenhum contrato ativo." />
+          )}
+
+          <div style={{ marginTop: 24 }}>
+            <SectionHeader icon={<Receipt size={18} />} title="Status Financeiro" count={faturas.length} />
+            {faturas.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {faturas.slice(0, 3).map(f => (
+                  <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-subtle)', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                       {f.status === 'pago' ? <CheckCircle2 size={14} color="var(--success)" /> : f.status === 'atrasado' ? <XCircle size={14} color="var(--danger)" /> : <Clock size={14} color="var(--warning)" />}
+                       <div>
+                         <p style={{ fontSize: 13, fontWeight: 700 }}>{fmt(f.amount)}</p>
+                         <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Venc: {fmtDate(f.date)}</p>
+                       </div>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: f.status === 'pago' ? 'var(--success)' : f.status === 'atrasado' ? 'var(--danger)' : 'var(--warning)' }}>{f.status}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <EmptyState message="Nenhuma fatura registrada." />}
+          </div>
+        </div>
+
+        {/* Projetos e Conteúdo */}
+        <div className="card" style={{ padding: 24 }}>
+          <SectionHeader icon={<Briefcase size={18} />} title="Projetos" count={clienteProjects.length} />
+          {clienteProjects.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {clienteProjects.map(p => (
+                <div key={p.id} style={{ padding: 14, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontWeight: 800, fontSize: 14 }}>{p.name}</span>
+                    <span className="badge" style={{ background: 'var(--bg-card)' }}>{p.status}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ width: `${p.progress}%`, height: '100%', background: 'var(--primary)', borderRadius: 99 }} />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 800 }}>{p.progress}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : <EmptyState message="Nenhum projeto associado." />}
+
+          <div style={{ marginTop: 24 }}>
+            <SectionHeader icon={<PenTool size={18} />} title="Conteúdos (Social Media)" count={conteudos.length} />
+            {conteudos.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {conteudos.slice(0, 4).map(c => (
+                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-subtle)', borderRadius: 8 }}>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 700, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.caption}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.platform} · {fmtDate(c.date)}</p>
+                    </div>
+                    <span className="badge" style={{ fontSize: 10, textTransform: 'uppercase' }}>{c.status}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <EmptyState message="Sem cronograma de conteúdo." />}
+          </div>
+        </div>
+
+        {/* Tarefas Operacionais */}
+        <div className="card" style={{ padding: 24 }}>
+          <SectionHeader icon={<CheckSquare size={18} />} title="Tarefas e Backlog" count={tarefas.length} />
+          {tarefas.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-main)' }}>{contratoAtivo.title}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary)' }}>{fmt(contratoAtivo.value)}</span>
-                <span className="badge" style={{ background: 'var(--success-glow)', color: 'var(--success)', fontWeight: 700 }}>{contratoAtivo.status}</span>
-              </div>
-              {contratoAtivo.recurrence && (
-                <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Recorrência: <strong>{contratoAtivo.recurrence}</strong></p>
-              )}
-              <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
-                <div>
-                  <p style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600 }}>INÍCIO</p>
-                  <p style={{ fontSize: 13, fontWeight: 600 }}>{fmtDate(contratoAtivo.startDate)}</p>
-                </div>
-                {contratoAtivo.endDate && (
-                  <div>
-                    <p style={{ fontSize: 11, color: 'var(--text-light)', fontWeight: 600 }}>ENCERRAMENTO</p>
-                    <p style={{ fontSize: 13, fontWeight: 600 }}>{fmtDate(contratoAtivo.endDate)}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* PROJETOS EM ANDAMENTO */}
-        <div className="card" style={{ padding: 20 }}>
-          <SectionHeader icon={<Briefcase size={16} />} title="Projetos em Andamento" count={projetos.length} />
-          {projetos.length === 0 ? (
-            <EmptyState message="Nenhum projeto ativo" />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {projetos.map(p => (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-subtle)', borderRadius: 10 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.status === 'EM_ANDAMENTO' ? 'var(--primary)' : 'var(--warning)', flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600 }}>{p.name}</p>
-                    {p.endDate && (
-                      <p style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <Calendar size={10} /> Entrega: {fmtDate(p.endDate)}
-                      </p>
-                    )}
-                  </div>
-                  <span className="badge" style={{ fontSize: 10, background: 'var(--primary-glow)', color: 'var(--primary)' }}>{p.status.replace('_', ' ')}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ÚLTIMAS FATURAS */}
-        <div className="card" style={{ padding: 20 }}>
-          <SectionHeader icon={<Receipt size={16} />} title="Últimas Faturas" count={faturas.length} />
-          {faturas.length === 0 ? (
-            <EmptyState message="Nenhuma fatura encontrada" />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {faturas.map(f => {
-                const cfg = STATUS_FATURA[f.status] || STATUS_FATURA['PENDENTE'];
-                return (
-                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-subtle)', borderRadius: 10 }}>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>{f.descricao || 'Fatura mensal'}</p>
-                      <p style={{ fontSize: 14, fontWeight: 700 }}>{fmt(f.valor)}</p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: cfg.color, fontWeight: 700, fontSize: 12, justifyContent: 'flex-end' }}>
-                        {cfg.icon} {cfg.label}
-                      </div>
-                      <p style={{ fontSize: 11, color: 'var(--text-light)', marginTop: 2 }}>
-                        {f.status === 'PAGO' && f.paidAt ? `Pago em ${fmtDate(f.paidAt)}` : `Vence ${fmtDate(f.vencimento)}`}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* TAREFAS ABERTAS */}
-        <div className="card" style={{ padding: 20 }}>
-          <SectionHeader icon={<CheckSquare size={16} />} title="Tarefas Abertas" count={tarefas.length} />
-          {tarefas.length === 0 ? (
-            <EmptyState message="Nenhuma tarefa aberta" />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {tarefas.map(t => {
-                const isOverdue = t.deadline && new Date(t.deadline) < new Date();
-                const prioColor = PRIORITY_COLOR[t.priority] || 'var(--text-muted)';
-                return (
-                  <div key={t.id} style={{ padding: '10px 12px', background: 'var(--bg-subtle)', borderRadius: 10, borderLeft: `3px solid ${prioColor}` }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{t.title}</p>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          <span className="badge" style={{ fontSize: 10, background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>{t.tipo}</span>
-                          <span className="badge" style={{ fontSize: 10, color: prioColor, background: 'transparent', border: `1px solid ${prioColor}` }}>{t.priority}</span>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        {t.assignee && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, justifyContent: 'flex-end' }}>
-                            <User size={10} /> {t.assignee.name}
-                          </div>
-                        )}
-                        {t.deadline && (
-                          <p style={{ fontSize: 11, color: isOverdue ? 'var(--danger)' : 'var(--text-light)', fontWeight: isOverdue ? 700 : 400, display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'flex-end' }}>
-                            <Calendar size={10} /> {fmtDate(t.deadline)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* CONTEÚDOS AGUARDANDO APROVAÇÃO */}
-        <div className="card" style={{ padding: 20, gridColumn: 'span 2' }}>
-          <SectionHeader icon={<PenTool size={16} />} title="Conteúdos Aguardando Aprovação" count={conteudos.length} />
-          {conteudos.length === 0 ? (
-            <EmptyState message="Nenhum conteúdo aguardando aprovação" />
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
-              {conteudos.map(c => (
-                <div key={c.id} style={{ padding: '12px 14px', background: 'var(--bg-subtle)', borderRadius: 10, borderTop: '3px solid var(--warning)' }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{c.title}</p>
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                    <span className="badge" style={{ fontSize: 10, background: 'var(--indigo-glow)', color: 'var(--indigo)' }}>{c.platform}</span>
-                    <span className="badge" style={{ fontSize: 10, background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>v{c.versao}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <p style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <User size={10} /> {c.author.name}
-                    </p>
-                    {c.publishAt && (
-                      <p style={{ fontSize: 11, color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <Calendar size={10} /> {fmtDate(c.publishAt)}
-                      </p>
-                    )}
+              {tarefas.slice(0, 6).map(t => (
+                <div key={t.id} style={{ display: 'flex', gap: 10, padding: 12, border: '1px solid var(--border)', borderRadius: 10, background: 'var(--bg-subtle)', alignItems: 'center' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: t.priority === 'urgent' ? 'var(--primary)' : t.priority === 'high' ? 'var(--danger)' : t.priority === 'medium' ? 'var(--warning)' : 'var(--success)', flexShrink: 0 }} />
+                  <div style={{ flex: 1, overflow: 'hidden' }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{t.title}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Membro: {t.assignee || 'X'}</p>
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          ) : <EmptyState message="Nenhuma pendência na produção." />}
         </div>
 
       </div>
