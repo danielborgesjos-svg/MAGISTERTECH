@@ -29,3 +29,8 @@ magister_tech_backend/pm2.log
 # OS
 .DS_Store
 Thumbs.db
+
+# WhatsApp Session
+magister_tech_backend/.wa_session/
+magister_tech_backend/.wwebjs_cache/
+magister_tech_backend/.wwebjs_auth/

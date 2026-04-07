@@ -3,7 +3,7 @@ import {
   Search, MoreVertical, MessageSquare, Phone, Video, Info,
   CheckCheck, Clock, Paperclip, Smile, Send, X,
   Users, Bell, Filter, ChevronRight,
-  ArrowRight
+  ArrowRight, Plus
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +30,7 @@ type Msg = {
 type TabVal = 'all' | 'unread' | 'groups';
 
 export default function Inbox() {
-  const { clients, addPipelineDeal } = useData();
+  const { clients, addPipelineDeal, waState, sendWAMessage: apiSendWA, addTicket } = useData();
   const navigate = useNavigate();
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [message, setMessage] = useState('');
@@ -43,74 +43,59 @@ export default function Inbox() {
   const [showMassModal, setShowMassModal] = useState(false);
   const [selectedForMass, setSelectedForMass] = useState<string[]>([]);
   const [massMessage, setMassMessage] = useState('');
-  const [replyTo, setReplyTo] = useState<Msg | null>(null);
-  const [chatHistory, setChatHistory] = useState<Record<string, Msg[]>>({});
-  const [unreadCount, setUnreadCount] = useState<Record<string, number>>({});
-  const [isTyping, setIsTyping] = useState(false);
+  const [replyTo, setReplyTo] = useState<any | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const contacts = clients.filter(c => c.phone && c.phone.length > 5);
-  const activeClient = contacts.find(c => c.id === activeChat);
+  // Mapear contatos: WhatsApp + Dados do CRM se existir
+  const contacts = waState.contacts.map(waContact => {
+    const crmMatch = clients.find(c => c.phone && c.phone.replace(/\D/g, '').includes(waContact.phone.replace(/\D/g, '')));
+    return {
+      id: waContact.id,
+      name: crmMatch?.name || waContact.name,
+      company: crmMatch?.company || waContact.name,
+      phone: waContact.phone,
+      status: crmMatch?.status || 'desconhecido',
+      crmId: crmMatch?.id
+    };
+  });
+
+  const activeContact = contacts.find(c => c.id === activeChat);
+  const rawHistory = activeChat ? waState.recentMessages[activeChat] || [] : [];
+  
+  // Converte WAMessage para o formato Msg esperado pelo componente
+  const chatMessages: Msg[] = rawHistory.map(m => ({
+    id: m.id,
+    text: m.text,
+    isSender: m.fromMe,
+    time: new Date(m.timestamp),
+    status: 'read' as const,
+  }));
 
   const filtered = contacts.filter(c => {
     const matchSearch = !searchTerm ||
       c.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (c.phone || '').includes(searchTerm);
-    const matchTab = activeTab === 'all' ? true :
-      activeTab === 'unread' ? (unreadCount[c.id] || 0) > 0 : false;
-    return matchSearch && matchTab;
+    return matchSearch;
   });
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory, activeChat]);
-
-  useEffect(() => {
-    if (activeChat) {
-      setUnreadCount(prev => ({ ...prev, [activeChat]: 0 }));
-    }
-  }, [activeChat]);
-
-  const simulateIncoming = (clientId: string, text: string) => {
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const incomingMsg: Msg = {
-        id: Date.now().toString(),
-        text,
-        isSender: false,
-        time: new Date(),
-        status: 'read',
-      };
-      setChatHistory(prev => ({
-        ...prev,
-        [clientId]: [...(prev[clientId] || []), incomingMsg],
-      }));
-      if (activeChat !== clientId) {
-        setUnreadCount(prev => ({ ...prev, [clientId]: (prev[clientId] || 0) + 1 }));
+    if (chatMessages.length > 0) {
+      const lastMsg = chatMessages[chatMessages.length - 1];
+      // Tocar som se a última mensagem não for minha
+      if (!lastMsg.isSender) {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+        audio.play().catch(() => {}); // Browser pode bloquear auto-play sem interação
       }
-    }, 1500);
-  };
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, activeChat]);
 
   const sendMessage = async (text?: string) => {
     const txt = text || message;
-    if (!activeChat || !txt.trim() || !activeClient) return;
+    if (!activeChat || !txt.trim() || !activeContact) return;
 
-    const newMsg: Msg = {
-      id: Date.now().toString(),
-      text: txt,
-      isSender: true,
-      time: new Date(),
-      status: 'sent',
-      replyTo: replyTo?.id,
-    };
-
-    setChatHistory(prev => ({
-      ...prev,
-      [activeChat]: [...(prev[activeChat] || []), newMsg],
-    }));
     setMessage('');
     setReplyTo(null);
     setShowEmoji(false);
@@ -118,57 +103,52 @@ export default function Inbox() {
     setIsSending(true);
 
     try {
-      const token = localStorage.getItem('magister_token');
-      await fetch('/api/whatsapp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ phone: activeClient.phone, message: txt }),
-      });
-      // Mark as delivered after 1s
-      setTimeout(() => {
-        setChatHistory(prev => ({
-          ...prev,
-          [activeChat]: (prev[activeChat] || []).map(m =>
-            m.id === newMsg.id ? { ...m, status: 'delivered' as const } : m
-          ),
-        }));
-      }, 1000);
-    } catch (_) { /* offline mode — OK */ }
+      await apiSendWA(activeContact.phone, txt);
+    } catch (_) { /* erro tratado no context */ }
     finally { setIsSending(false); }
-
-    // Simulate incoming reply after 3s (demo)
-    if (Math.random() > 0.5) {
-      simulateIncoming(activeChat, 'Recebido! Obrigado pelo contato 🙏');
-    }
   };
 
   const sendMass = async () => {
     if (!massMessage.trim() || selectedForMass.length === 0) return;
-    const token = localStorage.getItem('magister_token');
     for (const cid of selectedForMass) {
       const c = contacts.find(x => x.id === cid);
       if (!c) continue;
-      const msg: Msg = { id: Date.now().toString() + cid, text: massMessage, isSender: true, time: new Date(), status: 'sent' };
-      setChatHistory(prev => ({ ...prev, [cid]: [...(prev[cid] || []), msg] }));
-      try {
-        await fetch('/api/whatsapp/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ phone: c.phone, message: massMessage }),
-        });
-      } catch (_) {}
+      try { await apiSendWA(c.phone, massMessage); } catch (_) {}
     }
     setShowMassModal(false);
     setMassMessage('');
     setSelectedForMass([]);
   };
 
-  const handleMoveToFlow = (clientId: string) => {
-    const c = clients.find(x => x.id === clientId);
-    if (c && addPipelineDeal) {
-      (addPipelineDeal as any)({ title: c.company, clientId: c.id, value: 0, stage: 'lead', notes: 'Via Inbox N1' });
-    }
+  const handleMoveToFlow = () => {
+    if (!activeContact || !addPipelineDeal) return;
+    addPipelineDeal('lead', { 
+      title: `Lead: ${activeContact.company}`, 
+      assignee: 'Não Atribuído',
+      priority: 'high',
+      tag: 'WhatsApp',
+      description: `Iniciado via WhatsApp Inbox N1. Telefone: ${activeContact.phone}`,
+      phone: activeContact.phone
+    });
     navigate('/admin/pipeline');
+  };
+
+  const handleCreateTicket = () => {
+    if (!activeContact) return;
+    const history = waState.recentMessages[activeContact.id] || [];
+    const lastMsgs = history.slice(-5).map(m => `${m.fromMe ? 'Eu' : 'Cliente'}: ${m.text}`).join('\n');
+    
+    addTicket({
+      clientName: activeContact.company,
+      clientWhastapp: activeContact.phone,
+      subject: `Suporte via WhatsApp: ${activeContact.company}`,
+      description: `Ticket gerado a partir do chat.\n\nÚltimas mensagens:\n${lastMsgs}`,
+      category: 'suporte',
+      priority: 'media'
+    });
+    
+    alert('Ticket gerado com sucesso!');
+    navigate('/admin/tickets');
   };
 
   const StatusIcon = ({ status }: { status: Msg['status'] }) => {
@@ -199,7 +179,6 @@ export default function Inbox() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
           {([['all','Todas'], ['unread','Não Lidas'], ['groups','Grupos']] as [TabVal, string][]).map(([val, label]) => (
             <button key={val} onClick={() => setActiveTab(val)}
@@ -207,11 +186,6 @@ export default function Inbox() {
                 background: 'transparent', color: activeTab === val ? 'var(--primary)' : 'var(--text-muted)',
                 borderBottom: `2px solid ${activeTab === val ? 'var(--primary)' : 'transparent'}`, transition: 'all 0.2s' }}>
               {label}
-              {val === 'unread' && Object.values(unreadCount).reduce((a,b) => a+b, 0) > 0 && (
-                <span style={{ marginLeft: 4, background: 'var(--primary)', color: '#fff', borderRadius: 100, fontSize: 10, padding: '1px 5px', fontWeight: 800 }}>
-                  {Object.values(unreadCount).reduce((a,b) => a+b, 0)}
-                </span>
-              )}
             </button>
           ))}
         </div>
@@ -230,22 +204,20 @@ export default function Inbox() {
           </div>
         </div>
 
-        {/* Contact List */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {filtered.length === 0 && (
             <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Nenhum contato encontrado.</div>
           )}
-          {filtered.map(client => {
-            const h = chatHistory[client.id] || [];
+          {filtered.map(contact => {
+            const h = waState.recentMessages[contact.id] || [];
             const lastMsg = h.length > 0 ? h[h.length - 1] : null;
-            const unread = unreadCount[client.id] || 0;
-            const isActive = activeChat === client.id;
-            const hue = (client.id.charCodeAt(0) * 47 + 10) % 360;
+            const isActive = activeChat === contact.id;
+            const hue = (contact.id.charCodeAt(0) * 47 + 10) % 360;
 
             return (
               <div
-                key={client.id}
-                onClick={() => setActiveChat(client.id)}
+                key={contact.id}
+                onClick={() => setActiveChat(contact.id)}
                 style={{
                   display: 'flex', padding: '10px 16px', gap: 12, cursor: 'pointer', alignItems: 'center',
                   background: isActive ? 'var(--primary-glow)' : 'transparent',
@@ -256,7 +228,7 @@ export default function Inbox() {
                 {/* Avatar */}
                 <div style={{ position: 'relative', flexShrink: 0 }}>
                   <div style={{ width: 46, height: 46, borderRadius: '50%', background: `hsl(${hue}, 60%, 45%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 15 }}>
-                    {client.company.substring(0, 2).toUpperCase()}
+                    {(contact.company || '??').substring(0, 2).toUpperCase()}
                   </div>
                   <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: 'var(--success)', border: '2px solid var(--bg-card)' }} />
                 </div>
@@ -264,25 +236,22 @@ export default function Inbox() {
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                    <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{client.company}</span>
-                    <span style={{ fontSize: 10, color: unread > 0 ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 700, flexShrink: 0 }}>
-                      {lastMsg ? lastMsg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{contact.company}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, flexShrink: 0 }}>
+                      {lastMsg ? lastMsg.time : ''}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170 }}>
-                      {lastMsg ? (lastMsg.isSender ? `Você: ${lastMsg.text}` : lastMsg.text) : client.phone}
+                      {lastMsg ? (lastMsg.fromMe ? `Você: ${lastMsg.text}` : lastMsg.text) : contact.phone}
                     </span>
-                    {unread > 0 && (
-                      <span style={{ background: 'var(--primary)', color: '#fff', borderRadius: 100, fontSize: 10, padding: '1px 6px', fontWeight: 800, flexShrink: 0 }}>{unread}</span>
-                    )}
                   </div>
                   {/* Tag Row */}
                   <div style={{ marginTop: 4 }}>
                     <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', padding: '2px 6px', borderRadius: 4,
-                      background: client.status === 'ativo' ? 'var(--success-glow)' : client.status === 'prospect' ? 'var(--warning-glow)' : 'var(--bg-subtle)',
-                      color: client.status === 'ativo' ? 'var(--success)' : client.status === 'prospect' ? 'var(--warning)' : 'var(--text-muted)' }}>
-                      {client.status === 'ativo' ? '● ATIVO' : client.status === 'prospect' ? '◉ LEAD' : '○ ' + client.status}
+                      background: contact.status === 'ativo' ? 'var(--success-glow)' : contact.status === 'prospect' ? 'var(--warning-glow)' : 'var(--bg-subtle)',
+                      color: contact.status === 'ativo' ? 'var(--success)' : contact.status === 'prospect' ? 'var(--warning)' : 'var(--text-muted)' }}>
+                      {contact.status === 'ativo' ? '● ATIVO' : contact.status === 'prospect' ? '◉ LEAD' : '○ ' + contact.status}
                     </span>
                   </div>
                 </div>
@@ -293,28 +262,28 @@ export default function Inbox() {
       </div>
 
       {/* ── COL 2: CHAT PANEL ──────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', background: 'var(--bg)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', background: '#e5ddd5' }}>
         {/* Background pattern */}
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.025, pointerEvents: 'none', backgroundImage: 'radial-gradient(var(--text-main) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.06, pointerEvents: 'none', backgroundImage: 'url("https://wweb.dev/assets/whatsapp-chat-back.png")', backgroundSize: '400px' }} />
 
-        {activeClient ? (
+        {activeContact ? (
           <>
             {/* Chat Header */}
             <div style={{ padding: '10px 20px', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: '50%', background: `hsl(${(activeClient.id.charCodeAt(0) * 47 + 10) % 360}, 60%, 45%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 15 }}>
-                  {activeClient.company.substring(0, 2).toUpperCase()}
+                <div style={{ width: 42, height: 42, borderRadius: '50%', background: `hsl(${(activeContact.id.charCodeAt(0) * 47 + 10) % 360}, 60%, 45%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 15 }}>
+                  {activeContact.company.substring(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.2 }}>{activeClient.company}</h3>
-                  <p style={{ fontSize: 12, color: isTyping ? 'var(--success)' : 'var(--text-muted)', fontWeight: isTyping ? 700 : 400 }}>
-                    {isTyping ? 'digitando...' : `${activeClient.name} · ${activeClient.phone}`}
+                  <h3 style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.2 }}>{activeContact.company}</h3>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {activeContact.name} · {activeContact.phone}
                   </p>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button className="btn-icon" title="Mover para Pipeline" onClick={() => handleMoveToFlow(activeClient.id)} style={{ color: 'var(--primary)' }}>
-                  <ArrowRight size={18}/>
+                <button className="btn btn-primary btn-sm" title="Converter para Lead" onClick={handleMoveToFlow} style={{ gap: 8 }}>
+                  <ArrowRight size={16}/> Converter em Lead
                 </button>
                 <button className="btn-icon"><Video size={18}/></button>
                 <button className="btn-icon"><Phone size={18}/></button>
@@ -324,23 +293,15 @@ export default function Inbox() {
               </div>
             </div>
 
-            {/* Messages */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', zIndex: 10 }}>
-              {/* Date separator */}
-              <div style={{ textAlign: 'center', marginBottom: 12 }}>
-                <span style={{ background: 'var(--bg-card)', padding: '4px 14px', borderRadius: 100, fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-                  HOJE
-                </span>
-              </div>
-
-              {(chatHistory[activeClient.id] || []).length === 0 && (
+              {chatMessages.length === 0 && (
                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: '40px 20px' }}>
-                  Nenhuma mensagem ainda. Inicie a conversa abaixo.
+                  Nenhuma mensagem carregada. Inicie a conversa abaixo.
                 </div>
               )}
 
-              {(chatHistory[activeClient.id] || []).map(msg => {
-                const replyMsg = msg.replyTo ? (chatHistory[activeClient.id] || []).find(m => m.id === msg.replyTo) : null;
+              {chatMessages.map(msg => {
+                const replyMsg = msg.replyTo ? chatMessages.find(m => m.id === msg.replyTo) : null;
                 return (
                   <div
                     key={msg.id}
@@ -353,13 +314,12 @@ export default function Inbox() {
                       </div>
                     )}
                     <div style={{
-                      background: msg.isSender ? 'var(--primary)' : 'var(--bg-card)',
-                      color: msg.isSender ? '#fff' : 'var(--text-main)',
-                      padding: '9px 14px',
-                      borderRadius: msg.isSender ? '16px 16px 2px 16px' : '16px 16px 16px 2px',
-                      boxShadow: 'var(--shadow-sm)',
-                      border: msg.isSender ? 'none' : '1px solid var(--border)',
-                      fontSize: 14, lineHeight: 1.55
+                      background: msg.isSender ? '#dcf8c6' : '#ffffff',
+                      color: '#303030',
+                      padding: '8px 12px',
+                      borderRadius: msg.isSender ? '8px 0 8px 8px' : '0 8px 8px 8px',
+                      boxShadow: '0 1px 0.5px rgba(0,0,0,0.13)',
+                      fontSize: 14, lineHeight: 1.5
                     }}>
                       {msg.text}
                     </div>
@@ -370,12 +330,6 @@ export default function Inbox() {
                   </div>
                 );
               })}
-
-              {isTyping && (
-                <div style={{ alignSelf: 'flex-start', background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '10px 16px', borderRadius: '16px 16px 16px 2px', fontSize: 20, letterSpacing: 3 }}>
-                  <span style={{ animation: 'pulse 1s infinite' }}>···</span>
-                </div>
-              )}
 
               <div ref={messagesEndRef} />
             </div>
@@ -461,7 +415,7 @@ export default function Inbox() {
       </div>
 
       {/* ── COL 3: CONTACT INFO PANEL ──────────────────────── */}
-      {showInfo && activeClient && (
+      {showInfo && activeContact && (
         <div style={{ width: 300, background: 'var(--bg-card)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h4 style={{ fontSize: 14, fontWeight: 800 }}>Informações do Contato</h4>
@@ -469,21 +423,20 @@ export default function Inbox() {
           </div>
 
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ width: 72, height: 72, borderRadius: '50%', background: `hsl(${(activeClient.id.charCodeAt(0) * 47 + 10) % 360}, 60%, 45%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 24, marginBottom: 12 }}>
-              {activeClient.company.substring(0, 2).toUpperCase()}
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: `hsl(${(activeContact.id.charCodeAt(0) * 47 + 10) % 360}, 60%, 45%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: 24, marginBottom: 12 }}>
+              {activeContact.company.substring(0, 2).toUpperCase()}
             </div>
-            <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 4 }}>{activeClient.company}</h3>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{activeClient.name}</p>
-            <span className={`badge ${activeClient.status === 'ativo' ? 'badge-success' : 'badge-warning'}`} style={{ marginTop: 8 }}>
-              {activeClient.status?.toUpperCase()}
+            <h3 style={{ fontSize: 16, fontWeight: 900, marginBottom: 4 }}>{activeContact.company}</h3>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{activeContact.name}</p>
+            <span className={`badge ${activeContact.status === 'ativo' ? 'badge-success' : 'badge-warning'}`} style={{ marginTop: 8 }}>
+              {activeContact.status?.toUpperCase()}
             </span>
           </div>
 
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { label: 'Telefone', value: activeClient.phone },
-              { label: 'E-mail', value: activeClient.email },
-              { label: 'Segmento', value: (activeClient as any).segment || 'Não informado' },
+              { label: 'Telefone', value: activeContact.phone },
+              { label: 'Status CRM', value: activeContact.status },
             ].filter(f => f.value).map(f => (
               <div key={f.label}>
                 <p style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 3 }}>{f.label}</p>
@@ -493,23 +446,26 @@ export default function Inbox() {
           </div>
 
           <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'space-between' }} onClick={() => handleMoveToFlow(activeClient.id)}>
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'space-between' }} onClick={handleMoveToFlow}>
               Mover para Pipeline <ChevronRight size={16}/>
             </button>
-            <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'space-between' }} onClick={() => navigate('/admin/clientes')}>
-              Ver no CRM <ChevronRight size={16}/>
+            <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'space-between', color: 'var(--primary)', borderColor: 'var(--primary)' }} onClick={handleCreateTicket}>
+              Gerar Ticket de Suporte <Plus size={16}/>
             </button>
+            {activeContact.crmId && (
+              <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'space-between' }} onClick={() => navigate(`/admin/clientes/perfil/${activeContact.crmId}`)}>
+                Ver no CRM <ChevronRight size={16}/>
+              </button>
+            )}
           </div>
 
-          {/* Chat stats */}
           <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', margin: '0 12px' }}>
-            <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>Estatísticas da Conversa</p>
+            <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>Estatísticas (WhatsApp)</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {[
-                { label: 'Mensagens', value: (chatHistory[activeClient.id] || []).length },
-                { label: 'Enviadas', value: (chatHistory[activeClient.id] || []).filter(m => m.isSender).length },
-                { label: 'Recebidas', value: (chatHistory[activeClient.id] || []).filter(m => !m.isSender).length },
-                { label: 'Não Lidas', value: unreadCount[activeClient.id] || 0 },
+                { label: 'Mensagens', value: chatMessages.length },
+                { label: 'Enviadas', value: chatMessages.filter(m => m.isSender).length },
+                { label: 'Recebidas', value: chatMessages.filter(m => !m.isSender).length },
               ].map(s => (
                 <div key={s.label} style={{ background: 'var(--bg-subtle)', padding: '8px 10px', borderRadius: 8, textAlign: 'center' }}>
                   <p style={{ fontSize: 18, fontWeight: 900, color: 'var(--primary)', margin: 0 }}>{s.value}</p>

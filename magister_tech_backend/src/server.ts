@@ -137,9 +137,21 @@ app.get('/api/users', authMiddleware, blockCliente, async (_req: any, res: any) 
 // =====================================================
 // CLIENTS (CRM) — CRUD COMPLETO
 // =====================================================
-app.get('/api/clients', authMiddleware, blockCliente, async (_req: any, res: any) => {
+app.get('/api/clients', authMiddleware, blockCliente, async (req: any, res: any) => {
   try {
-    const clients = await prisma.client.findMany({ orderBy: { createdAt: 'desc' } });
+    const { withContracts } = req.query;
+    
+    let where = {};
+    if (withContracts === 'true') {
+      // Filtra apenas clientes que possuem contratos VIGENTES ou ativos
+      where = { contracts: { some: { status: 'VIGENTE' } } };
+    }
+
+    const clients = await prisma.client.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: { contracts: { select: { id: true, status: true } } }
+    });
     res.json(clients);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar clientes.' });
@@ -656,14 +668,26 @@ app.post('/api/whatsapp/sync-contacts', authMiddleware, requireRole('ADMIN', 'CE
 
   for (const contact of contacts) {
     if (!contact.phone) continue;
-    const existing = await prisma.client.findFirst({ where: { phone: contact.phone } });
+    // Verifica se já existe uma tarefa (lead) com este telefone nas observações ou descrição
+    const existing = await prisma.task.findFirst({ 
+      where: { 
+        OR: [
+          { description: { contains: contact.phone } },
+          { title: { contains: contact.name } }
+        ]
+      } 
+    });
+    
     if (existing) { skipped++; continue; }
-    await prisma.client.create({
+    
+    await prisma.task.create({
       data: {
-        name: contact.name,
-        phone: contact.phone,
-        status: 'PROSPECT',
-        segment: 'WhatsApp Import',
+        title: `Lead: ${contact.name}`,
+        description: `Importado via WhatsApp Engine: ${contact.phone}`,
+        status: 'lead',
+        priority: 'ALTA',
+        tipo: 'tarefa',
+        tags: 'WhatsApp',
       }
     });
     created++;

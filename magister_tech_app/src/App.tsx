@@ -27,6 +27,9 @@ import { AuthContext } from './contexts/AuthContext';
 import { useContext } from 'react';
 import { usePermission } from './hooks/usePermission';
 import Conectividade from './pages/Conectividade';
+import PortalSuporte from './pages/PortalSuporte';
+import Tickets from './pages/Tickets';
+import MeusTickets from './pages/MeusTickets';
 
 function ProtectedRoute({ children, module }: { children: React.ReactNode, module: string }) {
   const { canViewModule } = usePermission();
@@ -49,6 +52,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/suporte" element={<PortalSuporte />} />
+            <Route path="/suporte/acompanhar" element={<MeusTickets />} />
 
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -66,6 +71,7 @@ function App() {
               <Route path="team/diagrama" element={<ProtectedRoute module="projetos"><DiagramaEquipe /></ProtectedRoute>} />
               <Route path="audit" element={<ProtectedRoute module="dashboard"><AuditLog /></ProtectedRoute>} />
               <Route path="feed" element={<ProtectedRoute module="feed"><Feed /></ProtectedRoute>} />
+              <Route path="tickets" element={<ProtectedRoute module="crm"><Tickets /></ProtectedRoute>} />
               <Route path="config" element={<Configuracoes />} />
               <Route path="conectividade" element={<ProtectedRoute module="dashboard"><Conectividade /></ProtectedRoute>} />
 

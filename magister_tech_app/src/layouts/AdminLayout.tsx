@@ -65,6 +65,7 @@ const AdminLayout = () => {
       label: 'Comercial',
       items: [
         { to: '/admin/pipeline', icon: Target, label: 'Pipeline', module: 'pipeline' },
+        { to: '/admin/tickets', icon: Activity, label: 'Tickets Suporte', module: 'crm' },
         { to: '/admin/inbox', icon: MessageCircle, label: 'Inbox N1', module: 'crm' },
         { to: '/admin/crm', icon: Users, label: 'CRM — Clientes', module: 'crm' },
         { to: '/admin/contratos', icon: FileText, label: 'Contratos', module: 'contratos' },
@@ -260,26 +261,6 @@ const AdminLayout = () => {
         </section>
       </main>
 
-      {/* ─── FLOATING WHATSAPP BUTTON ─── */}
-      <a
-        href="https://wa.me/5511999999999"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Falar com Magister Tech via WhatsApp"
-        style={{
-          position: 'fixed', bottom: 28, right: 28, zIndex: 999,
-          width: 52, height: 52, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #25d366, #128c7e)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 20px rgba(37,211,102,0.4)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          textDecoration: 'none',
-        }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.1)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(37,211,102,0.6)'; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(37,211,102,0.4)'; }}
-      >
-        <MessageCircle size={24} color="#fff" fill="#fff" />
-      </a>
     </div>
   );
 };

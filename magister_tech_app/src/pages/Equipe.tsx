@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import {
-  Star, CheckCircle, Plus, X, Users, Pin, Trash2,
-  Phone, Mail, Edit, Activity, MessageSquare, Shield,
+  Star, CheckCircle, Plus, X, Users, Mail, Phone, Trash2, Edit2, 
+  Pin, Activity, MessageSquare, Shield,
   Bell, Megaphone, BookOpen, Briefcase, Info, Send
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
@@ -138,7 +138,7 @@ export default function Equipe() {
               {team.map(member => {
                 const tasksCount = getTaskCount(member.initials);
                 const isSelected = selected?.id === member.id;
-                const hue = (member.initials.charCodeAt(0) * 37 + (member.initials[1]?.charCodeAt(0) || 20) * 19) % 360;
+                const hue = (member.initials.charCodeAt(0) * 37 + (member.initials[1]?.charCodeAt(0) || 20) * 360) % 360;
                 const avatarBg = member.profileColor || `hsl(${hue}, 60%, 45%)`;
                 return (
                   <div key={member.id} className="card" onClick={() => { setSelected(member); setIsAdding(false); setIsEditing(false); }}
@@ -220,7 +220,7 @@ export default function Equipe() {
                         onClick={() => {
                           setFormData({ ...selected, password: '' } as any);
                           setIsEditing(true);
-                        }}><Edit size={14} /></button>
+                        }}><Edit2 size={14} /></button>
                     </div>
                   </div>
                   <div className="profile-card-body" style={{ padding: '0 24px 24px', textAlign: 'center' }}>

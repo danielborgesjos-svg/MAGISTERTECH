@@ -1,3 +1,6 @@
-2026/04/06-18:13:45.527 11ad8 Reusing MANIFEST C:\Users\Danie\OneDrive\Desktop\JARVIS-WORKSPACE\magister_tech_backend\.wa_session\session\Default\Local Storage\leveldb/MANIFEST-000001
-2026/04/06-18:13:45.533 11ad8 Recovering log #3
-2026/04/06-18:13:45.536 11ad8 Reusing old log C:\Users\Danie\OneDrive\Desktop\JARVIS-WORKSPACE\magister_tech_backend\.wa_session\session\Default\Local Storage\leveldb/000003.log 
+2026/04/06-22:19:22.275 d5d8 Reusing MANIFEST C:\Users\Danie\OneDrive\Desktop\JARVIS-WORKSPACE\magister_tech_backend\.wa_session\session\Default\Local Storage\leveldb/MANIFEST-000001
+2026/04/06-22:19:22.281 d5d8 Recovering log #4
+2026/04/06-22:19:22.285 d5d8 Reusing old log C:\Users\Danie\OneDrive\Desktop\JARVIS-WORKSPACE\magister_tech_backend\.wa_session\session\Default\Local Storage\leveldb/000004.log 
+2026/04/07-00:29:41.018 f34c Level-0 table #8: started
+2026/04/07-00:29:41.032 f34c Level-0 table #8: 14583 bytes OK
+2026/04/07-00:29:41.037 f34c Delete type=0 #4

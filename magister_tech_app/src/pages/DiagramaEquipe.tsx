@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { Network, Crown, Briefcase, LayoutGrid, X, FileText, Calendar, DollarSign, User } from 'lucide-react';
+import { useState, useContext } from 'react';
+import { Network, Crown, Briefcase, LayoutGrid, X, FileText, Calendar, DollarSign, User, ShieldCheck } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { AuthContext } from '../contexts/AuthContext';
 import type { TeamMember } from '../contexts/DataContext';
 
 export default function DiagramaEquipe() {
-  const { team, updateTeamMember } = useData();
+  const { team } = useData();
+  const { user } = useContext(AuthContext);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [masterView, setMasterView] = useState(false);
+
+  const canEdit = user?.accessLevel === 'ADMIN' || user?.role === 'CEO';
 
   const cLevel = team.filter(t => t.role === 'CEO' || t.role === 'ADMIN' || t.sector === 'Diretoria');
   const middleManagement = team.filter(t => t.role === 'MANAGER' || t.sector === 'Comercial' || t.sector === 'RH');
@@ -15,14 +19,28 @@ export default function DiagramaEquipe() {
   const sectors = [...new Set(operational.map(t => t.sector))].filter(Boolean);
 
   return (
-    <div className="animate-in" style={{ paddingBottom: 40, maxWidth: 1200, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+    <div className="animate-in" style={{ paddingBottom: 40, maxWidth: masterView ? '100%' : 1200, margin: '0 auto', transition: 'max-width 0.3s' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10 }}>
             <Network /> Organograma Master da Empresa
           </h1>
           <p style={{ color: 'var(--text-muted)' }}>Mapeamento hierárquico dinâmico gerado a partir do quadro de funcionários</p>
         </div>
+        {canEdit && (
+          <div style={{ display: 'flex', gap: 12 }}>
+             <button 
+                className={`btn ${masterView ? 'btn-primary' : 'btn-outline'}`} 
+                onClick={() => setMasterView(!masterView)}
+                style={{ gap: 8 }}
+             >
+                <ShieldCheck size={16} /> {masterView ? 'Visão Compacta' : 'Visão Master (Full)'}
+             </button>
+             <button className="btn btn-primary" onClick={() => alert('Apenas Admin Master pode alterar conexões manuais')}>
+                Editar Fluxo
+             </button>
+          </div>
+        )}
       </div>
 
       <div className="card" style={{ minHeight: 600, padding: 40, position: 'relative', overflowX: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -121,8 +139,8 @@ export default function DiagramaEquipe() {
 
       {/* MODAL GESTÃO HR / CONTRATO */}
       {selectedMember && (
-        <div className="modal-overlay" onClick={() => { setSelectedMember(null); setIsEditing(false); }}>
-          <div className="modal animate-scale-in" style={{ maxWidth: 500, padding: 0, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => { setSelectedMember(null); }}>
+<div className="modal animate-scale-in" style={{ maxWidth: 500, padding: 0, overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: '24px 32px', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 48, height: 48, borderRadius: '50%', background: selectedMember.profileColor || 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 800 }}>
@@ -133,7 +151,7 @@ export default function DiagramaEquipe() {
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{selectedMember.role} · {selectedMember.sector}</p>
                   </div>
                </div>
-               <button className="btn-icon" onClick={() => { setSelectedMember(null); setIsEditing(false); }}><X size={18} /></button>
+               <button className="btn-icon" onClick={() => { setSelectedMember(null); }}><X size={18} /></button>
             </div>
 
             <div style={{ padding: 32 }}>

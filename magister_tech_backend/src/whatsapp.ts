@@ -8,6 +8,7 @@ interface WAState {
   qrDataUrl: string | null;
   phone: string | null;
   contacts: { id: string; name: string; phone: string }[];
+  recentMessages: { [chatId: string]: { id: string; author: string; text: string; time: string; timestamp: number; fromMe: boolean }[] };
 }
 
 const state: WAState = {
@@ -15,6 +16,7 @@ const state: WAState = {
   qrDataUrl: null,
   phone: null,
   contacts: [],
+  recentMessages: {},
 };
 
 let clientInstance: Client | null = null;
@@ -49,10 +51,20 @@ export async function startWhatsApp() {
   const wc = new Client({
     authStrategy: new LocalAuth({ dataPath: './.wa_session' }),
     puppeteer: {
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ],
       headless: true,
     },
   });
+
+  console.log('[WhatsApp] Inicializando motor Puppeteer...');
 
   wc.on('qr', async (qr: string) => {
     try {
@@ -75,16 +87,74 @@ export async function startWhatsApp() {
     try {
       const info = wc.info;
       state.phone = info.wid.user;
-      // Carrega contatos
+
+      // Carrega contatos principais
       const allContacts = await wc.getContacts();
       state.contacts = allContacts
         .filter(c => !c.isGroup && c.name && c.number)
         .map(c => ({ id: c.id._serialized, name: c.name || c.pushname || c.number, phone: c.number }))
         .slice(0, 500);
+
+      // --- RECUPERAR HISTÓRICO (Últimas 100 mensagens) ---
+      console.log('[WhatsApp] Sincronizando histórico de mensagens...');
+      const chats = await wc.getChats();
+      // Pegar os 20 chats mais recentes para não sobrecarregar
+      const recentChats = chats.slice(0, 20);
+
+      for (const chat of recentChats) {
+        const messages = await chat.fetchMessages({ limit: 100 });
+        state.recentMessages[chat.id._serialized] = messages.map((m: any) => ({
+          id: m.id.id,
+          author: m.fromMe ? 'Você' : (m._data.notifyName || 'Cliente'),
+          text: m.body,
+          time: new Date(m.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: m.timestamp * 1000,
+          fromMe: m.fromMe
+        }));
+      }
+      console.log(`[WhatsApp] Histórico carregado para ${recentChats.length} conversas.`);
     } catch (err) {
-      console.error('[WhatsApp] Erro ao carregar contatos:', err);
+      console.error('[WhatsApp] Erro ao carregar histórico:', err);
     }
     broadcast();
+  });
+
+  wc.on('message', async (msg: any) => {
+    // Apenas mensagens de texto simples para o Cockpit
+    if (msg.body) {
+      const chatId = msg.from;
+      const newMessage = {
+        id: msg.id.id,
+        author: msg._data.notifyName || 'Cliente',
+        text: msg.body,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: Date.now(),
+        fromMe: false
+      };
+      
+      if (!state.recentMessages[chatId]) state.recentMessages[chatId] = [];
+      state.recentMessages[chatId].push(newMessage);
+      if (state.recentMessages[chatId].length > 50) state.recentMessages[chatId].shift();
+      
+      broadcast();
+    }
+  });
+
+  wc.on('message_create', async (msg: any) => {
+    if (msg.fromMe && msg.body) {
+      const chatId = msg.to;
+      const newMessage = {
+        id: msg.id.id,
+        author: 'Você',
+        text: msg.body,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: Date.now(),
+        fromMe: true
+      };
+      if (!state.recentMessages[chatId]) state.recentMessages[chatId] = [];
+      state.recentMessages[chatId].push(newMessage);
+      broadcast();
+    }
   });
 
   wc.on('auth_failure', (msg: string) => {

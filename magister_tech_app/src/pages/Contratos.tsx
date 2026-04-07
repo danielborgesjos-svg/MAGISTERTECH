@@ -30,7 +30,7 @@ const RECURRENCE_LABELS: Record<string, string> = {
 };
 
 export default function Contratos() {
-  const { contracts, clients, addContract, updateContractStatus } = useData();
+  const { contracts, clients, addContract, updateContractStatus, updateContract, deleteContract } = useData();
   const { user } = useContext(AuthContext);
   const [showForm, setShowForm] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
@@ -59,6 +59,8 @@ export default function Contratos() {
 
   const canManageContracts = user.accessLevel === 'ADMIN' || user.role === 'CEO';
   const [filterStatus, setFilterStatus] = useState<'all' | 'ativo' | 'vencendo' | 'encerrado'>('all');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: '',
     clientId: '',
@@ -69,22 +71,52 @@ export default function Contratos() {
     notes: '',
   });
 
-  const handleAdd = () => {
+  const handleSave = async () => {
     if (!form.title || !form.clientId || !form.value || !form.endDate) return;
-    addContract({
+    
+    const contractData = {
       title: form.title,
       clientId: form.clientId,
       value: parseFloat(form.value),
       startDate: form.startDate,
       endDate: form.endDate,
       recurrence: form.recurrence,
-    });
+    };
+
+    if (isEditing && editingId) {
+      await (updateContract as any)(editingId, contractData);
+    } else {
+      await addContract(contractData);
+    }
+
     setForm({
       title: '', clientId: '', value: '',
       startDate: new Date().toISOString().split('T')[0],
       endDate: '', recurrence: 'mensal', notes: '',
     });
+    setIsEditing(false);
+    setEditingId(null);
     setShowForm(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este contrato? Esta ação é irreversível.')) return;
+    await (deleteContract as any)(id);
+  };
+
+  const openEdit = (c: Contract) => {
+    setForm({
+      title: c.title,
+      clientId: c.clientId,
+      value: c.value.toString(),
+      startDate: c.startDate.split('T')[0],
+      endDate: c.endDate.split('T')[0],
+      recurrence: c.recurrence,
+      notes: '',
+    });
+    setEditingId(c.id);
+    setIsEditing(true);
+    setShowForm(true);
   };
 
   const totalMRR = contracts.filter(c => c.status === 'ativo' && c.recurrence === 'mensal').reduce((a, c) => a + c.value, 0);
@@ -263,9 +295,14 @@ export default function Contratos() {
                           <Eye size={15} />
                         </button>
                         {canManageContracts && (
-                          <button className="btn btn-ghost btn-sm" onClick={() => updateContractStatus(contract.id, 'ativo')} title="Renovar/Reativar" style={{ fontSize: 12, fontWeight: 700 }}>
-                            <RefreshCw size={13} /> Renovar
-                          </button>
+                          <>
+                            <button className="btn-icon" title="Editar" onClick={() => openEdit(contract)} style={{ color: 'var(--primary)' }}>
+                              <RefreshCw size={14} />
+                            </button>
+                            <button className="btn-icon" title="Excluir" onClick={() => handleDelete(contract.id)} style={{ color: 'var(--danger)' }}>
+                              <X size={15} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -340,8 +377,8 @@ export default function Contratos() {
                   <FileText size={24} color="var(--primary)" />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>Formalizar Novo Contrato</h2>
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>Registre o SLA, valor e vigência acordados com o cliente.</p>
+                  <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>{isEditing ? 'Editar Contrato' : 'Formalizar Novo Contrato'}</h2>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>{isEditing ? 'Atualize os termos e vigência do contrato.' : 'Registre o SLA, valor e vigência acordados com o cliente.'}</p>
                 </div>
               </div>
               <button className="btn-icon" style={{ background: 'var(--bg-card)' }} onClick={() => setShowForm(false)}><X size={18} /></button>
@@ -399,9 +436,9 @@ export default function Contratos() {
 
             <div className="modal-footer" style={{ justifyContent: 'flex-end', padding: '24px 32px', background: 'var(--bg-card)' }}>
               <div style={{ display: 'flex', gap: 12 }}>
-                <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancelar</button>
-                <button className="btn btn-primary" onClick={handleAdd} disabled={!form.title || !form.clientId || !form.value || !form.endDate} style={{ padding: '10px 24px' }}>
-                  <CheckCircle size={16} /> Assinar & Formalizar Contrato
+                <button className="btn btn-ghost" onClick={() => { setShowForm(false); setIsEditing(false); }}>Cancelar</button>
+                <button className="btn btn-primary" onClick={handleSave} disabled={!form.title || !form.clientId || !form.value || !form.endDate} style={{ padding: '10px 24px' }}>
+                  <CheckCircle size={16} /> {isEditing ? 'Salvar Alterações' : 'Assinar & Formalizar Contrato'}
                 </button>
               </div>
             </div>

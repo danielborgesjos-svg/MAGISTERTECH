@@ -202,6 +202,31 @@ export interface Goal {
   category: 'faturamento' | 'conteudo' | 'leads' | 'projetos';
 }
 
+export interface TicketMessage {
+  id: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+  isInternal: boolean;
+}
+
+export interface Ticket {
+  id: string;
+  clientId?: string;
+  clientName: string;
+  clientWhastapp: string;
+  subject: string;
+  description: string;
+  status: 'novo' | 'aberto' | 'pendente' | 'resolvido' | 'fechado';
+  priority: 'baixa' | 'media' | 'alta' | 'urgente';
+  category: 'bug' | 'suporte' | 'alteracao' | 'financeiro' | 'outro';
+  assigneeId?: string;
+  projectId?: string;
+  messages: TicketMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Alert {
   id: string;
   type: 'danger' | 'warning' | 'info' | 'purple';
@@ -209,6 +234,26 @@ export interface Alert {
   module: string;
   entityId?: string;
   createdAt: string;
+}
+
+// ─── WHATSAPP TYPES ────────────────────────────────────────────────────────
+export type WAStatus = 'disconnected' | 'qr_ready' | 'connecting' | 'connected' | 'auth_failure';
+
+export interface WAMessage {
+  id: string;
+  author: string;
+  text: string;
+  time: string;
+  timestamp: number;
+  fromMe: boolean;
+}
+
+export interface WAState {
+  status: WAStatus;
+  qrDataUrl: string | null;
+  phone: string | null;
+  contacts: { id: string; name: string; phone: string }[];
+  recentMessages: { [chatId: string]: WAMessage[] };
 }
 
 export interface ChatChannel {
@@ -354,6 +399,19 @@ interface DataContextType {
   getAtRiskProjects: () => Project[];
   getExpiringContracts: () => Contract[];
   getInactiveClients: () => Client[];
+  
+  // Tickets System
+  tickets: Ticket[];
+  addTicket: (t: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'messages' | 'status'>) => void;
+  updateTicket: (id: string, data: Partial<Ticket>) => void;
+  addTicketMessage: (ticketId: string, message: Omit<TicketMessage, 'id' | 'createdAt'>) => void;
+  deleteTicket: (id: string) => void;
+
+  waState: WAState;
+  sendWAMessage: (phone: string, message: string) => Promise<boolean>;
+  syncWAContacts: () => Promise<void>;
+  startWA: () => Promise<void>;
+  disconnectWA: () => Promise<void>;
 }
 
 export const DataContext = createContext<DataContextType>({} as DataContextType);
@@ -397,7 +455,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [chat, setChat] = useState<typeof INITIAL_CHAT>(() => memLoadPersist('chat', INITIAL_CHAT));
   const [feed, setFeed] = useState<FeedPost[]>(() => memLoadPersist('feed', []));
   const [goals, setGoals] = useState<Goal[]>(() => memLoadPersist('goals', INITIAL_GOALS));
+  const [tickets, setTickets] = useState<Ticket[]>(() => memLoadPersist('tickets', []));
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [waState, setWaState] = useState<WAState>({ status: 'disconnected', qrDataUrl: null, phone: null, contacts: [], recentMessages: {} });
 
   // — Persistência automática dos estados híbridos —
   useEffect(() => { memSave('kanban', kanban); }, [kanban]);
@@ -408,6 +468,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => { memSave('chat', chat); }, [chat]);
   useEffect(() => { memSave('feed', feed); }, [feed]);
   useEffect(() => { memSave('goals', goals); }, [goals]);
+  useEffect(() => { memSave('tickets', tickets); }, [tickets]);
 
   // — Carregamento inicial da API (Clientes, Contratos, Projetos) —
   useEffect(() => {
@@ -461,6 +522,63 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     loadAll();
   }, []);
+
+  // — WHATSAPP SSE LISTENER —
+  useEffect(() => {
+    const token = localStorage.getItem('magister_token');
+    if (!token) return;
+
+    let eventSource: EventSource | null = null;
+
+    const connectSSE = () => {
+      if (eventSource) eventSource.close();
+      
+      eventSource = new EventSource(`/api/whatsapp/stream?token=${token}`);
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setWaState(data);
+        } catch (err) {
+          console.error('[WA Engine] Erro ao processar SSE:', err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        console.warn('[WA Engine] SSE desconectado. Tentando reconectar...');
+        eventSource?.close();
+        setTimeout(connectSSE, 5000);
+      };
+    };
+
+    connectSSE();
+    return () => eventSource?.close();
+  }, []);
+
+  const sendWAMessage = async (phone: string, message: string) => {
+    try {
+      await apiFetch('/api/whatsapp/send', {
+        method: 'POST',
+        body: JSON.stringify({ phone, message }),
+      });
+      return true;
+    } catch (err) {
+      console.error('[WA Engine] Falha ao enviar:', err);
+      return false;
+    }
+  };
+
+  const syncWAContacts = async () => {
+    await apiFetch('/api/whatsapp/sync-contacts', { method: 'POST' });
+  };
+
+  const startWA = async () => {
+    await apiFetch('/api/whatsapp/start', { method: 'POST' });
+  };
+
+  const disconnectWA = async () => {
+    await apiFetch('/api/whatsapp/disconnect', { method: 'POST' });
+  };
 
   // Alert Engine
   useEffect(() => {
@@ -657,6 +775,74 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setFeed(prev => prev.map(f => f.id === postId ? { ...f, comments: [...(f.comments || []), { ...comment, id: Date.now().toString(), date: new Date().toISOString() }] } : f));
   }, []);
 
+  const sendTicketWANotification = useCallback(async (ticketId: string, type: 'created' | 'status_update' | 'new_message', extra?: string) => {
+    // Buscamos o ticket no estado atual
+    setTickets(currentTickets => {
+      const ticket = currentTickets.find(t => t.id === ticketId);
+      if (ticket && ticket.clientWhastapp) {
+        const portalUrl = `${window.location.origin}/suporte`;
+        let message = '';
+
+        if (type === 'created') {
+          message = `✅ Olá ${ticket.clientName}! Recebemos seu chamado: *${ticket.subject}*.\n\nProtocolo: #${ticket.id}\nAcompanhe em tempo real aqui: ${portalUrl}`;
+        } else if (type === 'status_update') {
+          message = `⏳ Olá ${ticket.clientName}! O status do seu chamado *#${ticket.id}* foi atualizado para: *${extra?.toUpperCase()}*.\n\nVeja os detalhes: ${portalUrl}`;
+        } else if (type === 'new_message') {
+          message = `💬 Olá ${ticket.clientName}! Você recebeu uma nova resposta no seu chamado *#${ticket.id}*.\n\n"${extra?.substring(0, 50)}..."\n\nResponda em: ${portalUrl}`;
+        }
+
+        if (message) {
+          apiFetch('/api/whatsapp/send', {
+            method: 'POST',
+            body: JSON.stringify({ phone: ticket.clientWhastapp, message }),
+          }).catch(err => console.error('[WA Notification] Erro:', err));
+        }
+      }
+      return currentTickets;
+    });
+  }, []);
+
+  // ─── TICKET ACTIONS ────────────────────────────────────────────────────────
+  const addTicket = useCallback((t: any) => {
+    const ticketId = `tk-${Date.now()}`;
+    const newTicket: Ticket = {
+      ...t,
+      id: ticketId,
+      status: t.status || 'novo',
+      messages: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    setTickets(prev => [newTicket, ...prev]);
+    // Notifica automaticamente
+    setTimeout(() => sendTicketWANotification(ticketId, 'created'), 500);
+  }, [sendTicketWANotification]);
+
+  const updateTicket = useCallback((id: string, data: Partial<Ticket>) => {
+    setTickets(prev => prev.map(t => t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t));
+    if (data.status) {
+      sendTicketWANotification(id, 'status_update', data.status);
+    }
+  }, [sendTicketWANotification]);
+
+  const addTicketMessage = useCallback((ticketId: string, msg: any) => {
+    const newMessage: TicketMessage = { ...msg, id: `tm-${Date.now()}`, createdAt: new Date().toISOString() };
+    setTickets(prev => prev.map(t => t.id === ticketId ? { 
+      ...t, 
+      messages: [...t.messages, newMessage],
+      updatedAt: new Date().toISOString() 
+    } : t));
+    
+    // Notifica o cliente se for uma mensagem externa (do admin para o cliente)
+    if (!msg.isInternal) {
+      sendTicketWANotification(ticketId, 'new_message', msg.text);
+    }
+  }, [sendTicketWANotification]);
+
+  const deleteTicket = useCallback((id: string) => {
+    setTickets(prev => prev.filter(t => t.id !== id));
+  }, []);
+
   // ─── COMPUTED ─────────────────────────────────────────────────────────────
   const getMonthRevenue = () => transactions.filter(t => t.type === 'income' && t.status === 'pago').reduce((a, b) => a + b.amount, 0);
   const getMonthExpense = () => transactions.filter(t => t.type === 'expense' && t.status === 'pago').reduce((a, b) => a + b.amount, 0);
@@ -677,6 +863,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       updateMemberPassword, updateMemberPermissions,
       addMessage, addFeedPost, deleteFeedPost, pinFeedPost, addFeedComment,
       archiveTask, addTaskLog, updateGoal,
+      addTicket, updateTicket, addTicketMessage, deleteTicket,
+      tickets,
       getClientById: (id) => clients.find(c => c.id === id),
       getProjectById: (id) => projects.find(p => p.id === id),
       getContractById: (id) => contracts.find(c => c.id === id),
@@ -692,7 +880,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       getPendingReceivables: () => transactions.filter(t => t.type === 'income' && t.status === 'pendente').reduce((a, b) => a + b.amount, 0),
       getAtRiskProjects: () => projects.filter(p => p.status === 'atrasado'),
       getExpiringContracts: () => contracts.filter(c => c.status === 'vencendo'),
-      getInactiveClients: () => clients.filter(c => c.status === 'inativo')
+      getInactiveClients: () => clients.filter(c => c.status === 'inativo'),
+      waState, sendWAMessage, syncWAContacts, startWA, disconnectWA
     }}>
       {children}
     </DataContext.Provider>

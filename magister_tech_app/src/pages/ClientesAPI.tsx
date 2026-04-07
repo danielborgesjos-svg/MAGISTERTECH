@@ -48,7 +48,7 @@ export default function ClientesAPI() {
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.get('/api/clients', {
+      const { data } = await axios.get('/api/clients?withContracts=true', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setClients(data);
