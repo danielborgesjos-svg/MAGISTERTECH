@@ -1,11 +1,10 @@
 /**
  * ClientesAPI — lista clientes diretamente do banco (backend Prisma).
- * Serve como ponto de entrada para Hub 360 e Kanban Interno por cliente.
- * Funciona apenas quando o backend está rodando com JWT real.
+ * Sessão via httpOnly cookie — sem token em localStorage.
  */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { apiFetch } from '../lib/api';
 import {
   Activity, Building2, KanbanSquare, LayoutGrid,
   Search, Plus, RefreshCw, AlertCircle, TrendingUp
@@ -40,21 +39,15 @@ export default function ClientesAPI() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
 
-  const token = localStorage.getItem('magister_token');
-  const isDemoToken = token === 'demo-offline-token' || !token;
-
   const loadClients = async () => {
-    if (isDemoToken) { setLoading(false); return; }
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.get('/api/clients?withContracts=true', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const data = await apiFetch<ApiClient[]>('/api/clients?withContracts=true');
       setClients(data);
     } catch (e: any) {
-      if (e?.response?.status === 401) {
-        setError('Sessão expirada. Faça login novamente.');
+      if (e?.message?.includes('401') || e?.message?.includes('Sessão')) {
+        setError('Sessão expirada. Redirecionando para login...');
       } else {
         setError('Backend indisponível. Certifique-se de que o servidor está rodando na porta 3001.');
       }
@@ -73,36 +66,6 @@ export default function ClientesAPI() {
       (c.email || '').toLowerCase().includes(q)
     );
   });
-
-  // ─── Estado: token demo / backend offline ──────────────────
-  if (isDemoToken) {
-    return (
-      <div className="animate-in">
-        <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.03em', marginBottom: 8 }}>Hub de Clientes</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Acesso 360 e Kanban interno por cliente.</p>
-        </div>
-        <div className="card" style={{ padding: 40, textAlign: 'center', maxWidth: 520, margin: '0 auto' }}>
-          <AlertCircle size={36} color="var(--warning)" style={{ marginBottom: 16 }} />
-          <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>Backend necessário</h3>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: 24 }}>
-            Você está em <strong>modo offline (Bypass)</strong>. Para acessar o Hub 360 e o Kanban interno, o backend precisa estar rodando e você precisa fazer login com credenciais reais.
-          </p>
-          <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 18px', textAlign: 'left', marginBottom: 20, fontSize: 13 }}>
-            <p style={{ fontWeight: 700, marginBottom: 8 }}>Como ativar:</p>
-            <ol style={{ paddingLeft: 18, color: 'var(--text-muted)', lineHeight: 2 }}>
-              <li>Abra um terminal em <code style={{ background: 'var(--bg-card)', padding: '1px 5px', borderRadius: 4 }}>magister_tech_backend</code></li>
-              <li>Rode <code style={{ background: 'var(--bg-card)', padding: '1px 5px', borderRadius: 4 }}>npm run dev</code></li>
-              <li>Faça logout e entre novamente com <code style={{ background: 'var(--bg-card)', padding: '1px 5px', borderRadius: 4 }}>admin@magistertech.com.br / admin123</code></li>
-            </ol>
-          </div>
-          <button className="btn btn-primary" onClick={() => { localStorage.removeItem('magister_token'); localStorage.removeItem('magister_user'); navigate('/login'); }}>
-            Ir para o Login
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="animate-in" style={{ paddingBottom: 40 }}>

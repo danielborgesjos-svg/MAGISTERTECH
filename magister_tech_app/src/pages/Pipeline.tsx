@@ -10,6 +10,7 @@ import {
   Plus, X, GripVertical, TrendingUp, Trash2, CheckCircle, Flame, User, DollarSign, AlignLeft, Tags, ArrowRight, MessageSquare, Phone
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { apiFetch } from '../lib/api';
 import type { Task, KanbanColumn } from '../contexts/DataContext';
 
 const fmt = (n: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
@@ -248,13 +249,10 @@ export default function Pipeline() {
     if (!waModal || !waMessage) return;
     setIsSendingWA(true);
     try {
-      const token = localStorage.getItem('magister_token');
-      const res = await fetch('http://localhost:3001/api/whatsapp/send', {
+      const data = await apiFetch<any>('/api/whatsapp/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ phone: waModal.phone, message: waMessage })
+        body: JSON.stringify({ phone: waModal.phone, message: waMessage }),
       });
-      const data = await res.json();
       if (data.ok) {
         alert('Mensagem N1 enviada para o lead!');
         setWaModal(null);

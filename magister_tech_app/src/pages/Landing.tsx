@@ -27,6 +27,7 @@ const Landing = () => {
     { name: 'Vantagens', href: '#vantagens' },
     { name: 'Clientes', href: '#clientes' },
     { name: 'Equipe', href: '#equipe' },
+    { name: 'Suporte', href: '/suporte' },
     { name: 'Contato', href: '#contato' },
   ];
 

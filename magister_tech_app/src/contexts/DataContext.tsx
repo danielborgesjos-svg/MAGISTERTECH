@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { ReactNode } from 'react';
+import { apiFetch } from '../lib/api';
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -190,6 +191,7 @@ export interface TeamMember {
   password?: string;
   accessLevel?: 'VIEWER' | 'EDITOR' | 'ADMIN';
   permissions?: string[];
+  preferences?: any;
 }
 
 export interface Goal {
@@ -248,6 +250,27 @@ export interface WAMessage {
   fromMe: boolean;
 }
 
+export interface TechService {
+  id: string;
+  nome: string;
+  tipo: string;
+  versao?: string;
+  status: string;
+  uptime: number;
+  custo_mes: number;
+}
+
+export interface AgencyProcess {
+  id: string;
+  nome: string;
+  area: string;
+  responsavel: string;
+  slaHoras: number;
+  realizado: number;
+  status: string;
+  automacao: number;
+}
+
 export interface WAState {
   status: WAStatus;
   qrDataUrl: string | null;
@@ -297,18 +320,8 @@ const INITIAL_GOALS: Goal[] = [
   { id: 'g3', title: 'Novos Projetos', target: 5, current: 0, unit: 'un', deadline: new Date().toISOString().split('T')[0], category: 'projetos' },
 ];
 
-// ─── API HELPERS ──────────────────────────────────────────────────────────────
 
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('magister_token') || ''}`,
-});
-
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...options, headers: { ...getHeaders(), ...(options?.headers || {}) } });
-  if (!res.ok) throw new Error(`API ${url} → ${res.status}`);
-  return res.json();
-}
+// apiFetch importado de '../lib/api' — usa credentials: 'include' (httpOnly cookie automático)
 
 // ─── CONTEXT TYPE ─────────────────────────────────────────────────────────────
 
@@ -326,6 +339,7 @@ interface DataContextType {
   feed: FeedPost[];
   alerts: Alert[];
   goals: Goal[];
+  logs: any[];
   apiReady: boolean;
 
   addClient: (c: Omit<Client, 'id' | 'createdAt' | 'lastContact' | 'notes'>) => void;
@@ -375,6 +389,7 @@ interface DataContextType {
   addTeamRating: (memberId: string, stars: number, feedback: string) => void;
   updateMemberPassword: (memberId: string, newPassword: string) => void;
   updateMemberPermissions: (memberId: string, permissions: string[], accessLevel: TeamMember['accessLevel']) => void;
+  updateMemberPreferences: (memberId: string, preferences: any) => void;
 
   addMessage: (channelId: string, authorInitials: string, authorName: string, text: string) => void;
 
@@ -412,6 +427,11 @@ interface DataContextType {
   syncWAContacts: () => Promise<void>;
   startWA: () => Promise<void>;
   disconnectWA: () => Promise<void>;
+  techStack: TechService[];
+  createTechService: (t: Omit<TechService, 'id'>) => Promise<void>;
+  
+  processos: AgencyProcess[];
+  createAgencyProcess: (p: Omit<AgencyProcess, 'id'>) => Promise<void>;
 }
 
 export const DataContext = createContext<DataContextType>({} as DataContextType);
@@ -421,22 +441,10 @@ export const useData = () => useContext(DataContext);
 
 // Chave única para dados que NÃO têm API (Kanban interno, Chat, Feed, Pipeline, Conteúdo, Agenda)
 // Esses serão persistidos via backend quando os endpoints forem criados.
-// Por enquanto usam um fallback em memória (semelhante ao localStorage mas sem persistir sessões).
-const MEM: Record<string, any> = {};
+// Por enquanto usam um fallback em memória.
+// const MEM: Record<string, any> = {}; 
 
 
-function memSave(key: string, data: unknown) {
-  MEM[key] = data;
-  // Persiste de forma secundária para não perder durante refresh da página
-  try { localStorage.setItem(`mstr_mem_${key}`, JSON.stringify(data)); } catch {}
-}
-function memLoadPersist<T>(key: string, fallback: T): T {
-  try {
-    const v = localStorage.getItem(`mstr_mem_${key}`);
-    if (v) return JSON.parse(v);
-  } catch {}
-  return fallback;
-}
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   // — Estados com API (fonte de verdade = Banco de Dados) —
@@ -447,44 +455,45 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [apiReady, setApiReady] = useState(false);
 
   // — Estados com persistência híbrida (persistem localmente, migram para API na Fase 3) —
-  const [kanban, setKanbanState] = useState<KanbanColumn[]>(() => memLoadPersist('kanban', INITIAL_KANBAN));
-  const [pipeline, setPipelineState] = useState<KanbanColumn[]>(() => memLoadPersist('pipeline', INITIAL_PIPELINE));
-  const [events, setEvents] = useState<CalendarEvent[]>(() => memLoadPersist('events', []));
-  const [content, setContent] = useState<ContentPost[]>(() => memLoadPersist('content', []));
-  const [team, setTeam] = useState<TeamMember[]>(() => memLoadPersist('team', []));
-  const [chat, setChat] = useState<typeof INITIAL_CHAT>(() => memLoadPersist('chat', INITIAL_CHAT));
-  const [feed, setFeed] = useState<FeedPost[]>(() => memLoadPersist('feed', []));
-  const [goals, setGoals] = useState<Goal[]>(() => memLoadPersist('goals', INITIAL_GOALS));
-  const [tickets, setTickets] = useState<Ticket[]>(() => memLoadPersist('tickets', []));
+  const [kanban, setKanbanState] = useState<KanbanColumn[]>(INITIAL_KANBAN);
+  const [pipeline, setPipelineState] = useState<KanbanColumn[]>(INITIAL_PIPELINE);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [content, setContent] = useState<ContentPost[]>([]);
+  const [techStack, setTechStack] = useState<TechService[]>([]);
+  const [processos, setProcessos] = useState<AgencyProcess[]>([]);
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [chat, setChat] = useState<typeof INITIAL_CHAT>(INITIAL_CHAT);
+  const [feed, setFeed] = useState<FeedPost[]>([]);
+  const [goals, setGoals] = useState<Goal[]>(INITIAL_GOALS);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [waState, setWaState] = useState<WAState>({ status: 'disconnected', qrDataUrl: null, phone: null, contacts: [], recentMessages: {} });
 
-  // — Persistência automática dos estados híbridos —
-  useEffect(() => { memSave('kanban', kanban); }, [kanban]);
-  useEffect(() => { memSave('pipeline', pipeline); }, [pipeline]);
-  useEffect(() => { memSave('events', events); }, [events]);
-  useEffect(() => { memSave('content', content); }, [content]);
-  useEffect(() => { memSave('team', team); }, [team]);
-  useEffect(() => { memSave('chat', chat); }, [chat]);
-  useEffect(() => { memSave('feed', feed); }, [feed]);
-  useEffect(() => { memSave('goals', goals); }, [goals]);
-  useEffect(() => { memSave('tickets', tickets); }, [tickets]);
-
-  // — Carregamento inicial da API (Clientes, Contratos, Projetos) —
+  // — Carregamento inicial da API —
+  // Sessão autenticada via httpOnly cookie (enviado automaticamente sem verificação explícita)
   useEffect(() => {
-    const token = localStorage.getItem('magister_token');
-    if (!token) return;
-
     const loadAll = async () => {
       try {
-        const [cls, cts, projs, txs] = await Promise.all([
+        const [cls, cts, projs, fts, tks, fdp, cht, gls, users, evs, trs, lgs, boardCols, tch, proc] = await Promise.all([
           apiFetch<any[]>('/api/clients'),
           apiFetch<any[]>('/api/contracts'),
           apiFetch<any[]>('/api/projects'),
           apiFetch<any[]>('/api/faturas').catch(() => []),
+          apiFetch<any[]>('/api/tickets').catch(() => []),
+          apiFetch<any[]>('/api/feed').catch(() => []),
+          apiFetch<any[]>('/api/chat').catch(() => []),
+          apiFetch<any[]>('/api/goals').catch(() => []),
+          apiFetch<any[]>('/api/users').catch(() => []),
+          apiFetch<any[]>('/api/events').catch(() => []),
+          apiFetch<any[]>('/api/transactions').catch(() => []),
+          apiFetch<any[]>('/api/logs').catch(() => []),
+          apiFetch<any[]>('/api/boards/columns').catch(() => []),
+          apiFetch<any[]>('/api/tech').catch(() => []),
+          apiFetch<any[]>('/api/processos').catch(() => []),
         ]);
 
-        // Mapear formato do backend para o formato do frontend
+        // 1. Mapear Clientes
         setClients(cls.map(c => ({
           id: c.id, name: c.name, company: c.company || '', email: c.email || '',
           phone: c.phone || '', segment: c.segment || '', status: (c.status || 'ativo').toLowerCase() as any,
@@ -492,6 +501,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           lastContact: c.updatedAt?.split('T')[0] || '', notes: [], contentPlan: c.briefing,
         })));
 
+        // 2. Mapear Contratos
         setContracts(cts.map(c => ({
           id: c.id, title: c.title, clientId: c.clientId, value: c.value,
           startDate: c.startDate?.split('T')[0] || '', endDate: c.endDate?.split('T')[0] || '',
@@ -500,6 +510,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           createdAt: c.createdAt?.split('T')[0] || '',
         })));
 
+        // 3. Mapear Projetos
         setProjects(projs.map(p => ({
           id: p.id, name: p.name, clientId: p.clientId, type: p.type || 'marketing',
           status: (p.status === 'EM_ANDAMENTO' ? 'ativo' : p.status === 'CONCLUIDO' ? 'concluido' : 'pausado') as any,
@@ -507,11 +518,125 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           team: [], budget: 0, color: '#7c3aed',
         })));
 
-        setTransactions(txs.map((f: any) => ({
-          id: f.id, description: f.descricao || 'Fatura', amount: f.valor,
-          type: 'income' as const, category: 'Contrato', date: f.vencimento?.split('T')[0] || '',
-          status: f.status === 'PAGO' ? 'pago' : f.status === 'VENCIDO' ? 'atrasado' : 'pendente',
+        // 4. Mapear Tickets
+        setTickets(tks.map(t => ({
+          id: t.id,
+          protocol: t.protocol,
+          clientName: t.clientName,
+          clientWhastapp: t.clientWhatsapp,
+          subject: t.subject,
+          description: t.description || '',
+          status: (t.status || 'novo').toLowerCase() as any,
+          priority: (t.priority || 'media').toLowerCase() as any,
+          category: 'suporte',
+          createdAt: t.createdAt,
+          updatedAt: t.updatedAt,
+          messages: t.messages.map((m: any) => ({
+            id: m.id, authorName: m.authorName, text: m.text, createdAt: m.createdAt, isInternal: m.isInternal
+          }))
         })));
+
+        // 5. Mapear Feed
+        setFeed(fdp.map(p => ({
+          id: p.id, authorName: p.authorName, authorId: p.authorId || '',
+          authorInitials: p.authorName.substring(0, 2).toUpperCase(),
+          type: (p.type || 'aviso') as any, title: 'Comunicado', content: p.text, createdAt: p.createdAt,
+          comments: p.comments.map((c: any) => ({ id: c.id, authorName: c.authorName, text: c.text, date: c.createdAt })),
+        })));
+
+        // 6. Mapear Chat
+        if (cht.length > 0) {
+          setChat({
+            channels: cht.map(ch => ({
+              id: ch.id, name: ch.name, icon: ch.icon || '#',
+              messages: ch.messages.map((m: any) => ({
+                id: m.id, author: m.senderName.substring(0, 2).toUpperCase(), authorName: m.senderName,
+                text: m.text, time: new Date(m.timestamp).toLocaleTimeString(), date: m.timestamp
+              }))
+            }))
+          });
+        }
+
+        // 7. Mapear Metas
+        setGoals(gls.map(g => ({
+          id: g.id, title: g.title, target: g.target, current: g.current,
+          unit: g.unit, deadline: g.deadline?.split('T')[0] || '',
+          category: 'faturamento'
+        })));
+
+        // 8. Equipe do Banco
+        setTeam(users.map((u: any) => ({
+          id: u.id, name: u.name, initials: u.name.substring(0, 2).toUpperCase(),
+          role: u.role, sector: u.sector || '', email: u.email, avatar: u.avatar,
+          preferences: typeof u.preferences === 'string' ? JSON.parse(u.preferences) : (u.preferences || {}),
+          performance: 5, tasksOpen: 0, ratings: []
+        })));
+
+        // 9. Agenda
+        setEvents(evs.map((e: any) => ({
+          id: e.id, title: e.title, date: e.startDate?.split('T')[0], time: e.startDate?.split('T')[1]?.substring(0, 5) || '09:00',
+          type: (e.type || 'reunião') as any, clientId: e.clientId, projectId: e.projectId, color: e.color || '#7c3aed',
+          description: e.description
+        })));
+
+        // 10. Financeiro (Faturas e Transações)
+        const mappedFts: Transaction[] = fts.map((f: any) => ({
+          id: f.id, description: f.descricao || `Fatura: ${f.contrato?.title}`, amount: f.valor, 
+          type: 'income' as const, category: 'Fatura', date: f.vencimento.split('T')[0], 
+          status: f.status.toLowerCase() as any, clientId: f.clienteId
+        }));
+        
+        const mappedTrs: Transaction[] = trs.map((t: any) => ({
+          id: t.id, description: t.description, amount: t.amount, 
+          type: (t.type === 'RECEITA' ? 'income' : 'expense') as "income" | "expense",
+          category: t.category || 'Geral', date: t.dueDate?.split('T')[0], 
+          status: t.status.toLowerCase() as any, contractId: t.contractId, clientId: t.clientId
+        }));
+
+        setTransactions([...mappedFts, ...mappedTrs]);
+
+        // 11. Auditoria
+        setLogs(lgs.map((l: any) => ({
+          id: l.id, action: l.action, module: l.module, details: l.details,
+          userName: l.user?.name, userRole: l.user?.role, createdAt: l.createdAt
+        })));
+
+        // 12. Kanban e Pipeline Dinâmicos
+        const kanbanTasks = tks.filter((t: any) => !t.boardType || t.boardType === 'KANBAN');
+        const pipelineTasks = tks.filter((t: any) => t.boardType === 'PIPELINE');
+
+        const dbKanbanCols = boardCols.filter((c: any) => c.boardType === 'KANBAN');
+        const dbPipelineCols = boardCols.filter((c: any) => c.boardType === 'PIPELINE');
+
+        const finalKanbanCols = dbKanbanCols.length > 0 
+          ? dbKanbanCols.map((c: any) => ({ id: c.id, title: c.title, color: c.color, tasks: [] }))
+          : INITIAL_KANBAN;
+
+        const finalPipelineCols = dbPipelineCols.length > 0
+          ? dbPipelineCols.map((c: any) => ({ id: c.id, title: c.title, color: c.color, tasks: [] }))
+          : INITIAL_PIPELINE;
+
+        setKanbanState(finalKanbanCols.map(col => ({
+          ...col,
+          tasks: kanbanTasks.filter((t: any) => t.status === col.id || t.status === col.title).map((t: any) => ({
+            id: t.id, title: t.title, columnId: col.id, assignee: t.assignee?.name?.substring(0, 2).toUpperCase() || '?',
+            priority: t.priority.toLowerCase() as any, tag: t.tags || 'Geral', dueDate: t.deadline?.split('T')[0],
+            description: t.description, projectId: t.projectId
+          }))
+        })));
+
+        setPipelineState(finalPipelineCols.map(col => ({
+          ...col,
+          tasks: pipelineTasks.filter((t: any) => t.status === col.id || t.status === col.title).map((t: any) => ({
+            id: t.id, title: t.title, columnId: col.id, assignee: t.assignee?.name?.substring(0, 2).toUpperCase() || '?',
+            priority: t.priority.toLowerCase() as any, tag: t.tags || 'Lead', dueDate: t.deadline?.split('T')[0],
+            description: t.description, value: t.value || 0
+          }))
+        })));
+
+        // 13. Atribuição KPIs Reais
+        setTechStack(tch || []);
+        setProcessos(proc || []);
 
         setApiReady(true);
       } catch (err) {
@@ -523,18 +648,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     loadAll();
   }, []);
 
-  // — WHATSAPP SSE LISTENER —
+  // — WHATSAPP SSE LISTENER — Cookie automático via credentials: include
   useEffect(() => {
-    const token = localStorage.getItem('magister_token');
-    if (!token) return;
-
     let eventSource: EventSource | null = null;
 
     const connectSSE = () => {
       if (eventSource) eventSource.close();
-      
-      eventSource = new EventSource(`/api/whatsapp/stream?token=${token}`);
-      
+
+      // EventSource não suporta credentials: 'include' nativo,
+      // então usamos polling via fetch (já implementado na página Conectividade).
+      // O SSE aqui é mantído como fallback para atualizações em tempo real.
+      eventSource = new EventSource('/api/whatsapp/stream');
+
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
@@ -681,17 +806,26 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setKanbanState(updater);
   }, []);
 
-  const addTask = useCallback((colId: string, taskData: any) => {
-    const task = { ...taskData, id: `task-${Date.now()}`, columnId: colId, isArchived: false, logs: [] };
-    setKanbanState(prev => prev.map(c => c.id === colId ? { ...c, tasks: [...c.tasks, task] } : c));
+  const addTask = useCallback(async (colId: string, taskData: any) => {
+    try {
+      const body = { ...taskData, status: colId, boardType: 'KANBAN' };
+      const data = await apiFetch<any>('/api/tasks', { method: 'POST', body: JSON.stringify(body) });
+      setKanbanState(prev => prev.map(c => c.id === colId ? { ...c, tasks: [...c.tasks, { ...taskData, id: data.id, columnId: colId }] } : c));
+    } catch (err) { console.error('Erro ao adicionar tarefa:', err); }
   }, []);
 
-  const updateTask = useCallback((taskId: string, data: any) => {
-    setKanbanState(prev => prev.map(c => ({ ...c, tasks: c.tasks.map(t => t.id === taskId ? { ...t, ...data } : t) })));
+  const updateTask = useCallback(async (taskId: string, data: any) => {
+    try {
+      await apiFetch(`/api/tasks/${taskId}`, { method: 'PUT', body: JSON.stringify(data) });
+      setKanbanState(prev => prev.map(c => ({ ...c, tasks: c.tasks.map(t => t.id === taskId ? { ...t, ...data } : t) })));
+    } catch (err) { console.error('Erro ao atualizar tarefa:', err); }
   }, []);
 
-  const deleteTask = useCallback((taskId: string) => {
-    setKanbanState(prev => prev.map(c => ({ ...c, tasks: c.tasks.filter(t => t.id !== taskId) })));
+  const deleteTask = useCallback(async (taskId: string) => {
+    try {
+      await apiFetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      setKanbanState(prev => prev.map(c => ({ ...c, tasks: c.tasks.filter(t => t.id !== taskId) })));
+    } catch (err) { console.error('Erro ao excluir tarefa:', err); }
   }, []);
 
   const archiveTask = useCallback((taskId: string, isArchived: boolean) => {
@@ -709,9 +843,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setPipelineState(updater);
   }, []);
 
-  const addPipelineDeal = useCallback((colId: string, deal: Omit<Task, 'id' | 'columnId'>) => {
-    const task: Task = { ...deal, id: `deal-${Date.now()}`, columnId: colId, isArchived: false, logs: [] };
-    setPipelineState(prev => prev.map(c => c.id === colId ? { ...c, tasks: [...c.tasks, task] } : c));
+  const addPipelineDeal = useCallback(async (colId: string, deal: any) => {
+    try {
+      const body = { ...deal, status: colId, boardType: 'PIPELINE' };
+      const data = await apiFetch<any>('/api/tasks', { method: 'POST', body: JSON.stringify(body) });
+      setPipelineState(prev => prev.map(c => c.id === colId ? { ...c, tasks: [...c.tasks, { ...deal, id: data.id, columnId: colId }] } : c));
+    } catch (err) { console.error('Erro ao adicionar deal:', err); }
   }, []);
 
   const updatePipelineDeal = useCallback((dealId: string, data: Partial<Task>) => {
@@ -719,8 +856,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // ─── TRANSACTION ACTIONS (API) ─────────────────────────────────────────────
-  const addTransaction = useCallback((t: any) => {
-    setTransactions(prev => [{ ...t, id: `tr${Date.now()}` }, ...prev]);
+  const addTransaction = useCallback(async (t: any) => {
+    try {
+      const body = { ...t, type: t.type === 'income' ? 'RECEITA' : 'DESPESA' };
+      const data = await apiFetch<any>('/api/transactions', { method: 'POST', body: JSON.stringify(body) });
+      setTransactions(prev => [{ ...t, id: data.id }, ...prev]);
+    } catch (err) { console.error('Erro ao adicionar transação:', err); }
   }, []);
 
   const updateTransaction = useCallback((id: string, data: any) => {
@@ -731,14 +872,30 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t));
   }, []);
 
-  const deleteTransaction = useCallback((id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  const deleteTransaction = useCallback(async (id: string) => {
+    try {
+      await apiFetch(`/api/transactions/${id}`, { method: 'DELETE' });
+      setTransactions(prev => prev.filter(t => t.id !== id));
+    } catch (err) { console.error('Erro ao excluir transação:', err); }
   }, []);
 
-  // ─── EVENT ACTIONS ─────────────────────────────────────────────────────────
-  const addEvent = useCallback((e: any) => setEvents(prev => [...prev, { ...e, id: `ev${Date.now()}` }]), []);
+  // ─── EVENT ACTIONS (API) ──────────────────────────────────────────────────
+  const addEvent = useCallback(async (e: any) => {
+    try {
+      const data = await apiFetch<any>('/api/events', { method: 'POST', body: JSON.stringify(e) });
+      setEvents(prev => [...prev, { ...e, id: data.id }]);
+    } catch (err) { console.error('Erro ao adicionar evento:', err); }
+  }, []);
+
   const updateEvent = useCallback((id: string, data: any) => setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data } : e)), []);
-  const deleteEvent = useCallback((id: string) => setEvents(prev => prev.filter(e => e.id !== id)), []);
+
+
+  const deleteEvent = useCallback(async (id: string) => {
+    try {
+      await apiFetch(`/api/events/${id}`, { method: 'DELETE' });
+      setEvents(prev => prev.filter(e => e.id !== id));
+    } catch (err) { console.error('Erro ao excluir evento:', err); }
+  }, []);
 
   // ─── CONTENT ACTIONS ──────────────────────────────────────────────────────
   const addContent = useCallback((c: any) => setContent(prev => [{ ...c, id: `cp${Date.now()}`, createdAt: new Date().toISOString().split('T')[0] }, ...prev]), []);
@@ -750,33 +907,96 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   const deleteContent = useCallback((id: string) => setContent(prev => prev.filter(c => c.id !== id)), []);
 
-  // ─── TEAM ACTIONS ─────────────────────────────────────────────────────────
-  const addTeamMember = useCallback((m: any) => setTeam(prev => [...prev, { ...m, id: `tm${Date.now()}`, performance: 5, tasksOpen: 0, ratings: [] }]), []);
-  const updateTeamMember = useCallback((id: string, data: any) => setTeam(prev => prev.map(m => m.id === id ? { ...m, ...data } : m)), []);
-  const deleteTeamMember = useCallback((id: string) => setTeam(prev => prev.filter(m => m.id !== id)), []);
+  // ─── TEAM ACTIONS (API) ──────────────────────────────────────────────────
+  const addTeamMember = useCallback(async (m: any) => {
+    try {
+      const data = await apiFetch<any>('/api/users', { method: 'POST', body: JSON.stringify(m) });
+      setTeam(prev => [...prev, { ...m, id: data.id, initials: m.name.substring(0, 2).toUpperCase(), performance: 5, tasksOpen: 0, ratings: [] }]);
+    } catch (err) { console.error('Erro ao adicionar membro:', err); }
+  }, []);
+
+  const updateTeamMember = useCallback(async (id: string, data: any) => {
+    try {
+      await apiFetch(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+      setTeam(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
+    } catch (err) { console.error('Erro ao atualizar membro:', err); }
+  }, []);
+
+  const deleteTeamMember = useCallback(async (id: string) => {
+    try {
+      await apiFetch(`/api/users/${id}`, { method: 'DELETE' });
+      setTeam(prev => prev.filter(m => m.id !== id));
+    } catch (err) { console.error('Erro ao excluir membro:', err); }
+  }, []);
+
   const addTeamRating = useCallback((memberId: string, stars: number, feedback: string) => {
     setTeam(prev => prev.map(m => m.id === memberId ? { ...m, ratings: [...m.ratings, { stars, feedback, date: new Date().toISOString() }] } : m));
   }, []);
-  const updateMemberPassword = useCallback((id: string, password: string) => setTeam(prev => prev.map(m => m.id === id ? { ...m, password } : m)), []);
-  const updateMemberPermissions = useCallback((id: string, permissions: string[], accessLevel: any) => setTeam(prev => prev.map(m => m.id === id ? { ...m, permissions, accessLevel } : m)), []);
-  const updateGoal = useCallback((id: string, current: number) => setGoals(prev => prev.map(g => g.id === id ? { ...g, current } : g)), []);
 
-  // ─── CHAT ACTIONS ─────────────────────────────────────────────────────────
-  const addMessage = useCallback((channelId: string, authorInitials: string, authorName: string, text: string) => {
-    const msg = { id: `m-${Date.now()}`, author: authorInitials, authorName, text, time: new Date().toLocaleTimeString(), date: new Date().toISOString() };
-    setChat(prev => ({ ...prev, channels: prev.channels.map(ch => ch.id === channelId ? { ...ch, messages: [...ch.messages, msg] } : ch) }));
+  const updateMemberPassword = useCallback(async (id: string, password: string) => {
+    try {
+      await apiFetch(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify({ password }) });
+    } catch (err) { console.error('Erro ao atualizar senha:', err); }
   }, []);
 
-  // ─── FEED ACTIONS ─────────────────────────────────────────────────────────
-  const addFeedPost = useCallback((p: any) => setFeed(prev => [{ ...p, id: `fp${Date.now()}`, createdAt: new Date().toISOString() }, ...prev]), []);
+  const updateMemberPermissions = useCallback(async (id: string, permissions: string[], accessLevel: any) => {
+    try {
+      await apiFetch(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify({ permissions, accessLevel }) });
+      setTeam(prev => prev.map(m => m.id === id ? { ...m, permissions, accessLevel } : m));
+    } catch (err) { console.error('Erro ao atualizar permissões:', err); }
+  }, []);
+
+  // ─── CHAT ACTIONS (API) ───────────────────────────────────────────────────
+  const addMessage = useCallback(async (channelId: string, authorInitials: string, authorName: string, text: string) => {
+    try {
+      const msg = await apiFetch<any>('/api/chat/messages', {
+        method: 'POST',
+        body: JSON.stringify({ channelId, text })
+      });
+      const frontendMsg = { 
+        id: msg.id, author: authorInitials, authorName, text, 
+        time: new Date(msg.timestamp).toLocaleTimeString(), date: msg.timestamp 
+      };
+      setChat(prev => ({ ...prev, channels: prev.channels.map(ch => ch.id === channelId ? { ...ch, messages: [...ch.messages, frontendMsg] } : ch) }));
+    } catch (err) {
+      console.error('[Chat] Erro ao enviar mensagem:', err);
+    }
+  }, []);
+
+  // ─── FEED ACTIONS (API) ───────────────────────────────────────────────────
+  const addFeedPost = useCallback(async (p: any) => {
+    try {
+      const data = await apiFetch<any>('/api/feed', {
+        method: 'POST',
+        body: JSON.stringify({ text: p.content, type: p.type })
+      });
+      setFeed(prev => [{ 
+        ...p, id: data.id, authorName: data.authorName, 
+        authorInitials: data.authorName.substring(0, 2).toUpperCase(), createdAt: data.createdAt 
+      }, ...prev]);
+    } catch (err) {
+      console.error('[Feed] Erro ao criar post:', err);
+    }
+  }, []);
+
   const deleteFeedPost = useCallback((id: string) => setFeed(prev => prev.filter(f => f.id !== id)), []);
   const pinFeedPost = useCallback((id: string) => setFeed(prev => prev.map(f => f.id === id ? { ...f, pinned: !f.pinned } : f)), []);
-  const addFeedComment = useCallback((postId: string, comment: any) => {
-    setFeed(prev => prev.map(f => f.id === postId ? { ...f, comments: [...(f.comments || []), { ...comment, id: Date.now().toString(), date: new Date().toISOString() }] } : f));
+  
+  const addFeedComment = useCallback(async (postId: string, comment: any) => {
+    try {
+      const data = await apiFetch<any>(`/api/feed/${postId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ text: comment.text })
+      });
+      setFeed(prev => prev.map(f => f.id === postId ? { 
+        ...f, comments: [...(f.comments || []), { ...comment, id: data.id, date: data.createdAt }] 
+      } : f));
+    } catch (err) {
+      console.error('[Feed] Erro ao comentar:', err);
+    }
   }, []);
 
   const sendTicketWANotification = useCallback(async (ticketId: string, type: 'created' | 'status_update' | 'new_message', extra?: string) => {
-    // Buscamos o ticket no estado atual
     setTickets(currentTickets => {
       const ticket = currentTickets.find(t => t.id === ticketId);
       if (ticket && ticket.clientWhastapp) {
@@ -802,40 +1022,72 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  // ─── TICKET ACTIONS ────────────────────────────────────────────────────────
-  const addTicket = useCallback((t: any) => {
-    const ticketId = `tk-${Date.now()}`;
-    const newTicket: Ticket = {
-      ...t,
-      id: ticketId,
-      status: t.status || 'novo',
-      messages: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    setTickets(prev => [newTicket, ...prev]);
-    // Notifica automaticamente
-    setTimeout(() => sendTicketWANotification(ticketId, 'created'), 500);
-  }, [sendTicketWANotification]);
-
-  const updateTicket = useCallback((id: string, data: Partial<Ticket>) => {
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t));
-    if (data.status) {
-      sendTicketWANotification(id, 'status_update', data.status);
+  // ─── TICKETS ACTIONS (API) ─────────────────────────────────────────────────
+  const addTicket = useCallback(async (t: any) => {
+    try {
+      const data = await apiFetch<any>('/api/public/tickets', {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: t.subject,
+          description: t.description || '',
+          clientName: t.clientName,
+          clientWhatsapp: t.clientWhastapp
+        })
+      });
+      
+      const newTicket: Ticket = {
+        ...t, id: data.id, protocol: data.protocol, status: 'novo', messages: [],
+        createdAt: data.createdAt, updatedAt: data.updatedAt
+      };
+      
+      setTickets(prev => [newTicket, ...prev]);
+      sendTicketWANotification(data.id, 'created');
+    } catch (err) {
+      console.error('[Tickets] Erro ao criar ticket:', err);
     }
   }, [sendTicketWANotification]);
 
-  const addTicketMessage = useCallback((ticketId: string, msg: any) => {
-    const newMessage: TicketMessage = { ...msg, id: `tm-${Date.now()}`, createdAt: new Date().toISOString() };
-    setTickets(prev => prev.map(t => t.id === ticketId ? { 
-      ...t, 
-      messages: [...t.messages, newMessage],
-      updatedAt: new Date().toISOString() 
-    } : t));
-    
-    // Notifica o cliente se for uma mensagem externa (do admin para o cliente)
-    if (!msg.isInternal) {
-      sendTicketWANotification(ticketId, 'new_message', msg.text);
+  const updateTicket = useCallback(async (id: string, data: any) => {
+    try {
+      const updated = await apiFetch<any>(`/api/tickets/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+      
+      setTickets(prev => prev.map(t => t.id === id ? { 
+        ...t, status: (updated.status || t.status).toLowerCase() as any, 
+        priority: (updated.priority || t.priority).toLowerCase() as any 
+      } : t));
+
+      if (data.status) {
+        sendTicketWANotification(id, 'status_update', data.status);
+      }
+    } catch (err) {
+      console.error('[Tickets] Erro ao atualizar ticket:', err);
+    }
+  }, [sendTicketWANotification]);
+
+  const addTicketMessage = useCallback(async (ticketId: string, message: any) => {
+    try {
+      const data = await apiFetch<any>(`/api/tickets/${ticketId}/messages`, {
+        method: 'POST',
+        body: JSON.stringify(message)
+      });
+      
+      const frontendMsg = {
+        id: data.id, authorName: data.authorName, text: data.text,
+        createdAt: data.createdAt, isInternal: data.isInternal
+      };
+
+      setTickets(prev => prev.map(t => t.id === ticketId ? { 
+        ...t, messages: [...t.messages, frontendMsg], updatedAt: data.createdAt 
+      } : t));
+
+      if (!message.isInternal) {
+        sendTicketWANotification(ticketId, 'new_message', data.text);
+      }
+    } catch (err) {
+      console.error('[Tickets] Erro ao enviar mensagem:', err);
     }
   }, [sendTicketWANotification]);
 
@@ -843,14 +1095,41 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setTickets(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  const updateGoal = useCallback(async (id: string, current: number) => {
+    try {
+      await apiFetch(`/api/goals/${id}`, { method: 'PUT', body: JSON.stringify({ current }) });
+      setGoals(prev => prev.map(g => g.id === id ? { ...g, current } : g));
+    } catch (err) {
+      console.error('[Goals] Erro ao atualizar meta:', err);
+    }
+  }, []);
+
   // ─── COMPUTED ─────────────────────────────────────────────────────────────
   const getMonthRevenue = () => transactions.filter(t => t.type === 'income' && t.status === 'pago').reduce((a, b) => a + b.amount, 0);
   const getMonthExpense = () => transactions.filter(t => t.type === 'expense' && t.status === 'pago').reduce((a, b) => a + b.amount, 0);
   const getBalance = () => getMonthRevenue() - getMonthExpense();
 
+  const createTechService = async (t: Omit<TechService, 'id'>) => {
+    try {
+      const res = await apiFetch<TechService>('/api/tech', { method: 'POST', body: JSON.stringify(t) });
+      setTechStack(prev => [...prev, res]);
+    } catch (err) { }
+  };
+
+  const createAgencyProcess = async (p: Omit<AgencyProcess, 'id'>) => {
+    try {
+      const res = await apiFetch<AgencyProcess>('/api/processos', { method: 'POST', body: JSON.stringify(p) });
+      setProcessos(prev => [...prev, res]);
+    } catch (err) { }
+  };
+
   return (
     <DataContext.Provider value={{
-      clients, contracts, projects, kanban, pipeline, transactions, events, content, team, chat, feed, alerts, goals, apiReady,
+      clients, contracts, projects, kanban, pipeline, transactions, events, content, team, chat, feed,
+      alerts,
+      goals,
+      logs,
+      apiReady,
       addClient, updateClient, deleteClient, addClientNote,
       addContract, updateContract, updateContractStatus, deleteContract,
       addProject, updateProject, deleteProject, addProjectMeeting,
@@ -881,7 +1160,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       getAtRiskProjects: () => projects.filter(p => p.status === 'atrasado'),
       getExpiringContracts: () => contracts.filter(c => c.status === 'vencendo'),
       getInactiveClients: () => clients.filter(c => c.status === 'inativo'),
-      waState, sendWAMessage, syncWAContacts, startWA, disconnectWA
+      waState, sendWAMessage, syncWAContacts, startWA, disconnectWA,
+      techStack, processos, createTechService, createAgencyProcess
     }}>
       {children}
     </DataContext.Provider>

@@ -30,6 +30,13 @@ import Conectividade from './pages/Conectividade';
 import PortalSuporte from './pages/PortalSuporte';
 import Tickets from './pages/Tickets';
 import MeusTickets from './pages/MeusTickets';
+import Perfil from './pages/Perfil';
+import ClienteDashboard from './pages/ClienteDashboard';
+import KPIs from './pages/KPIs';
+import ViewAs from './pages/ViewAs';
+import Aprovacoes from './pages/Aprovacoes';
+import ValidarAprovacao from './pages/ValidarAprovacao';
+import MetaAdsDashboard from './pages/MetaAdsDashboard';
 
 function ProtectedRoute({ children, module }: { children: React.ReactNode, module: string }) {
   const { canViewModule } = usePermission();
@@ -54,6 +61,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/suporte" element={<PortalSuporte />} />
             <Route path="/suporte/acompanhar" element={<MeusTickets />} />
+            <Route path="/cliente-dashboard" element={<ClienteDashboard />} />
+            <Route path="/relatorio/baragao" element={<MetaAdsDashboard />} />
+            <Route path="/validar-aprovacao/:id" element={<ValidarAprovacao />} />
 
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -66,14 +76,18 @@ function App() {
               <Route path="projetos" element={<ProtectedRoute module="projetos"><Projetos /></ProtectedRoute>} />
               <Route path="agenda" element={<ProtectedRoute module="agenda"><Agenda /></ProtectedRoute>} />
               <Route path="conteudo" element={<ProtectedRoute module="conteudo"><Conteudo /></ProtectedRoute>} />
+              <Route path="aprovacoes" element={<ProtectedRoute module="conteudo"><Aprovacoes /></ProtectedRoute>} />
               <Route path="financeiro" element={<ProtectedRoute module="financeiro"><Financeiro /></ProtectedRoute>} />
+              <Route path="kpis" element={<ProtectedRoute module="kpis"><KPIs /></ProtectedRoute>} />
               <Route path="equipe" element={<ProtectedRoute module="equipe"><Equipe /></ProtectedRoute>} />
               <Route path="team/diagrama" element={<ProtectedRoute module="projetos"><DiagramaEquipe /></ProtectedRoute>} />
               <Route path="audit" element={<ProtectedRoute module="dashboard"><AuditLog /></ProtectedRoute>} />
+              <Route path="view-as" element={<ProtectedRoute module="view-as"><ViewAs /></ProtectedRoute>} />
               <Route path="feed" element={<ProtectedRoute module="feed"><Feed /></ProtectedRoute>} />
               <Route path="tickets" element={<ProtectedRoute module="crm"><Tickets /></ProtectedRoute>} />
               <Route path="config" element={<Configuracoes />} />
               <Route path="conectividade" element={<ProtectedRoute module="dashboard"><Conectividade /></ProtectedRoute>} />
+              <Route path="perfil" element={<Perfil />} />
 
               {/* ─── FASE 1: Hub de Clientes (backend) ─── */}
               <Route

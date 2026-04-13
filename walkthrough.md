@@ -1,53 +1,53 @@
-# Walkthrough: Magister ERP Operational Cockpit Finalizada
-
-O ecossistema **Magister ERP (Cockpit Operacional)** foi finalizado com sucesso. Todas as melhorias solicitadas foram implementadas, validadas e o sistema foi resetado para um estado de produção limpo ("Fresh Start").
-
-## ✅ Melhorias Implementadas
-
-### 1. Conectividade WhatsApp 🔥 (Hot Leads)
-- **Ação Direta**: Adicionado o botão **"🔥 QUENTE"** na lista de contatos sincronizados.
-- **Automação**: Ao clicar no botão, o lead é movido instantaneamente para a primeira coluna do **Pipeline de Vendas** (Kanban de Leads), com tag automatizada e prioridade alta.
-
-### 2. Calendário Editorial Interativo 📅
-- **Multimídia**: Suporte total a anexos (Foto/Vídeo) nas postagens. Prévia visual integrada nos cards e no modal de edição.
-- **Estratégia**: Selo visual **"ESTRATÉGIA"** em dias com cronograma fixo definido para facilitar a visualização do planejamento editorial.
-
-### 3. Organograma & Gestão HR 🏢
-- **Cards Interativos**: Todos os membros do organograma agora abrem um modal de **Gestão HR**.
-- **Contratos**: Visualização de admissão, tipo de contrato (PJ/CLT) e dados financeiros (Custo Mensal).
-- **Segurança**: Dados financeiros visíveis apenas para níveis de acesso autorizados.
-
-### 4. RBAC & Segurança 🔐
-- **Acesso Restrito**: Implementado bloqueio na página de **Contratos**. 
-- **Permissões**: Apenas usuários com role `ADMIN`, `CEO` ou `FINANCEIRO` podem visualizar o faturamento da agência e os SLAs ativos. Usuários operacionais verão uma tela de "Acesso Negado".
-
-### 5. Mural Interno de Alta Performance 📢
-- **Anexos**: Feed agora suporta URLs de imagens e vídeos.
-- **Threads (Replies)**: Sistema de comentários aprimorado com suporte a **respostas (threads)**, permitindo discussões organizadas dentro de cada aviso ou curso.
-
----
-
-## ⚡ Reset de Fábrica (Fresh Start)
-
-Conforme solicitado, os dados foram zerados para permitir o início de uma operação limpa.
+# Walkthrough: Integração Master KPIs
 
 > [!IMPORTANT]
-> **Estado Atual do Banco de Dados:**
-> - Todas as faturas, contratos, tarefas, leads e clientes **foram removidos**.
-> - **Único Usuário Ativo:** Root Admin para configuração.
-> - **Acesso:** `admin@magistertech.com.br` / `admin123`
+> Os KPIs de Tecnologia e Processos agora são **100% integrados e reais**. Os contadores do painel puxam relatórios diretamente do PostgreSQL (migrados via Prisma) e dispensam variáveis fixas de escopo, garantindo verdade absoluta.
 
----
-
-## 🚀 Status do Deployment & Git
-
-- **Repositório**: Sincronizado (`git push` concluído).
-- **Commit**: `feat: operational cockpit finalization & system reset`
-- **Frontend/Backend**: Operacionais e prontos para uso.
+## O que foi realizado:
+1. **Banco de Dados (Schema)**: Foram criadas duas novas entidades no `schema.prisma`: `AgencyProcess` e `TechService`. Em seguida, aplicamos o Migration.
+2. **Backend (CRUD e Auto-Seed)**: Desenvolvidas as rotas globais (`/api/tech` e `/api/processos`). Adicionado um Auto-seed contendo as informações passadas como padrão do sistema.
+3. **Contexto Global (Frontend)**: O Frontend agora busca, durante o Single-Page-Load da classe principal do SPA, esses valores. Eles foram expostos e centralizados na memória para agilidade na renderização e reuso entre módulos.
+4. **Interface Gráfica (`KPIs.tsx`)**: 
+   - Os *"mocks"* (dados de mentirinha) foram sumariamente deletados.
+   - Os cálculos reativos (ex: Margens e Custo %) e gráficos (Status e Up/Down) agora cruzam as transações brutas de pagamentos com o valor dinâmico real da Stack Tech.
+   - Foram implementados dois botões de ação e modais nativos ativados pelo `useState` para: **"Nova Ferramenta"** e **"Novo Processo"**. 
 
 > [!TIP]
-> Para iniciar um novo colaborador, utilize o módulo **Equipe** para criar o perfil e definir o setor, o que atualizará o **Organograma** automaticamente.
+> Você pode acessar na UI o painel em `/kpis` e usar os botões azuis recém adicionados em cada aba para registrar novas ferramentas à sua stack e ver o custo de tech % vs faturamento recalculado dinamicamente em *real-time*.
+
+## Operação de VPS e Produção:
+Atendendo a exigência da política operacional (Safe Deploy Protocol), foi executado e documentado o processo completo de deploy na produção da Hostinger (`187.127.11.172`).
+*   Um erro de compilação da Prisma via `createMany()` no SQLite foi interceptado e refatorado ativamente para loops compatíveis na camada Node.JS.
+*   **A implantação remota ocorreu com sucesso total.**
+*   *As instâncias do PM2 foram reiniciadas remotamente.*
+
+## Validação Realizada:
+- Typescript compila sem impedimentos.
+- O Frontend e Backend foram reiniciados com sucesso.
+- Banco SQLite da área Dev rodou o Push com total sincronia.
+
+O Dashboard estratégico agora está completo, livre de placeholds e apto para gestão C-Level da Magister ERP.
 
 ---
-**JARVIS 4.1 -- DNA MASTER (Relational Singularity)**
-*Ação > Palavras. Sistema Estabilizado.*
+
+# Walkthrough: Refatoração Responsiva e Resolucão TS
+
+> [!IMPORTANT]
+> O Portal do Cliente (Dashboard Cliente) foi totalmente refatorado para funcionar magicamente via Celular. Além disso, foram resolvidos todos os conflitos de Type e dependências nulas para garantir um build verde antes do push na VPS.
+
+## O que foi realizado:
+1. **Responsividade no ClienteDashboard.tsx**: 
+   - Criação e integração de um hook `useIsMobile`.
+   - Modificação estrutural: Transformação da Sidebar fixa numa `Bottom Nav Menu` (navegação inferior bar) para acessos de telas `< 768px`.
+   - Aplicação de `flexbox` e margens condicionais nos Componentes Filhos (como `AdsCard`, `CalendarioPostagens`, e `TicketModal`).
+2. **Correção Global de TypeScript**: 
+   - Retirado o uso ocioso de imports (`Trello`, `Calendar`, `Agenda`, `ExternalLink`, etc).
+   - Componente de Kanban do Lucide substituído oficialmente por `KanbanSquare`.
+   - Remoção de variáveis não usadas em `KPIs.tsx`, `Aprovacoes.tsx`, `Clientes.tsx` e `AdminLayout.tsx`.
+3. **Deploy VPS em Produção**:
+   - Os commits foram sincronizados na master remota (`git commit && git push`).
+   - O `Safe Deploy Protocol` (via `push_to_vps.sh`) foi executado com rsync, SSH pre-configurado e build do Vite via VPS. 
+
+## Validação e Próximos Passos
+- Toda a Stack de frontend construiu imagens via TS sem acusações de Warnings.
+- Agora, a empresa pode apresentar o sistema tranquilamente nos celulares de clientes.

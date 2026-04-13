@@ -3,11 +3,11 @@ import { useData } from '../contexts/DataContext';
 import { 
   Search, Plus, 
   Clock, AlertCircle, 
-  X, Send,
+  X, Send 
 } from 'lucide-react';
 
 export default function Tickets() {
-  const { tickets, team, updateTicket, addTicketMessage, deleteTicket } = useData();
+  const { tickets, team, clients, updateTicket, addTicketMessage, deleteTicket, addTask, kanban, pipeline, addPipelineDeal } = useData();
   const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -141,18 +141,52 @@ export default function Tickets() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <h2 style={{ fontSize: 18, fontWeight: 900, marginBottom: 4 }}>{activeTicket.subject}</h2>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                      Aberto por <strong>{activeTicket.clientName}</strong> · {activeTicket.clientWhastapp}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                        Aberto por <strong>{activeTicket.clientName}</strong> · {activeTicket.clientWhastapp}
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 10 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                     {/* BOTAO PARA CONVERTER/MANDAR PARA CRM OU KANBAN */}
+                     <select className="btn btn-outline btn-sm" onChange={(e) => {
+                       const pMap: any = { baixa: 'low', media: 'medium', alta: 'high', urgente: 'urgent' };
+                       const engPriority = pMap[activeTicket.priority] || 'medium';
+
+                       if (e.target.value === 'kanban' && kanban.length > 0) {
+                          addTask(kanban[0].id, {
+                            title: `[TICKET] ${activeTicket.subject}`,
+                            priority: engPriority,
+                            tag: 'Suporte',
+                            description: activeTicket.description,
+                            assignee: activeTicket.assigneeId || team[0]?.id || 'Sys'
+                          });
+                          alert('Ticket convertido em Tarefa (Kanban) com sucesso!');
+                       } else if (e.target.value === 'pipeline' && pipeline.length > 0) {
+                          addPipelineDeal(pipeline[0].id, {
+                            title: `[TICKET] ${activeTicket.subject} - ${activeTicket.clientName}`,
+                            priority: engPriority,
+                            tag: 'Suporte/Expansão',
+                            description: activeTicket.description,
+                            value: 0,
+                            assignee: activeTicket.assigneeId || team[0]?.id || 'Sys'
+                          });
+                          alert('Ticket enviado ao fluxo do Pipeline Comercial!');
+                       }
+                       // Reseta o select
+                       e.target.value = '';
+                     }}>
+                        <option value="">Ações Rápidas</option>
+                        <option value="kanban">Gerar Tarefa (Kanban)</option>
+                        <option value="pipeline">Mandar para Pipeline (CRM)</option>
+                     </select>
                     <button className="btn-icon" onClick={() => (confirm('Excluir ticket?') && deleteTicket(activeTicket.id))}><X size={16}/></button>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: 24, marginTop: 20 }}>
                   <div>
-                    <p className="form-label">Status</p>
+                    <p className="form-label">Status do Chamado</p>
                     <select 
                       className="input input-sm" 
                       value={activeTicket.status}
@@ -166,7 +200,7 @@ export default function Tickets() {
                     </select>
                   </div>
                   <div>
-                    <p className="form-label">Responsável</p>
+                    <p className="form-label">Responsável / Encaminhar</p>
                     <select 
                       className="input input-sm"
                       value={activeTicket.assigneeId || ''}
@@ -179,22 +213,24 @@ export default function Tickets() {
                     </select>
                   </div>
                   <div>
-                    <p className="form-label">Prioridade</p>
+                    <p className="form-label">Vincular a uma Conta (CRM)</p>
                     <select 
                       className="input input-sm"
-                      value={activeTicket.priority}
-                      onChange={e => updateTicket(activeTicket.id, { priority: e.target.value as any })}
+                      value={activeTicket.clientId || ''}
+                      onChange={e => updateTicket(activeTicket.id, { clientId: e.target.value })}
                     >
-                      <option value="baixa">Baixa</option>
-                      <option value="media">Média</option>
-                      <option value="alta">Alta</option>
-                      <option value="urgente">Urgente</option>
+                      <option value="">-- Vincular Cliente (Automático se houver) --</option>
+                      {clients.map(c => (
+                        <option key={c.id} value={c.id}>{c.company} ({c.name})</option>
+                      ))}
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Chat View */}
+               {/* Split view if client is linked */}
+              <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+                <div style={{ flex: 2, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border)' }}>
               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 
                 {/* Description "Message" */}
@@ -223,20 +259,59 @@ export default function Tickets() {
                 ))}
               </div>
 
-              {/* Input */}
-              <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ flex: 1 }}>
-                  <input 
-                    className="input" 
-                    placeholder="Escreva uma resposta para o cliente ou nota interna..." 
-                    value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                  />
+                   <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                      <input 
+                        className="input" 
+                        placeholder="Escreva uma resposta para o cliente ou nota interna..." 
+                        value={newMessage}
+                        onChange={e => setNewMessage(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                      />
+                    </div>
+                    <button className="btn btn-primary" onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                      <Send size={16} /> Enviar
+                    </button>
+                  </div>
                 </div>
-                <button className="btn btn-primary" onClick={handleSendMessage} disabled={!newMessage.trim()}>
-                  <Send size={16} /> Enviar
-                </button>
+                
+                {/* 360 Client View */}
+                {activeTicket.clientId && (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-subtle)', overflowY: 'auto' }}>
+                     <div style={{ padding: '24px' }}>
+                        <h4 style={{ fontSize: 13, fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 16 }}>Visão do Cliente</h4>
+                        {(() => {
+                           const c = clients.find(cl => cl.id === activeTicket.clientId);
+                           if(!c) return <p>Conta não encontrada.</p>;
+                           return (
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                               <div className="card" style={{ padding: 16 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                                    <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14 }}>
+                                      {c.company.substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <p style={{ fontWeight: 800 }}>{c.company}</p>
+                                      <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{c.segment}</p>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+                                    <p><strong>Contato:</strong> {c.name}</p>
+                                    <p><strong>Telefone:</strong> {c.phone}</p>
+                                    <p><strong>Email:</strong> {c.email}</p>
+                                  </div>
+                               </div>
+                               <div className="card" style={{ padding: 16, borderLeft: c.status === 'ativo' ? '4px solid var(--success)' : '4px solid var(--warning)' }}>
+                                  <p style={{ fontWeight: 800, marginBottom: 4 }}>Status Ativo CRM</p>
+                                  <span className="badge" style={{ background: c.status === 'ativo' ? 'var(--success-glow)' : 'var(--warning-glow)', color: c.status === 'ativo' ? 'var(--success)' : 'var(--warning)' }}>ESTADO: {c.status.toUpperCase()}</span>
+                                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Último contato: {new Date(c.lastContact).toLocaleDateString('pt-BR')}</p>
+                               </div>
+                             </div>
+                           );
+                        })()}
+                     </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (

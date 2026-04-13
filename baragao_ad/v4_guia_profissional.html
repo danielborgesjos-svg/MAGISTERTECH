@@ -1,1064 +1,371 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Magister Tech — Estratégia Comercial | Grupo Baragão</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet"/>
-<style>
-:root{
-  --ink:       #0a0f1e;
-  --ink-mid:   #3d4460;
-  --ink-soft:  #6b7394;
-  --ink-pale:  #a8afc8;
-  --bg:        #f5f6fa;
-  --surface:   #ffffff;
-  --surface2:  #f0f2f8;
-  --line:      #e4e7f0;
-  --gold:      #c9952a;
-  --gold-lt:   #fdf3df;
-  --blue:      #1a3a8f;
-  --blue-lt:   #dde5f7;
-  --blue-mid:  #2c52c7;
-  --red:       #b82828;
-  --red-lt:    #fde8e8;
-  --amber:     #b45309;
-  --amber-lt:  #fef3c7;
-  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px;
-  --max: 1160px;
-  --pad: clamp(20px, 5vw, 48px);
-  --sh-sm: 0 1px 4px rgba(10,15,30,.06);
-  --sh-md: 0 4px 16px rgba(10,15,30,.08);
-  --sh-lg: 0 8px 32px rgba(10,15,30,.10);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
-img{max-width:100%;display:block}
-a{color:inherit;text-decoration:none}
-
-/* ── UTIL ── */
-.wrap{width:min(var(--max),calc(100% - 40px));margin:0 auto}
-.sec{padding:clamp(56px,8vw,96px) 0}
-.sec-sm{padding:clamp(40px,6vw,72px) 0}
-
-/* ── EYEBROW ── */
-.eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--blue);background:var(--blue-lt);
-  padding:5px 12px;border-radius:999px;margin-bottom:18px;
-}
-.eyebrow-inv{color:#c7d4f7;background:rgba(255,255,255,.08)}
-
-/* ── GRID HELPERS ── */
-.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(16px,2.5vw,28px)}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.5vw,24px)}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,2vw,20px)}
-
-/* ══════════════════════════════════
-   HERO
-══════════════════════════════════ */
-.hero{
-  background:var(--ink);
-  background-image:
-    radial-gradient(ellipse 80% 60% at 60% -10%, #1e3a8a 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 10% 110%, #0f1e4a 0%, transparent 60%);
-  color:#fff;padding:0;overflow:hidden;position:relative;
-}
-.hero::after{
-  content:"";position:absolute;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.018'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  pointer-events:none;
-}
-
-/* NAV */
-.nav{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:clamp(16px,3vw,28px) 0;
-  border-bottom:1px solid rgba(255,255,255,.07);
-  position:relative;z-index:10;
-}
-.brand{display:flex;align-items:center;gap:14px}
-.brand-icon{
-  width:42px;height:42px;border-radius:var(--r-sm);
-  background:linear-gradient(135deg,var(--blue-mid),#1a3a8f);
-  display:grid;place-items:center;
-  font-family:"DM Serif Display",serif;font-size:15px;color:#fff;
-  box-shadow:0 4px 16px rgba(44,82,199,.4);flex-shrink:0;
-}
-.brand-name{font-size:17px;font-weight:600;letter-spacing:-.01em;color:#fff}
-.brand-sub{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
-.nav-pill{
-  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--gold);background:rgba(201,149,42,.12);border:1px solid rgba(201,149,42,.25);
-  padding:7px 16px;border-radius:999px;white-space:nowrap;
-}
-
-/* HERO BODY */
-.hero-body{
-  position:relative;z-index:10;
-  padding:clamp(48px,7vw,88px) 0 clamp(56px,8vw,104px);
-  display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;
-}
-.hero-kicker{margin-bottom:12px}
-.hero-body h1{
-  font-family:"DM Serif Display",serif;
-  font-size:clamp(36px,5vw,68px);line-height:1.06;
-  letter-spacing:-.02em;color:#fff;
-  margin-bottom:20px;
-}
-.hero-body h1 em{color:var(--gold);font-style:normal}
-.hero-lead{font-size:clamp(15px,1.6vw,17px);color:rgba(255,255,255,.6);line-height:1.7;max-width:500px;margin-bottom:28px}
-.hero-tags{display:flex;flex-wrap:wrap;gap:8px}
-.hero-tag{
-  font-size:12px;font-weight:600;color:rgba(255,255,255,.75);
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-  padding:6px 14px;border-radius:999px;
-}
-
-/* HERO METRICS RIGHT */
-.hero-metrics{
-  display:grid;grid-template-columns:1fr 1fr;gap:14px;
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
-  border-radius:var(--r-xl);padding:clamp(20px,3vw,32px);
-  backdrop-filter:blur(12px);
-}
-.hm-card{padding:20px;border-radius:var(--r-md);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
-.hm-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px}
-.hm-value{font-family:"DM Serif Display",serif;font-size:30px;color:#fff;line-height:1;margin-bottom:4px}
-.hm-desc{font-size:12px;color:rgba(255,255,255,.45);line-height:1.4}
-
-/* GOLD STRIP */
-.gold-strip{height:3px;background:linear-gradient(90deg,#c9952a,#f0c55a,#c9952a)}
-
-/* ══════════════════════════════════
-   SECTION HEADERS
-══════════════════════════════════ */
-.sh{margin-bottom:clamp(32px,5vw,52px)}
-.sh h2{
-  font-family:"DM Serif Display",serif;
-  font-size:clamp(26px,3.5vw,44px);line-height:1.1;
-  letter-spacing:-.02em;color:var(--ink);margin-bottom:14px;
-}
-.sh p{font-size:clamp(15px,1.6vw,17px);color:var(--ink-soft);line-height:1.7;max-width:700px}
-
-/* ══════════════════════════════════
-   HIRING — top band
-══════════════════════════════════ */
-.hiring-band{background:var(--surface);border-bottom:1px solid var(--line)}
-.alert-bar{
-  background:linear-gradient(90deg,var(--blue) 0%,var(--blue-mid) 100%);
-  color:#fff;padding:14px var(--pad);
-  display:flex;align-items:center;gap:12px;
-  font-size:13px;font-weight:600;
-}
-.alert-bar svg{flex-shrink:0}
-.alert-bar span{opacity:.8;font-weight:400}
-
-/* ══════════════════════════════════
-   CARDS
-══════════════════════════════════ */
-.card{
-  background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--r-lg);padding:clamp(20px,3vw,32px);
-  box-shadow:var(--sh-sm);transition:box-shadow .2s,transform .2s;
-}
-.card:hover{box-shadow:var(--sh-md)}
-
-/* Stat */
-.stat-kicker{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
-.stat-val{font-family:"DM Serif Display",serif;font-size:32px;color:var(--ink);line-height:1;margin-bottom:10px}
-.stat-desc{font-size:14px;color:var(--ink-soft);line-height:1.6}
-
-/* ══════════════════════════════════
-   FUNNEL
-══════════════════════════════════ */
-.funnel-wrap{display:grid;grid-template-columns:1fr 320px;gap:clamp(20px,3vw,32px);align-items:start}
-.funnel-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(20px,3vw,32px);box-shadow:var(--sh-md)}
-
-.funnel-step{
-  padding:20px 24px;border-radius:var(--r-md);margin-bottom:12px;
-  position:relative;background:var(--bg);border:1px solid var(--line);
-  border-left:4px solid transparent;transition:background .15s;
-}
-.funnel-step:hover{background:var(--surface)}
-.funnel-step:last-child{margin-bottom:0}
-.fs-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px}
-.fs-title{font-size:15px;font-weight:700;color:var(--ink)}
-.fs-badge{
-  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-  padding:4px 10px;border-radius:999px;white-space:nowrap;flex-shrink:0;margin-top:2px;
-}
-.fs-desc{font-size:13px;color:var(--ink-soft);line-height:1.55}
-.fs-topo{border-left-color:#60a5fa}.fs-topo .fs-badge{background:var(--blue-lt);color:var(--blue)}
-.fs-meio{border-left-color:#3b82f6}.fs-meio .fs-badge{background:#dde9fe;color:#1d4ed8}
-.fs-fundo{border-left-color:#2563eb}.fs-fundo .fs-badge{background:#eff3ff;color:#1e40af}
-.fs-fech{border-left-color:var(--gold)}.fs-fech .fs-badge{background:var(--gold-lt);color:var(--amber)}
-
-.funnel-side{display:grid;gap:14px}
-.mini-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:20px;box-shadow:var(--sh-sm)}
-.mini-card h4{font-size:14px;font-weight:700;color:var(--blue);margin-bottom:6px}
-.mini-card p{font-size:13px;color:var(--ink-soft);line-height:1.55}
-
-/* ══════════════════════════════════
-   CHANNELS GRID
-══════════════════════════════════ */
-.channel-card{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:clamp(20px,3vw,32px);box-shadow:var(--sh-md);
-}
-.channel-card h3{font-family:"DM Serif Display",serif;font-size:26px;color:var(--ink);margin-bottom:16px}
-.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
-.tag{
-  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  padding:5px 12px;border-radius:999px;background:var(--surface2);color:var(--ink-soft);
-  border:1px solid var(--line);
-}
-.list-item{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px}
-.list-item:last-child{margin-bottom:0}
-.list-item strong{color:var(--ink)}
-.dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:8px}
-
-/* ══════════════════════════════════
-   BUDGET
-══════════════════════════════════ */
-.budget-wrap{display:grid;grid-template-columns:1fr 340px;gap:clamp(20px,3vw,32px);align-items:start;margin-top:clamp(24px,4vw,40px)}
-.budget-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(20px,3vw,32px);box-shadow:var(--sh-md)}
-.budget-card h3{font-family:"DM Serif Display",serif;font-size:22px;color:var(--ink);margin-bottom:24px}
-
-table.bt{width:100%;border-collapse:collapse;font-size:13px}
-.bt th{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-pale);background:var(--surface2);padding:12px 14px;text-align:left;border-bottom:1px solid var(--line)}
-.bt td{padding:14px;border-bottom:1px solid var(--line);color:var(--ink-mid);vertical-align:top}
-.bt tr:last-child td{border-bottom:none}
-.bt tr:hover td{background:var(--surface2)}
-.bt .price{font-weight:700;color:var(--blue);white-space:nowrap}
-.bt .small{font-size:11px;color:var(--ink-pale);margin-top:2px}
-
-.callout-dark{
-  background:var(--ink);
-  background-image:radial-gradient(ellipse 80% 70% at 80% 50%, #1e3a8a44 0%, transparent 70%);
-  border-radius:var(--r-lg);padding:clamp(20px,3vw,32px);color:#fff;
-  box-shadow:var(--sh-lg);
-}
-.callout-badge{
-  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--gold);background:rgba(201,149,42,.15);border:1px solid rgba(201,149,42,.2);
-  padding:5px 12px;border-radius:999px;margin-bottom:18px;
-}
-.callout-dark p{font-size:14px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:14px}
-.callout-dark p:last-child{margin-bottom:0}
-.callout-dark strong{color:#fff;font-weight:600}
-
-/* ══════════════════════════════════
-   CREATIVES
-══════════════════════════════════ */
-.creative-card{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--sh-sm);
-  transition:box-shadow .2s,transform .2s;
-}
-.creative-card:hover{box-shadow:var(--sh-md);transform:translateY(-3px)}
-.creative-top{
-  background:var(--surface2);border-bottom:1px solid var(--line);
-  padding:clamp(18px,2.5vw,28px);min-height:130px;
-  display:flex;flex-direction:column;justify-content:flex-end;
-}
-.chip{
-  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  background:var(--blue);color:#fff;padding:4px 10px;border-radius:var(--r-xs);margin-bottom:10px;width:fit-content;
-}
-.creative-top h4{font-family:"DM Serif Display",serif;font-size:20px;color:var(--ink);line-height:1.25}
-.creative-body{padding:clamp(16px,2.5vw,24px);flex-grow:1;display:flex;flex-direction:column}
-.creative-body p{font-size:13px;color:var(--ink-soft);line-height:1.6;flex-grow:1;margin-bottom:18px}
-.creative-meta{
-  display:flex;justify-content:space-between;gap:10px;
-  font-size:11px;font-weight:700;color:var(--ink-mid);
-  border-top:1px solid var(--line);padding-top:14px;
-  text-transform:uppercase;letter-spacing:.05em;
-}
-
-/* ══════════════════════════════════
-   VEHICLES
-══════════════════════════════════ */
-.vehicle-card{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  overflow:hidden;box-shadow:var(--sh-sm);transition:box-shadow .2s;
-}
-.vehicle-card:hover{box-shadow:var(--sh-md)}
-.vehicle-head{
-  padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px;
-  border-bottom:1px solid var(--line);background:var(--surface2);
-}
-.vehicle-head h3{font-size:16px;font-weight:700;color:var(--ink)}
-.pb{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:999px;white-space:nowrap}
-.pb-hot{background:var(--red-lt);color:var(--red)}
-.pb-fast{background:var(--amber-lt);color:var(--amber)}
-.pb-base{background:var(--blue-lt);color:var(--blue)}
-.vehicle-body{padding:20px 22px}
-.v-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.v-m{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px}
-.v-m b{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-pale);margin-bottom:4px}
-.v-m span{font-size:13px;font-weight:600;color:var(--ink)}
-.vehicle-body ul{padding-left:16px;color:var(--ink-soft);font-size:13px}
-.vehicle-body li{margin-bottom:7px;line-height:1.5}
-.vehicle-body li:last-child{margin-bottom:0}
-
-/* ══════════════════════════════════
-   TIMELINE
-══════════════════════════════════ */
-.timeline{display:grid;gap:14px}
-.tl-item{
-  display:grid;grid-template-columns:120px 1fr;gap:clamp(16px,3vw,32px);align-items:start;
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:clamp(18px,2.5vw,28px);box-shadow:var(--sh-sm);
-  transition:transform .2s,box-shadow .2s;
-}
-.tl-item:hover{transform:translateX(4px);box-shadow:var(--sh-md)}
-.tl-week{
-  padding-bottom:10px;border-bottom:2px solid var(--blue);
-  font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);
-}
-.tl-content h4{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:6px}
-.tl-content > p{font-size:13px;color:var(--ink-soft);line-height:1.55;margin-bottom:12px}
-.tl-content ul{padding-left:16px;color:var(--ink-soft);font-size:13px}
-.tl-content li{margin-bottom:6px}
-
-/* ══════════════════════════════════
-   JOB CARDS
-══════════════════════════════════ */
-.job-card{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:clamp(20px,3vw,32px);box-shadow:var(--sh-sm);
-  transition:box-shadow .2s,background .15s;
-}
-.job-card:hover{box-shadow:var(--sh-md)}
-.job-tag{
-  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  background:var(--blue);color:#fff;padding:5px 12px;border-radius:999px;margin-bottom:16px;
-}
-.job-card h3{font-family:"DM Serif Display",serif;font-size:24px;color:var(--ink);margin-bottom:12px}
-.job-card > p{font-size:14px;color:var(--ink-soft);line-height:1.65;margin-bottom:16px}
-.job-card ul{padding-left:16px;color:var(--ink-soft);font-size:14px;margin-bottom:22px}
-.job-card li{margin-bottom:8px}
-.job-budget-pill{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--blue-lt);color:var(--blue);
-  font-size:12px;font-weight:700;padding:10px 18px;border-radius:999px;
-}
-.job-budget-pill::before{content:"💰";font-size:14px}
-
-/* ══════════════════════════════════
-   KPI ROW
-══════════════════════════════════ */
-.kpi{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:clamp(18px,2.5vw,28px);text-align:center;box-shadow:var(--sh-md);
-  transition:transform .2s;
-}
-.kpi:hover{transform:translateY(-3px)}
-.kpi-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-pale);margin-bottom:14px;display:block}
-.kpi-val{font-family:"DM Serif Display",serif;font-size:26px;color:var(--blue);display:block;margin-bottom:10px;line-height:1}
-.kpi p{font-size:13px;color:var(--ink-soft);line-height:1.5}
-
-/* ══════════════════════════════════
-   WHY CARD
-══════════════════════════════════ */
-.why-card{
-  background:var(--surface2);border:1px solid var(--line);
-  border-radius:var(--r-lg);padding:clamp(20px,3vw,28px);
-  margin-top:clamp(20px,3vw,28px);box-shadow:var(--sh-sm);
-}
-.why-card h4{font-size:16px;font-weight:700;margin-bottom:10px;color:var(--ink)}
-.why-card p{font-size:14px;color:var(--ink-soft);line-height:1.65}
-
-/* ══════════════════════════════════
-   FOOTER
-══════════════════════════════════ */
-.footer{
-  background:var(--ink);border-top:3px solid var(--gold);
-  padding:clamp(32px,5vw,56px) 0;
-}
-.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-.footer-brand-name{font-family:"DM Serif Display",serif;font-size:22px;color:#fff;margin-bottom:6px}
-.footer-brand-sub{font-size:13px;color:rgba(255,255,255,.4)}
-.footer-stamp{
-  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:rgba(255,255,255,.35);background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.1);padding:10px 20px;border-radius:var(--r-sm);
-}
-
-/* ══════════════════════════════════
-   ANIMATION
-══════════════════════════════════ */
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-.anim{animation:fadeUp .55s ease both}
-.d1{animation-delay:.05s}.d2{animation-delay:.12s}.d3{animation-delay:.19s}.d4{animation-delay:.26s}
-
-/* ══════════════════════════════════
-   ██ RESPONSIVE — MOBILE ██
-══════════════════════════════════ */
-@media(max-width:900px){
-  .hero-body{grid-template-columns:1fr}
-  .hero-metrics{display:none} /* colapsado em mobile — não duplica informação */
-  .funnel-wrap,.budget-wrap{grid-template-columns:1fr}
-  .g2,.g3,.g4{grid-template-columns:1fr 1fr}
-}
-@media(max-width:600px){
-  .nav{flex-direction:column;align-items:flex-start;gap:12px}
-  .g2,.g3,.g4{grid-template-columns:1fr}
-  .tl-item{grid-template-columns:1fr;gap:10px}
-  .v-metrics{grid-template-columns:1fr 1fr}
-  .vehicle-head{flex-wrap:wrap;gap:8px}
-  .channel-card h3{font-size:21px}
-  .footer-inner{flex-direction:column;align-items:flex-start}
-  .bt th:nth-child(3),.bt td:nth-child(3){display:none} /* esconde coluna objetivo em telas pequenas */
-  .budget-card h3{font-size:19px}
-}
-@media(max-width:400px){
-  .v-metrics{grid-template-columns:1fr}
-  .bt th,.bt td{padding:10px 10px;font-size:12px}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetPerfect - Seu lar, mais perfeito para quem você ama.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pet: {
+                            primary: '#8195B9',    // Principal / fundo
+                            secondary: '#7490BC',  // Secundária / cards
+                            medium: '#3F6190',     // Elementos principais / botões
+                            dark: '#2F4A6D',       // Texto / contraste
+                            light: '#DBE3EF',      // Fundos leves
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        html { scroll-behavior: smooth; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 text-pet-dark font-sans antialiased overflow-x-hidden">
 
-<!-- ══════ HERO ══════ -->
-<header class="hero">
-  <div class="wrap">
-    <nav class="nav">
-      <div class="brand">
-<div class="brand-icon">
-  <img src="https://i.imgur.com/OnbS18D.png" alt="Magister Tech" style="width:28px;height:28px;object-fit:contain;">
-</div>        <div>
-          <div class="brand-name">Magister Tech</div>
-          <div class="brand-sub">Estratégia Comercial · Grupo Baragão</div>
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-pet-light/50">
+        <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3 hover:opacity-80 transition">
+                <img src="https://i.imgur.com/f3I47lB.png" alt="PetPerfect Logo" class="h-10">
+                <span class="text-2xl font-bold text-pet-dark tracking-tight">PetPerfect</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#sobre" class="text-pet-dark font-medium hover:text-pet-medium transition-colors">Sobre nós</a>
+                <a href="#produtos" class="text-pet-dark font-medium hover:text-pet-medium transition-colors">Produtos</a>
+                <a href="#prevenda" class="text-pet-medium font-bold hover:text-pet-dark transition-colors">Pré-venda</a>
+            </div>
+            <a href="https://wa.me/SEUNUMERO" target="_blank" class="hidden md:inline-flex items-center justify-center bg-pet-medium text-white px-6 py-2.5 rounded-full font-semibold hover:bg-pet-dark transition-all shadow-md hover:shadow-lg">
+                Fale Conosco
+            </a>
+            <button class="md:hidden text-pet-dark text-2xl">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <section class="relative bg-pet-light/40 pt-16 pb-24 lg:pt-24 lg:pb-32 overflow-hidden">
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-pet-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-[400px] h-[400px] bg-pet-secondary/10 rounded-full blur-[60px] pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-16 lg:gap-12 items-center">
+                <div class="space-y-8 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-pet-secondary/20 shadow-sm mx-auto lg:mx-0">
+                        <span class="flex h-2.5 w-2.5 rounded-full bg-pet-medium animate-pulse"></span>
+                        <span class="text-sm font-bold text-pet-medium uppercase tracking-wide">Design pensado para eles</span>
+                    </div>
+
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-pet-dark leading-[1.15]">
+                        Seu lar, <br class="hidden lg:block">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-pet-medium to-pet-secondary">mais perfeito</span><br>
+                        para quem você ama.
+                    </h1>
+
+                    <p class="text-lg sm:text-xl text-pet-dark/80 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                        Soluções inteligentes que adaptam sua casa ao bem-estar do seu pet, unindo funcionalidade, cuidado e uma estética impecável.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                        <a href="https://wa.me/SEUNUMERO" target="_blank" class="w-full sm:w-auto flex items-center justify-center gap-3 bg-pet-medium text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-pet-dark transition-all duration-300 shadow-lg hover:shadow-pet-medium/50 hover:-translate-y-1">
+                            <i class="fab fa-whatsapp text-2xl"></i> Falar no WhatsApp
+                        </a>
+                        <a href="#prevenda" class="w-full sm:w-auto flex items-center justify-center gap-3 bg-white text-pet-dark border-2 border-pet-light px-8 py-4 rounded-full font-bold text-lg hover:border-pet-medium hover:text-pet-medium transition-all duration-300">
+                            Garantir Pré-venda
+                        </a>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-8 border-t border-pet-medium/10">
+                        <div class="flex -space-x-3">
+                            <img class="w-12 h-12 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80" alt="Cliente">
+                            <img class="w-12 h-12 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&q=80" alt="Cliente">
+                            <img class="w-12 h-12 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&q=80" alt="Cliente">
+                            <div class="w-12 h-12 rounded-full border-2 border-white bg-pet-primary flex items-center justify-center text-white text-xs font-bold">+2k</div>
+                        </div>
+                        <div class="text-sm text-pet-dark font-medium text-center sm:text-left">
+                            <div class="flex text-yellow-400 text-sm mb-1 justify-center sm:justify-start">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            Famílias e pets satisfeitos
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative mx-auto w-full max-w-lg lg:max-w-full mt-10 lg:mt-0">
+                    <div class="absolute inset-0 bg-pet-primary/30 rounded-[3rem] transform translate-x-4 translate-y-6 lg:translate-x-8 lg:translate-y-8"></div>
+                    <div class="relative rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white aspect-[4/3] lg:aspect-auto">
+                        <img src="https://i.imgur.com/Pv2sxdi.png" alt="Família feliz com pet na sala" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-pet-dark/30 to-transparent"></div>
+                    </div>
+                    <div class="absolute -left-6 lg:-left-12 bottom-10 bg-white p-4 lg:p-5 rounded-2xl shadow-xl flex items-center gap-4 border border-pet-light z-20 animate-float">
+                        <div class="w-12 h-12 lg:w-14 lg:h-14 bg-pet-light rounded-full flex items-center justify-center text-pet-medium text-xl lg:text-2xl">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] lg:text-xs text-pet-dark/60 font-bold uppercase tracking-wider">Bem-estar</p>
+                            <p class="text-sm lg:text-base font-bold text-pet-dark">Aprovado por Pets</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="nav-pill">Plano de Crescimento 2026</div>
-    </nav>
+    </section>
 
-    <div class="hero-body">
-      <div class="anim">
-        <div class="eyebrow eyebrow-inv">Sistema de Vendas Automotivas</div>
-        <h1>Estratégia<br>para o<br><em>Grupo Baragão</em></h1>
-        <p class="hero-lead">Tráfego pago, funil comercial e execução estratégica para acelerar vendas de veículos e gerar previsibilidade de faturamento.</p>
-        <div class="hero-tags">
-          <span class="hero-tag">Meta Ads</span>
-          <span class="hero-tag">Google Ads</span>
-          <span class="hero-tag">Funil de Vendas</span>
-          <span class="hero-tag">Escala Comercial</span>
+    <section id="sobre" class="bg-white py-20 lg:py-32">
+        <div class="container mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+            <div class="order-2 lg:order-1 relative">
+                <div class="absolute inset-0 bg-pet-light rounded-[2rem] transform -translate-x-4 -translate-y-4"></div>
+                <img src="https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=800&auto=format&fit=crop" alt="Cachorro relaxando no sofá" class="relative z-10 w-full h-[400px] lg:h-[500px] object-cover rounded-[2rem] shadow-lg">
+            </div>
+            
+            <div class="order-1 lg:order-2 space-y-8">
+                <div>
+                    <h2 class="text-sm font-bold text-pet-medium uppercase tracking-widest mb-2">Quem Somos</h2>
+                    <h3 class="text-3xl lg:text-4xl font-extrabold text-pet-dark leading-tight">A harmonia perfeita entre o seu lar e o seu pet.</h3>
+                </div>
+                <p class="text-lg text-pet-dark/80 leading-relaxed">
+                    A PetPerfect acredita que o lar deve ser um espaço de harmonia entre pessoas e animais. Criamos soluções inteligentes e funcionais que promovem o bem-estar dos pets sem que os tutores precisem mudar sua rotina ou abrir mão da estética de casa.
+                </p>
+                <div class="space-y-6 pt-4">
+                    <div class="flex items-start gap-5 bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="w-12 h-12 shrink-0 bg-pet-light rounded-full flex items-center justify-center text-pet-medium text-xl">
+                            <i class="fas fa-couch"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-pet-dark text-lg">Ambientes Adaptados</h4>
+                            <p class="text-pet-dark/70 mt-1">Desenvolvemos móveis e soluções que se integram à sua decoração.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+    </section>
 
-      <div class="hero-metrics anim d2">
-        <div class="hm-card">
-          <div class="hm-label">Investimento base</div>
-          <div class="hm-value">R$&thinsp;150</div>
-          <div class="hm-desc">por dia de tráfego</div>
+    <section id="produtos" class="bg-pet-primary/5 py-20 lg:py-32">
+        <div class="container mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-sm font-bold text-pet-medium uppercase tracking-widest mb-2">Nossa Linha</h2>
+                <h3 class="text-3xl lg:text-4xl font-extrabold text-pet-dark">Conheça Nossos Produtos</h3>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-[2rem] shadow-lg border border-pet-light hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="w-16 h-16 bg-pet-light rounded-2xl flex items-center justify-center text-pet-medium text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-bed"></i>
+                    </div>
+                    <h4 class="text-2xl font-bold text-pet-dark mb-3">PetZen</h4>
+                    <p class="text-pet-dark/70 mb-8 h-12">Conforto e relaxamento total para o pet dentro de casa.</p>
+                    <a href="#prevenda" class="inline-flex items-center gap-2 text-pet-medium font-bold hover:text-pet-dark transition-colors">
+                        Quero este <i class="fas fa-arrow-down text-sm"></i>
+                    </a>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2rem] shadow-lg border border-pet-light hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="w-16 h-16 bg-pet-light rounded-2xl flex items-center justify-center text-pet-medium text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-stairs"></i>
+                    </div>
+                    <h4 class="text-2xl font-bold text-pet-dark mb-3">PetStep</h4>
+                    <p class="text-pet-dark/70 mb-8 h-12">Soluções de mobilidade, rampas e adaptação de móveis.</p>
+                    <a href="#prevenda" class="inline-flex items-center gap-2 text-pet-medium font-bold hover:text-pet-dark transition-colors">
+                        Quero este <i class="fas fa-arrow-down text-sm"></i>
+                    </a>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2rem] shadow-lg border border-pet-light hover:-translate-y-2 transition-transform duration-300 group">
+                    <div class="w-16 h-16 bg-pet-light rounded-2xl flex items-center justify-center text-pet-medium text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-puzzle-piece"></i>
+                    </div>
+                    <h4 class="text-2xl font-bold text-pet-dark mb-3">PetBuddy</h4>
+                    <p class="text-pet-dark/70 mb-8 h-12">Integração perfeita entre o pet, o ambiente e sua rotina.</p>
+                    <a href="#prevenda" class="inline-flex items-center gap-2 text-pet-medium font-bold hover:text-pet-dark transition-colors">
+                        Quero este <i class="fas fa-arrow-down text-sm"></i>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="hm-card">
-          <div class="hm-label">Criativos</div>
-          <div class="hm-value">10+</div>
-          <div class="hm-desc">Carrosséis de alta conversão</div>
+    </section>
+
+    <section id="prevenda" class="py-20 lg:py-32 bg-white relative">
+        <div class="container mx-auto px-6 max-w-6xl relative z-10">
+            <div class="bg-pet-light/40 rounded-[2.5rem] overflow-hidden flex flex-col lg:flex-row shadow-2xl border border-pet-light">
+                
+                <div class="lg:w-5/12 bg-pet-medium p-10 lg:p-14 text-white flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    <div class="relative z-10 space-y-6">
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 text-white text-sm font-bold uppercase tracking-wide border border-white/30 w-max">
+                            <i class="fas fa-star text-yellow-300"></i> Lançamento Exclusivo
+                        </div>
+                        <h3 class="text-3xl lg:text-4xl font-extrabold leading-tight">Garanta seu acesso na Pré-venda!</h3>
+                        <p class="text-white/80 text-lg leading-relaxed">
+                            Cadastre-se agora para receber <strong>condições especiais de lançamento</strong> e seja um dos primeiros a transformar o seu lar com a PetPerfect.
+                        </p>
+                        <ul class="space-y-4 pt-4">
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-pet-light text-xl"></i> Desconto exclusivo para os primeiros.</li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-pet-light text-xl"></i> Atendimento personalizado.</li>
+                            <li class="flex items-center gap-3"><i class="fas fa-check-circle text-pet-light text-xl"></i> Prioridade na entrega.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="lg:w-7/12 p-10 lg:p-14 bg-white">
+                    <h4 class="text-2xl font-bold text-pet-dark mb-6">Preencha e fale conosco 🐾</h4>
+                    <form id="preVendaForm" class="space-y-5">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="space-y-2">
+                                <label for="nome" class="block text-sm font-bold text-pet-dark/70">Seu Nome</label>
+                                <input type="text" id="nome" required placeholder="Ex: Maria Silva" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-pet-medium focus:ring-2 focus:ring-pet-light outline-none transition-all">
+                            </div>
+                            <div class="space-y-2">
+                                <label for="pet" class="block text-sm font-bold text-pet-dark/70">Nome do seu Pet</label>
+                                <input type="text" id="pet" required placeholder="Ex: Thor" class="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-pet-medium focus:ring-2 focus:ring-pet-light outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="produto" class="block text-sm font-bold text-pet-dark/70">Qual produto mais te interessou?</label>
+                            <select id="produto" required class="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-pet-medium focus:ring-2 focus:ring-pet-light outline-none transition-all text-pet-dark cursor-pointer">
+                                <option value="" disabled selected>Selecione um produto</option>
+                                <option value="PetZen">PetZen (Conforto e Relaxamento)</option>
+                                <option value="PetStep">PetStep (Mobilidade e Acesso)</option>
+                                <option value="PetBuddy">PetBuddy (Integração na Rotina)</option>
+                                <option value="Todos os Produtos">Quero conhecer todos!</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="mensagemOpcional" class="block text-sm font-bold text-pet-dark/70">Mensagem Adicional (Opcional)</label>
+                            <textarea id="mensagemOpcional" rows="2" placeholder="Ex: Meu sofá é muito alto e preciso de ajuda..." class="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-pet-medium focus:ring-2 focus:ring-pet-light outline-none transition-all resize-none"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full flex items-center justify-center gap-3 bg-pet-medium text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-pet-dark transition-all duration-300 shadow-lg hover:shadow-pet-medium/40 hover:-translate-y-0.5 mt-4">
+                            <i class="fab fa-whatsapp text-2xl"></i> Enviar e Falar no WhatsApp
+                        </button>
+                        <p class="text-xs text-center text-gray-400 mt-3">Você será redirecionado para o nosso WhatsApp oficial.</p>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="hm-card">
-          <div class="hm-label">Canais</div>
-          <div class="hm-value">2</div>
-          <div class="hm-desc">Meta + Google integrados</div>
+    </section>
+
+    <section id="diferenciais" class="bg-gray-50 py-20 lg:py-32">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center mb-20 bg-pet-dark text-white p-10 lg:p-14 rounded-[2rem] shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                <h3 class="text-2xl lg:text-3xl font-light leading-relaxed relative z-10 italic">
+                    "Para quem quer cuidar do seu pet sem abrir mão de um <strong class="font-bold text-pet-light">lar bonito e funcional</strong>."
+                </h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 text-center">
+                <div class="space-y-4">
+                    <div class="w-20 h-20 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center text-pet-medium text-3xl border border-pet-light">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-pet-dark">Design Inteligente</h4>
+                </div>
+                <div class="space-y-4">
+                    <div class="w-20 h-20 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center text-pet-medium text-3xl border border-pet-light">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-pet-dark">Integração</h4>
+                </div>
+                <div class="space-y-4">
+                    <div class="w-20 h-20 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center text-pet-medium text-3xl border border-pet-light">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-pet-dark">Bem-estar</h4>
+                </div>
+                <div class="space-y-4">
+                    <div class="w-20 h-20 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center text-pet-medium text-3xl border border-pet-light">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-pet-dark">Praticidade</h4>
+                </div>
+            </div>
         </div>
-        <div class="hm-card">
-          <div class="hm-label">Objetivo</div>
-          <div class="hm-value">Venda</div>
-          <div class="hm-desc">Giro e escala de estoque</div>
+    </section>
+
+    <section class="bg-pet-light/30 py-20 lg:py-24 border-y border-pet-light/50">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl lg:text-4xl font-extrabold text-pet-dark leading-tight max-w-4xl mx-auto mb-16">
+                “Mais do que produtos, entregamos <span class="text-pet-medium">harmonia, tranquilidade e qualidade de vida</span> para toda a família.”
+            </h2>
+            <div class="inline-flex flex-col items-center justify-center bg-white p-8 rounded-3xl shadow-sm border border-pet-light">
+                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80" alt="Emanuelle Nunes Martinez" class="w-24 h-24 rounded-full object-cover border-4 border-pet-light mb-4">
+                <h4 class="text-xl font-bold text-pet-dark">Emanuelle Nunes Martinez</h4>
+                <p class="text-pet-medium text-sm font-bold tracking-widest uppercase mt-1">CEO</p>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
-</header>
-<div class="gold-strip"></div>
+    </section>
 
-<!-- ══════ HIRING ALERT ══════ -->
-<div class="hiring-band">
-  <div class="alert-bar">
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-    <strong>Prioridade estratégica:</strong>
-    <span>Contratação de vendedores como parte central do sistema — veja as vagas abaixo.</span>
-  </div>
-</div>
-
-<!-- ══════ HIRING SECTION ══════ -->
-<section class="sec hiring-band">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Prioridade estratégica</div>
-      <h2>Estruturação do Time Comercial</h2>
-      <p>A performance das campanhas está diretamente ligada à qualidade do time de vendas. Contratação de vendedores experientes não é suporte — é parte central da estratégia.</p>
-    </div>
-
-    <div class="g2">
-      <article class="job-card">
-        <div class="job-tag">Vaga 01 — Estratégica</div>
-        <h3>Vendedor de Carros</h3>
-        <p>Profissional com experiência comprovada em vendas, foco em negociação, atendimento consultivo e fechamento ativo.</p>
-        <ul>
-          <li>Experiência sólida em vendas automotivas ou comerciais</li>
-          <li>Perfil agressivo em fechamento e geração de oportunidade</li>
-          <li>Capacidade de atendimento rápido e condução de lead</li>
-        </ul>
-        <div class="job-budget-pill">Campanha: R$&thinsp;20/dia durante 5 dias</div>
-      </article>
-
-      <article class="job-card">
-        <div class="job-tag">Vaga 02 — Estratégica</div>
-        <h3>Vendedor de Motos</h3>
-        <p>Profissional com perfil comercial ativo, experiência sólida em vendas e facilidade em negociação direta com clientes.</p>
-        <ul>
-          <li>Vivência com vendas e abordagem ativa no atendimento</li>
-          <li>Capacidade de conversão e disciplina comercial</li>
-          <li>Perfil competitivo e orientado a metas</li>
-        </ul>
-        <div class="job-budget-pill">Campanha: R$&thinsp;20/dia durante 5 dias</div>
-      </article>
-    </div>
-
-    <div class="why-card">
-      <h4>Por que isso é prioridade?</h4>
-      <p>Sem um time comercial preparado, o tráfego perde eficiência. A Magister Tech considera mídia + operação comercial como um único sistema. Leads gerados precisam ser rapidamente convertidos — isso depende diretamente da qualidade dos vendedores.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ OBJETIVO ══════ -->
-<section class="sec" style="background:var(--bg)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Visão estratégica</div>
-      <h2>Objetivo central da operação</h2>
-      <p>Gerar volume qualificado de leads para veículos do estoque, acelerar a saída dos carros prioritários e transformar tráfego pago em rotina comercial previsível.</p>
-    </div>
-
-    <div class="g4">
-      <article class="card anim d1">
-        <div class="stat-kicker">Meta principal</div>
-        <div class="stat-val">Vender</div>
-        <p class="stat-desc">Foco total em giro de estoque com campanhas orientadas por intenção, urgência e argumento certo para cada carro.</p>
-      </article>
-      <article class="card anim d2">
-        <div class="stat-kicker">Canal de conversão</div>
-        <div class="stat-val">WhatsApp</div>
-        <p class="stat-desc">Leads indo para atendimento rápido, triagem, oferta de troca, financiamento e agendamento de visita.</p>
-      </article>
-      <article class="card anim d3">
-        <div class="stat-kicker">Modelo criativo</div>
-        <div class="stat-val">Cards+Vídeo</div>
-        <p class="stat-desc">Carrosséis com preço e condição visual forte, mais vídeo do barganhão para aquecer e ampliar alcance.</p>
-      </article>
-      <article class="card anim d4">
-        <div class="stat-kicker">Critério de sucesso</div>
-        <div class="stat-val">Lead útil</div>
-        <p class="stat-desc">Não basta clique. A régua mede volume de conversa útil, visita agendada e potencial real de compra.</p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ FUNIL ══════ -->
-<section class="sec-sm" style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Funil comercial</div>
-      <h2>Desenho do funil de vendas</h2>
-      <p>Como vamos atrair, qualificar, reimpactar e fechar vendas com Meta Ads, Google Ads e operação comercial integrada.</p>
-    </div>
-
-    <div class="funnel-wrap">
-      <div class="funnel-card">
-        <div class="funnel-step fs-topo">
-          <div class="fs-top"><span class="fs-title">1. Atenção e descoberta</span><span class="fs-badge">Topo</span></div>
-          <p class="fs-desc">Vídeo Barganhão, liquidação de carros e criativos de estoque para gerar reconhecimento e trazer público novo.</p>
+    <footer class="bg-gray-900 text-gray-400 py-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <img src="https://i.imgur.com/f3I47lB.png" alt="PetPerfect Logo" class="h-8 brightness-0 invert opacity-70">
+                    <span class="text-white font-bold text-xl tracking-tight">PetPerfect</span>
+                </div>
+                <a href="https://www.instagram.com/pet_perfect.br/" target="_blank" class="flex items-center gap-2 hover:text-white transition-colors">
+                    <i class="fab fa-instagram text-xl"></i> @pet_perfect.br
+                </a>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+                &copy; 2024 PetPerfect. Todos os direitos reservados.
+            </div>
         </div>
-        <div class="funnel-step fs-meio">
-          <div class="fs-top"><span class="fs-title">2. Interesse e comparação</span><span class="fs-badge">Meio</span></div>
-          <p class="fs-desc">Carrosséis segmentados por modelo, preço e perfil de compra, levando para clique em WhatsApp ou formulário rápido.</p>
-        </div>
-        <div class="funnel-step fs-fundo">
-          <div class="fs-top"><span class="fs-title">3. Intenção de compra</span><span class="fs-badge">Fundo</span></div>
-          <p class="fs-desc">Google Ads com termos de alta intenção, busca por modelo/ano e remarketing para quem visitou, clicou ou engajou.</p>
-        </div>
-        <div class="funnel-step fs-fech">
-          <div class="fs-top"><span class="fs-title">4. Conversão e retomada</span><span class="fs-badge">Fechamento</span></div>
-          <p class="fs-desc">Atendimento consultivo, follow-up em até 5 minutos, prova social, condições, troca, financiamento e reimpacto.</p>
-        </div>
-      </div>
+    </footer>
 
-      <div class="funnel-side">
-        <div class="mini-card">
-          <h4>Regra de operação</h4>
-          <p>Cada lead precisa entrar em uma cadência clara: contato imediato, qualificação, objeção, proposta e reativação.</p>
-        </div>
-        <div class="mini-card">
-          <h4>Meta Ads</h4>
-          <p>Responsável por escala visual, descoberta, remarketing e geração de conversas com criativos de estoque.</p>
-        </div>
-        <div class="mini-card">
-          <h4>Google Ads</h4>
-          <p>Captura demanda pronta — usuários pesquisando modelo específico, preço e condição de compra imediata.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('preVendaForm');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Evita que a página recarregue
+                
+                // Pegar os valores dos campos
+                const nome = document.getElementById('nome').value.trim();
+                const pet = document.getElementById('pet').value.trim();
+                const produto = document.getElementById('produto').value;
+                const msgExtra = document.getElementById('mensagemOpcional').value.trim();
 
-<!-- ══════ CANAIS ══════ -->
-<section class="sec" style="background:var(--bg)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Canais de tráfego</div>
-      <h2>Meta Ads e Google Ads — funções distintas</h2>
-      <p>Meta gera percepção, desejo e remarketing. Google captura quem já está buscando o carro ou a condição de compra.</p>
-    </div>
+                // COLOQUE SEU NÚMERO DE WHATSAPP AQUI (Apenas números, inclua código do país e DDD)
+                // Exemplo: 5511999999999
+                const numeroWhatsApp = "SEUNUMERO"; 
 
-    <div class="g2">
-      <article class="channel-card">
-        <h3>Meta Ads</h3>
-        <div class="tag-row">
-          <span class="tag">Carrossel</span><span class="tag">Vídeo</span>
-          <span class="tag">Remarketing</span><span class="tag">WhatsApp</span>
-        </div>
-        <div class="list-item"><span class="dot"></span><div><strong>Campanhas de estoque:</strong> 10 carrosséis com layout novo, preço forte, CTA claro e leitura rápida no mobile.</div></div>
-        <div class="list-item"><span class="dot"></span><div><strong>Campanha Liquida Carros:</strong> criativo guarda-chuva para acelerar giro e criar senso de urgência.</div></div>
-        <div class="list-item"><span class="dot"></span><div><strong>Vídeo Barganhão:</strong> criativo de alcance para aquecer público e gerar lembrança da oferta.</div></div>
-        <div class="list-item"><span class="dot"></span><div><strong>Remarketing:</strong> usuários que assistiram vídeo, engajaram com o perfil ou clicaram pro WhatsApp.</div></div>
-      </article>
+                // Montar a mensagem
+                let mensagem = `Olá, PetPerfect! 🐾%0A%0A`;
+                mensagem += `Meu nome é *${nome}* e gostaria de participar da pré-venda.%0A`;
+                mensagem += `O nome do meu pet é *${pet}*.%0A`;
+                mensagem += `Tenho muito interesse no produto: *${produto}*.%0A`;
+                
+                if(msgExtra !== "") {
+                    mensagem += `%0AObservação: ${msgExtra}`;
+                }
 
-      <article class="channel-card">
-        <h3>Google Ads</h3>
-        <div class="tag-row">
-          <span class="tag">Rede de Pesquisa</span><span class="tag">Alta intenção</span>
-          <span class="tag">Marca + modelo</span><span class="tag">Fundo do funil</span>
-        </div>
-        <div class="list-item"><span class="dot"></span><div><strong>Busca por modelo:</strong> termos como "Etios 2017", "Corolla 2019", "Tiguan 2019" e variações com cidade.</div></div>
-        <div class="list-item"><span class="dot"></span><div><strong>Busca por necessidade:</strong> usados, seminovos, financiamento, troca, loja confiável e SUV usado.</div></div>
-        <div class="list-item"><span class="dot"></span><div><strong>Extensões:</strong> WhatsApp, chamada, localização e destaques de credibilidade.</div></div>
-        <div class="list-item"><span class="dot"></span><div><strong>Prioridade:</strong> campanhas específicas para veículos que queremos vender primeiro.</div></div>
-      </article>
-    </div>
-
-    <div class="budget-wrap">
-      <article class="budget-card">
-        <div class="eyebrow">Divisão de verba</div>
-        <h3>Plano-base de mídia diária</h3>
-        <div style="overflow-x:auto">
-          <table class="bt">
-            <thead>
-              <tr>
-                <th>Campanha</th>
-                <th>Canal</th>
-                <th>Objetivo</th>
-                <th>Verba</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Carros do estoque</td>
-                <td>Meta + Google</td>
-                <td>Leads e conversas</td>
-                <td class="price">R$&thinsp;100/dia</td>
-              </tr>
-              <tr>
-                <td>Vídeo Barganhão</td>
-                <td>Meta Ads</td>
-                <td>Alcance e aquecimento</td>
-                <td class="price">R$&thinsp;50/dia</td>
-              </tr>
-              <tr>
-                <td>Vaga vendedor carros</td>
-                <td>Meta Ads</td>
-                <td>Recrutamento</td>
-                <td class="price">R$&thinsp;20/dia<div class="small">5 dias</div></td>
-              </tr>
-              <tr>
-                <td>Vaga vendedor motos</td>
-                <td>Meta Ads</td>
-                <td>Recrutamento</td>
-                <td class="price">R$&thinsp;20/dia<div class="small">5 dias</div></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
-
-      <article class="callout-dark">
-        <div class="callout-badge">Recomendação de alocação</div>
-        <p><strong>Dos R$&thinsp;100/dia dos carros:</strong> 70% em Meta Ads para carrosséis, remarketing e liquidação. 30% em Google Ads para busca por modelo e intenção de compra.</p>
-        <p><strong>Dos R$&thinsp;50/dia do vídeo:</strong> 100% em Meta, com foco em alcance local, visualizações e públicos semelhantes.</p>
-        <p><strong>Estratégia tática:</strong> concentrar mais verba nos carros prioritários e redistribuir semanalmente conforme CPL, qualidade do lead e interesse real.</p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ CRIATIVOS ══════ -->
-<section class="sec-sm" style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Direção criativa</div>
-      <h2>Novo layout para os 10 carrosséis</h2>
-      <p>Card visualmente forte no feed e extremamente legível no celular. O formato prioriza carro, preço, chamada curta e CTA imediato.</p>
-    </div>
-
-    <div class="g3">
-      <article class="creative-card">
-        <div class="creative-top">
-          <span class="chip">Modelo 01</span>
-          <h4>Carro + preço em destaque</h4>
-        </div>
-        <div class="creative-body">
-          <p>Imagem dominante do veículo, preço grande, ano/modelo no topo e CTA "Chame agora no WhatsApp". Ideal para feed, stories e remarketing.</p>
-          <div class="creative-meta"><span>Foco: conversão</span><span>Leitura rápida</span></div>
-        </div>
-      </article>
-
-      <article class="creative-card">
-        <div class="creative-top">
-          <span class="chip">Modelo 02</span>
-          <h4>Liquida Carros</h4>
-        </div>
-        <div class="creative-body">
-          <p>Faixa promocional, urgência visual, selo de oportunidade e organização por lote. Excelente para campanhas com pressão comercial.</p>
-          <div class="creative-meta"><span>Foco: urgência</span><span>Baixa de estoque</span></div>
-        </div>
-      </article>
-
-      <article class="creative-card">
-        <div class="creative-top">
-          <span class="chip">Modelo 03</span>
-          <h4>Barganhão em vídeo</h4>
-        </div>
-        <div class="creative-body">
-          <p>Abertura forte, fala comercial objetiva, cortes rápidos, identidade da loja e fechamento chamando o lead pro WhatsApp.</p>
-          <div class="creative-meta"><span>Foco: topo e meio</span><span>Engajamento local</span></div>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ VEÍCULOS ══════ -->
-<section class="sec" style="background:var(--bg)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Estratégia por veículo</div>
-      <h2>Plano para cada carro do estoque</h2>
-      <p>Cada veículo precisa de uma narrativa própria — linha de atuação para anúncio, argumento de venda, prioridade e execução.</p>
-    </div>
-
-    <div class="g2">
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Toyota Etios 2017</h3><span class="pb pb-base">Giro de entrada</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Econômico e urbano</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Meta carrossel + Google</span></div>
-          </div>
-          <ul>
-            <li>Copy focada em economia, manutenção acessível e confiança Toyota.</li>
-            <li>Segmentar público que busca primeiro carro, troca de popular e uso diário.</li>
-            <li>No Google, ativar palavras ligadas a Etios 2017 e carro para trabalhar.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Jeep Renegade 2016</h3><span class="pb pb-fast">SUV de desejo</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>SUV urbano c/ apelo</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Meta vídeo/carrossel</span></div>
-          </div>
-          <ul>
-            <li>Explorar design, altura, presença e percepção de status no anúncio.</li>
-            <li>Segmentar público de SUV compacto, casais e famílias pequenas.</li>
-            <li>Remarketing forte para quem interagir com conteúdos de SUV.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Peugeot 3008</h3><span class="pb pb-base">Oferta de valor</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Conforto e custo-benefício</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Carrossel comparativo</span></div>
-          </div>
-          <ul>
-            <li>Trabalhar a percepção de "mais carro pelo valor" para comparadores.</li>
-            <li>Criativo com preço muito visível e destaque para espaço e acabamento.</li>
-            <li>Ideal para campanha de liquidação com CTA direto.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Toyota Corolla 2019</h3><span class="pb pb-hot">Queremos vender</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Sedã desejado e confiável</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Google intenção + Meta</span></div>
-          </div>
-          <ul>
-            <li>Veículo prioritário. Criar campanha exclusiva com verba destacada.</li>
-            <li>Google Ads com termos de busca por Corolla 2019, XEi/GLi/Altis.</li>
-            <li>Na Meta, criativo premium com ângulos e argumento forte.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Pajero TR4 2012</h3><span class="pb pb-fast">Nicho aventureiro</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>4x4 robusta e raiz</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Meta nichado + busca</span></div>
-          </div>
-          <ul>
-            <li>Apelo para robustez, estrada ruim, sítio e perfil off-road.</li>
-            <li>Criativo com linguagem forte: resistência, altura e tradição Pajero.</li>
-            <li>Trabalhar palavras-chave ligadas a 4x4 usada e SUV robusto.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Renault Kardian 2025</h3><span class="pb pb-hot">Queremos vender</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Atual e moderno</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Meta premium + Google</span></div>
-          </div>
-          <ul>
-            <li>Tratar como carro vitrine. Criativo elegante com percepção de novidade.</li>
-            <li>Separar verba e rotina de otimização própria pelo alto potencial comercial.</li>
-            <li>Campanha com linguagem de oportunidade para seminovo recente.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Kombi 1995 · 9 lugares</h3><span class="pb pb-fast">Nicho utilitário</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Trabalho e turismo</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Meta segmentado</span></div>
-          </div>
-          <ul>
-            <li>Criativos para transporte, lazer, eventos e colecionadores.</li>
-            <li>Explorar o diferencial dos 9 lugares, utilidade e versatilidade.</li>
-            <li>Bom candidato para conteúdo orgânico com impulsionamento.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Saveiro 2018</h3><span class="pb pb-fast">Utilitário comercial</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Trabalho e versatilidade</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Google serviço + Meta</span></div>
-          </div>
-          <ul>
-            <li>Foco em autônomos, pequenos empresários, entregas e obra.</li>
-            <li>Copys com "ideal para trabalhar", economia e praticidade.</li>
-            <li>Campanha com forte apelo racional, menos aspiracional.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Tiguan 2019</h3><span class="pb pb-fast">SUV premium</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Família premium</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Meta premium + busca</span></div>
-          </div>
-          <ul>
-            <li>Mostrar interior, conforto, sofisticação e sensação de categoria superior.</li>
-            <li>Público de maior ticket e comparadores de SUVs médios.</li>
-            <li>Remarketing com prova social e argumentos de credibilidade da loja.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="vehicle-card">
-        <div class="vehicle-head"><h3>Dodge Journey 2012</h3><span class="pb pb-base">Família e espaço</span></div>
-        <div class="vehicle-body">
-          <div class="v-metrics">
-            <div class="v-m"><b>Posicionamento</b><span>Espaço e perfil familiar</span></div>
-            <div class="v-m"><b>Mídia ideal</b><span>Meta comparativo</span></div>
-          </div>
-          <ul>
-            <li>Foco em espaço, conforto para família, viagens e custo-benefício.</li>
-            <li>Boa peça para carrossel de oportunidades e lote de liquidação.</li>
-            <li>Abordagem objetiva para reduzir objeção e destacar benefício real.</li>
-          </ul>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ CRONOGRAMA ══════ -->
-<section class="sec-sm" style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Cronograma de tráfego</div>
-      <h2>Plano de execução em 4 semanas</h2>
-      <p>Organização clara de implantação, aprendizado, ajuste criativo e escala de campanhas.</p>
-    </div>
-
-    <div class="timeline">
-      <article class="tl-item">
-        <div class="tl-week">Semana 1</div>
-        <div class="tl-content">
-          <h4>Estrutura e lançamento</h4>
-          <p>Configuração da conta, organização das campanhas, instalação de eventos e publicação dos primeiros criativos.</p>
-          <ul>
-            <li>Subir campanha de estoque com carrosséis e liquida carros.</li>
-            <li>Subir vídeo Barganhão em Meta Ads.</li>
-            <li>Subir campanhas de Google Ads para modelos prioritários.</li>
-            <li>Definir atendimento, mensagem inicial e tempo máximo de resposta.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="tl-item">
-        <div class="tl-week">Semana 2</div>
-        <div class="tl-content">
-          <h4>Leitura de dados e primeiros cortes</h4>
-          <p>Avaliar CTR, custo por conversa, qualidade do lead e veículos com maior interesse.</p>
-          <ul>
-            <li>Redistribuir verba entre os carros conforme resposta do mercado.</li>
-            <li>Cortar anúncios fracos e reforçar os melhores criativos.</li>
-            <li>Ativar remarketing com base em engajamento e cliques.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="tl-item">
-        <div class="tl-week">Semana 3</div>
-        <div class="tl-content">
-          <h4>Escala tática e pressão nos prioritários</h4>
-          <p>Foco em Corolla 2019 e Kardian 2025, sem perder tração dos veículos de entrada e utilitários.</p>
-          <ul>
-            <li>Ampliar orçamento dos grupos vencedores.</li>
-            <li>Lançar novas variações de copy e abertura do vídeo.</li>
-            <li>Fortalecer liquidação com urgência visual e prova social.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="tl-item">
-        <div class="tl-week">Semana 4</div>
-        <div class="tl-content">
-          <h4>Otimização fina e relatório comercial</h4>
-          <p>Fechamento do primeiro ciclo com visão de vendas, aprendizado e próximos movimentos.</p>
-          <ul>
-            <li>Comparar origem dos leads por canal e por veículo.</li>
-            <li>Identificar gargalos no atendimento e objeções recorrentes.</li>
-            <li>Planejar segundo mês com foco nas oportunidades validadas.</li>
-          </ul>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ RECRUTAMENTO ══════ -->
-<section class="sec" style="background:var(--bg)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Contratação com tráfego</div>
-      <h2>2 campanhas de recrutamento</h2>
-      <p>Além das campanhas de venda, vamos rodar duas ações de contratação com tráfego pago para reforçar o time comercial do grupo.</p>
-    </div>
-
-    <div class="g2">
-      <article class="job-card">
-        <div class="job-tag">Vaga 01</div>
-        <h3>Vendedor de Carros</h3>
-        <p>Campanha com foco em profissionais com experiência sólida, perfil comercial forte, disciplina de atendimento e capacidade de fechamento.</p>
-        <ul>
-          <li>Segmentar por interesse em vendas, veículos, concessionárias e atuação comercial.</li>
-          <li>Criativo direto com promessa clara: oportunidade real, estrutura e alta performance.</li>
-          <li>Formulário simples com nome, telefone, experiência e histórico em vendas.</li>
-        </ul>
-        <div class="job-budget-pill">Investimento: R$&thinsp;20/dia durante 5 dias</div>
-      </article>
-
-      <article class="job-card">
-        <div class="job-tag">Vaga 02</div>
-        <h3>Vendedor de Motos</h3>
-        <p>Campanha para atrair profissionais com experiência sólida em vendas, vivência com atendimento consultivo e rotina comercial ativa.</p>
-        <ul>
-          <li>Segmentar por vendas, motos, lojas de motos e atuação comercial local.</li>
-          <li>Falar em crescimento, comissão, metas e perfil que gosta de negociar.</li>
-          <li>Captação via formulário ou WhatsApp com triagem rápida da experiência.</li>
-        </ul>
-        <div class="job-budget-pill">Investimento: R$&thinsp;20/dia durante 5 dias</div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ KPIs ══════ -->
-<section class="sec-sm" style="background:var(--surface);border-top:1px solid var(--line)">
-  <div class="wrap">
-    <div class="sh">
-      <div class="eyebrow">Métricas de gestão</div>
-      <h2>Indicadores para acompanhar a operação</h2>
-      <p>O acompanhamento não deve ser só de clique. O que importa é a qualidade do lead, a velocidade da resposta e a evolução comercial por veículo.</p>
-    </div>
-
-    <div class="g4">
-      <article class="kpi">
-        <span class="kpi-label">CPL / conversa</span>
-        <strong class="kpi-val">Meta-chave</strong>
-        <p>Acompanhar custo por conversa iniciada e custo por lead aproveitável.</p>
-      </article>
-      <article class="kpi">
-        <span class="kpi-label">Tempo de resposta</span>
-        <strong class="kpi-val">Até 5 min</strong>
-        <p>Velocidade de atendimento influencia diretamente o fechamento do negócio.</p>
-      </article>
-      <article class="kpi">
-        <span class="kpi-label">Taxa de visita</span>
-        <strong class="kpi-val">Escalada</strong>
-        <p>Mensurar quantos leads agendam ou comparecem à loja presencialmente.</p>
-      </article>
-      <article class="kpi">
-        <span class="kpi-label">Venda por veículo</span>
-        <strong class="kpi-val">Prioridade</strong>
-        <p>Separar performance dos carros estratégicos dos demais anúncios.</p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ══════ FOOTER ══════ -->
-<footer class="footer">
-  <div class="wrap">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand-name">Magister Tech</div>
-        <div class="footer-brand-sub">Estratégia de performance, tráfego pago e estrutura comercial para o Grupo Baragão.</div>
-      </div>
-      <div class="footer-stamp">Apresentação Estratégica · 2026</div>
-    </div>
-  </div>
-</footer>
+                // Criar o link final e redirecionar
+                const url = `https://wa.me/${numeroWhatsApp}?text=${mensagem}`;
+                window.open(url, '_blank'); // Abre em nova guia
+            });
+        });
+    </script>
 
 </body>
 </html>

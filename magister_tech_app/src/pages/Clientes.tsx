@@ -4,9 +4,11 @@ import {
   Search, Plus, MoreVertical, X, User, Building2,
   Mail, Phone, Tag, Globe, StickyNote, FileText,
   Briefcase, ChevronRight, Archive, MessageSquare, CheckCircle, Activity,
-  KanbanSquare, LayoutGrid
+  KanbanSquare, LayoutGrid, Key, Copy
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { usePermission } from '../hooks/usePermission';
+import { apiFetch } from '../lib/api';
 import type { Client } from '../contexts/DataContext';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -17,7 +19,8 @@ const SEGMENTS = ['Software', 'Gestão', 'E-commerce', 'Consultoria', 'Saúde', 
 const ORIGINS = ['Indicação', 'LinkedIn', 'Google Ads', 'Cold Outreach', 'Evento', 'Site', 'Outro'];
 
 export default function Clientes() {
-  const { clients, contracts, projects, addClient, updateClient, addClientNote, pipeline, addPipelineDeal } = useData();
+  const { clients, contracts, projects, addClient, updateClient, deleteClient, addClientNote, pipeline, addPipelineDeal } = useData();
+  const { canViewSensitiveData } = usePermission();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
@@ -33,6 +36,10 @@ export default function Clientes() {
   });
   const [isEditingForm, setIsEditingForm] = useState(false);
 
+  // Modal de credenciais do portal gerado
+  const [portalCredentials, setPortalCredentials] = useState<{ email: string; tempPassword: string; loginUrl: string } | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+
   // WhatsApp N1 Native State
   const [waModal, setWaModal] = useState<{ phone: string; title: string } | null>(null);
   const [waMessage, setWaMessage] = useState('');
@@ -46,14 +53,26 @@ export default function Clientes() {
     return matchSearch && matchStatus;
   });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name || !form.company) return;
     if (isEditingForm && selectedClient) {
       updateClient(selectedClient.id, form);
       const updatedClient = { ...selectedClient, ...form };
       setSelectedClient(updatedClient);
     } else {
-      addClient(form);
+      try {
+        const res = await apiFetch<any>('/api/clients', {
+          method: 'POST',
+          body: JSON.stringify({ ...form, generatePortalAccess: true }),
+        });
+        if (res.portalAccess) {
+          setPortalCredentials(res.portalAccess);
+        }
+        // Refresh data via DataContext
+        addClient(form);
+      } catch (e) {
+        addClient(form);
+      }
     }
     setForm({ name: '', company: '', email: '', phone: '', segment: 'Software', status: 'prospect', origin: 'Site' });
     setShowForm(false);
@@ -71,13 +90,10 @@ export default function Clientes() {
     if (!waModal || !waMessage) return;
     setIsSendingWA(true);
     try {
-      const token = localStorage.getItem('magister_token');
-      const res = await fetch('http://localhost:3001/api/whatsapp/send', {
+      const data = await apiFetch<any>('/api/whatsapp/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ phone: waModal.phone, message: waMessage })
+        body: JSON.stringify({ phone: waModal.phone, message: waMessage }),
       });
-      const data = await res.json();
       if (data.ok) {
         alert('Mensagem N1 enviada para o cliente!');
         setWaModal(null);
@@ -94,6 +110,16 @@ export default function Clientes() {
 
   const clientContracts = selectedClient ? contracts.filter(c => c.clientId === selectedClient.id) : [];
   const clientProjects = selectedClient ? projects.filter(p => p.clientId === selectedClient.id) : [];
+
+  const copyCredentials = () => {
+    if (!portalCredentials) return;
+    const text = `Portal Magister Tech:\nURL: ${window.location.origin}${portalCredentials.loginUrl}\nEmail: ${portalCredentials.email}\nSenha: ${portalCredentials.tempPassword}`;
+    navigator.clipboard.writeText(text);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 3000);
+  };
+
+
 
   return (
     <div className="animate-in" style={{ paddingBottom: 40 }}>
@@ -274,13 +300,18 @@ export default function Clientes() {
               </div>
 
               {/* Tabs */}
-              <div style={{ display: 'flex', gap: 24 }}>
-                {[['resumo', '📌 Ficha Cadastral'], ['contratos', '📄 Contratos Ativos'], ['projetos', '📊 Entregas / Projetos'], ['notas', '💬 Histórico de Interações']].map(([tab, label]) => (
+              <div style={{ display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 4 }}>
+                {[
+                  ['resumo', '📌 Ficha Cadastral'],
+                  ...(canViewSensitiveData() ? [['contratos', '📄 Contratos Ativos']] : []),
+                  ['projetos', '📊 Entregas / Projetos'],
+                  ['notas', '💬 Histórico']
+                ].map(([tab, label]) => (
                   <button key={tab} onClick={() => setActiveTab(tab)} style={{
                     padding: '12px 0', border: 'none', background: 'transparent', cursor: 'pointer',
                     fontSize: 14, fontWeight: 700, color: activeTab === tab ? 'var(--primary)' : 'var(--text-muted)',
                     borderBottom: activeTab === tab ? '3px solid var(--primary)' : '3px solid transparent',
-                    transition: 'var(--transition)'
+                    transition: 'var(--transition)', whiteSpace: 'nowrap'
                   }}>{label}</button>
                 ))}
               </div>
@@ -334,13 +365,12 @@ export default function Clientes() {
                      </div>
                    </div>
 
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 16, paddingTop: 24, borderTop: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
                      <button className="btn btn-primary" onClick={() => { setForm({ name: selectedClient.name, company: selectedClient.company, email: selectedClient.email, phone: selectedClient.phone, segment: selectedClient.segment, status: selectedClient.status, origin: selectedClient.origin }); setIsEditingForm(true); setShowForm(true); }}>
-                        Editar Dados Cadastrais
+                        Editar Dados
                      </button>
                      {selectedClient.status === 'prospect' && (
                         <button className="btn btn-primary" style={{ background: 'var(--indigo)' }} onClick={() => {
-                           // Procura a coluna "Novos Leads" ou a primeira coluna
                            if (pipeline.length > 0) {
                              addPipelineDeal(pipeline[0].id, {
                                title: selectedClient.company,
@@ -354,19 +384,27 @@ export default function Clientes() {
                              alert('Lead transferido para o Pipeline Comercial com sucesso!');
                            }
                         }}>
-                           Transferir para Painel Pipeline
+                           Mandar p/ Pipeline
                         </button>
                      )}
                     {selectedClient.status !== 'ativo' && (
                        <button className="btn btn-outline" onClick={() => updateClient(selectedClient.id, { status: 'ativo' })} style={{ color: 'var(--success)', borderColor: 'var(--success)' }}>
-                          <CheckCircle size={16} /> Coverter para Conta Ativa
+                          <CheckCircle size={14} /> Ativar Conta
                        </button>
                     )}
                     {selectedClient.status !== 'inativo' && (
-                       <button className="btn btn-ghost" onClick={() => updateClient(selectedClient.id, { status: 'inativo' })} style={{ color: 'var(--danger)' }}>
-                           Arquivar Conta (Churn)
+                       <button className="btn btn-ghost" onClick={() => updateClient(selectedClient.id, { status: 'inativo' })} style={{ color: 'var(--warning)', borderColor: 'transparent' }}>
+                           <Archive size={14} style={{ marginRight: 6 }} />Inativar/Arquivar
                        </button>
                     )}
+                    <button className="btn btn-ghost" onClick={() => {
+                      if (confirm('Tem certeza absoluta que deseja excluir este cliente permanentemente da base? Todos os contratos sumirão.')) {
+                        deleteClient(selectedClient.id);
+                        setSelectedClient(null);
+                      }
+                    }} style={{ color: 'var(--danger)', borderColor: 'transparent', marginLeft: 'auto' }}>
+                       <X size={14} style={{ marginRight: 6 }} />Excluir Definitivo
+                    </button>
                   </div>
                 </div>
               )}
@@ -503,6 +541,54 @@ export default function Clientes() {
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancelar</button>
               <button className="btn btn-primary" onClick={handleAdd} disabled={!form.name || !form.company}>{isEditingForm ? 'Salvar Modificações' : <><Plus size={16}/> Inserir no CRM</>}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL DE CREDENCIAIS DO PORTAL ─────────────────────────── */}
+      {portalCredentials && (
+        <div className="modal-overlay" onClick={() => setPortalCredentials(null)}>
+          <div className="modal animate-scale-in" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Key size={22} color="var(--primary)" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-main)' }}>Acesso ao Portal Gerado</h3>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>Repasse estas credenciais ao cliente</p>
+              </div>
+              <button className="btn-icon" onClick={() => setPortalCredentials(null)} style={{ marginLeft: 'auto' }}><X size={18} /></button>
+            </div>
+
+            <div style={{ background: 'var(--bg-subtle)', borderRadius: 12, padding: 20, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>URL de Login</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary)' }}>{window.location.origin}/login</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Email</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-main)', fontFamily: 'monospace' }}>{portalCredentials.email}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Senha Temporária</p>
+                <p style={{ fontSize: 18, fontWeight: 900, color: 'var(--warning)', fontFamily: 'monospace', letterSpacing: '0.05em' }}>{portalCredentials.tempPassword}</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 16, lineHeight: 1.6 }}>
+              ⚠️ Guarde esta senha — ela não será exibida novamente. Se precisar de um novo acesso, use o botão "Resetar Acesso Portal" na ficha do cliente.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+              <button className="btn btn-ghost" onClick={() => setPortalCredentials(null)} style={{ flex: 1 }}>Fechar</button>
+              <button
+                className="btn btn-primary"
+                onClick={copyCredentials}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: copySuccess ? 'var(--success)' : undefined }}
+              >
+                {copySuccess ? <><CheckCircle size={16} /> Copiado!</> : <><Copy size={16} /> Copiar Credenciais</>}
+              </button>
             </div>
           </div>
         </div>

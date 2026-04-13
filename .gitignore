@@ -34,3 +34,10 @@ Thumbs.db
 magister_tech_backend/.wa_session/
 magister_tech_backend/.wwebjs_cache/
 magister_tech_backend/.wwebjs_auth/
+
+# Arquivos de Deploy e Archives (Grandes)
+magister_deploy.tar.gz
+magister_deploy.zip
+*.tar.gz
+*.zip
+relatorio-baragao.html

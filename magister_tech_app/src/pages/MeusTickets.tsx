@@ -11,23 +11,21 @@ export default function MeusTickets() {
   const { tickets, addTicketMessage } = useData();
   const navigate = useNavigate();
   
-  const [clientPhone, setClientPhone] = useState<string | null>(localStorage.getItem('mstr_client_phone'));
+  const [clientPhone, setClientPhone] = useState<string | null>(null);
   const [phoneInput, setPhoneInput] = useState('');
   const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
-
-  // Sincroniza login
+ 
+  // Sincroniza login (Apenas em memória para sessao aberta)
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const sanitized = phoneInput.replace(/\D/g, '');
     if (sanitized.length >= 8) {
-      localStorage.setItem('mstr_client_phone', sanitized);
       setClientPhone(sanitized);
     }
   };
-
+ 
   const handleLogout = () => {
-    localStorage.removeItem('mstr_client_phone');
     setClientPhone(null);
     setActiveTicketId(null);
   };

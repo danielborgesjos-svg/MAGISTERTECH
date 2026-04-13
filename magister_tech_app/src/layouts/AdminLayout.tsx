@@ -4,21 +4,20 @@ import {
   LayoutDashboard, KanbanSquare, Users, FileText,
   LogOut, Terminal, Calendar, PenTool,
   Briefcase, Landmark, Moon, Sun, Target, UserCircle,
-  Bell, Search, ChevronRight, Settings, X, Rss, Activity, Wifi, MessageCircle, Network, Fingerprint
+  Bell, Search, ChevronRight, Settings, X, Rss, Activity, Wifi, MessageCircle, Network, Fingerprint, Headset, BarChart2, Eye, EyeOff, CheckCircle
 } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 import { usePermission } from '../hooks/usePermission';
 import { useData } from '../contexts/DataContext';
 
 const AdminLayout = () => {
-  const { user, loading, logout } = useContext(AuthContext);
+  const { user, loading, theme, logout, updatePreferences, impersonating, stopImpersonation } = useContext(AuthContext);
   const { canViewModule } = usePermission();
   const { alerts, feed } = useData();
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('mstr_dark') === '1');
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
   if (loading) {
     return (
       <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
@@ -33,15 +32,9 @@ const AdminLayout = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   const toggleTheme = () => {
-    const next = !darkMode;
-    setDarkMode(next);
-    document.body.classList.toggle('dark-mode', next);
-    localStorage.setItem('mstr_dark', next ? '1' : '0');
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    updatePreferences({ theme: nextTheme });
   };
-
-  if (darkMode && !document.body.classList.contains('dark-mode')) {
-    document.body.classList.add('dark-mode');
-  }
 
   const alertCount = alerts.length;
   const dangerAlerts = alerts.filter(a => a.type === 'danger');
@@ -76,6 +69,7 @@ const AdminLayout = () => {
       items: [
         { to: '/admin/projetos', icon: Briefcase, label: 'Projetos', module: 'projetos' },
         { to: '/admin/conteudo', icon: PenTool, label: 'Conteúdo', module: 'conteudo' },
+        { to: '/admin/aprovacoes', icon: CheckCircle, label: 'Aprovações', module: 'conteudo' },
         { to: '/admin/hub-clientes', icon: Activity, label: 'Hub de Clientes', module: 'cliente-hub' },
         { to: '/admin/team/diagrama', icon: Network, label: 'Diagrama de Resp.', module: 'projetos' },
       ]
@@ -84,15 +78,18 @@ const AdminLayout = () => {
       label: 'Administrativo',
       items: [
         { to: '/admin/financeiro', icon: Landmark, label: 'Financeiro', module: 'financeiro' },
+        { to: '/admin/kpis', icon: BarChart2, label: 'KPIs Estratégicos', module: 'kpis' },
         { to: '/admin/equipe', icon: UserCircle, label: 'Equipe / RH', module: 'equipe' },
         { to: '/admin/conectividade', icon: Wifi, label: 'WhatsApp', module: 'dashboard' },
+        { to: '/suporte', icon: Headset, label: 'Portal de Suporte (Público)', module: 'dashboard' },
         { to: '/admin/audit', icon: Fingerprint, label: 'Logs Master', module: 'dashboard' },
+        { to: '/admin/view-as', icon: Eye, label: 'Visualizar Como', module: 'view-as' },
       ]
     },
   ];
 
   return (
-    <div className={`admin-layout ${darkMode ? 'dark-mode' : ''}`}>
+    <div className={`admin-layout ${theme === 'dark' ? 'dark-mode' : ''}`}>
       {/* ─── SIDEBAR ─────────────────────────────────────── */}
       <aside className={`admin-sidebar ${collapsed ? 'collapsed' : ''}`} style={{ width: collapsed ? 72 : 256 }}>
         {/* Logo */}
@@ -153,13 +150,37 @@ const AdminLayout = () => {
 
         {/* User Card */}
         {!collapsed && (
-          <div className="user-card-sidebar">
-            <div className="avatar avatar-sm" style={{ background: 'var(--primary)' }}>
-              {user.name.substring(0, 2).toUpperCase()}
+          <div className="user-card-sidebar" style={{ cursor: 'default' }}>
+            <div
+              onClick={() => navigate('/admin/perfil')}
+              style={{
+                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                background: user.avatar ? `url(${user.avatar}) center/cover` : 'var(--primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13, fontWeight: 900, color: '#fff', border: '2px solid rgba(255,255,255,0.2)',
+                cursor: 'pointer'
+              }}
+            >
+              {!user.avatar && user.name.substring(0, 2).toUpperCase()}
             </div>
             <div style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name.split(' ')[0]}</div>
-              <div style={{ fontSize: 10, color: 'var(--sidebar-text)', textTransform: 'capitalize' }}>{user.role}</div>
+              <div 
+                onClick={() => navigate('/admin/perfil')}
+                style={{ fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}
+              >
+                {user.name.split(' ')[0]}
+              </div>
+              <div 
+                onClick={(e) => { e.stopPropagation(); setRoleModalOpen(true); }}
+                style={{ 
+                   display: 'inline-block',
+                   fontSize: 10, fontWeight: 800, color: 'var(--primary)', 
+                   textTransform: 'uppercase', background: 'rgba(99,102,241,0.15)',
+                   padding: '2px 6px', borderRadius: 4, marginTop: 4, cursor: 'pointer', border: '1px solid rgba(99,102,241,0.3)'
+                }}
+              >
+                {user.sector || user.role} <ChevronRight size={10} style={{ display: 'inline', marginBottom: -2 }} />
+              </div>
             </div>
           </div>
         )}
@@ -172,7 +193,7 @@ const AdminLayout = () => {
                 <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
               </button>
               <button onClick={toggleTheme} className="nav-item" style={{ justifyContent: 'center', padding: '10px' }}>
-                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
               <button onClick={() => { logout(); navigate('/login'); }} className="nav-item" style={{ justifyContent: 'center', padding: '10px', color: 'var(--danger)' }}>
                 <LogOut size={18} />
@@ -181,8 +202,11 @@ const AdminLayout = () => {
           ) : (
             <>
               <button onClick={toggleTheme} className="nav-item">
-                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-                {darkMode ? 'Modo Claro' : 'Modo Escuro'}
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+              </button>
+              <button onClick={() => navigate('/admin/perfil')} className="nav-item">
+                <UserCircle size={18} /> Meu Perfil
               </button>
               <button onClick={() => navigate('/admin/config')} className="nav-item">
                 <Settings size={18} /> Configurações
@@ -247,17 +271,93 @@ const AdminLayout = () => {
               )}
             </div>
 
-            {/* User avatar → go to config */}
-            <div className="avatar avatar-sm" style={{ background: 'var(--primary)', cursor: 'pointer' }}
-              title={user.name} onClick={() => navigate('/admin/config')}>
-              {user.name.substring(0, 2).toUpperCase()}
+            {/* User avatar → profile page */}
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: user.avatar ? `url(${user.avatar}) center/cover` : 'var(--primary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 900, color: '#fff',
+                cursor: 'pointer', border: '2px solid var(--border)', flexShrink: 0
+              }}
+              title={user.name}
+              onClick={() => navigate('/admin/perfil')}
+            >
+              {!user.avatar && user.name.substring(0, 2).toUpperCase()}
             </div>
           </div>
         </header>
 
         {/* Page Content */}
         <section className="admin-content">
+          {/* ─── BANNER IMPERSONATION ─ */}
+          {impersonating && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px',
+              background: 'color-mix(in srgb, var(--warning) 12%, var(--bg-card))',
+              border: '1px solid var(--warning)', borderRadius: 10, marginBottom: 20,
+            }}>
+              <Eye size={16} color="var(--warning)" style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--warning)' }}>
+                  Visualizando como: {user?.name}
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 8 }}>
+                  ({user?.role}) — Você está em modo de debug
+                </span>
+              </div>
+              <button
+                className="btn btn-outline"
+                style={{ borderColor: 'var(--warning)', color: 'var(--warning)', fontSize: 12, padding: '6px 14px', gap: 6 }}
+                onClick={stopImpersonation}
+              >
+                <EyeOff size={13} /> Sair da Visualização
+              </button>
+            </div>
+          )}
           <Outlet />
+          {/* Modal Profile Badge */}
+          {roleModalOpen && (
+            <div className="modal-overlay" onClick={() => setRoleModalOpen(false)}>
+              <div className="modal" onClick={e => e.stopPropagation()} style={{ padding: 0, overflow: 'hidden', maxWidth: 400 }}>
+                 <div style={{ padding: '24px', background: 'var(--primary-glow)', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                       <div>
+                         <p style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Setor de Atuação</p>
+                         <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-main)', margin: 0 }}>{user.sector || user.role}</h2>
+                       </div>
+                       <button className="btn-icon" onClick={() => setRoleModalOpen(false)}><X size={16} /></button>
+                    </div>
+                 </div>
+                 <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Você possui acessos vinculados à sua função. Abaixo estão listadas as suas responsabilidades de sistema com base no seu cargo atual.</p>
+                    
+                    <div className="card" style={{ padding: 16, background: 'var(--bg-subtle)' }}>
+                       {user.sector === 'DIRETORIA' ? (
+                          <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Acesso Global. Gerenciamento financeiro livre, contratos, gestão da equipe e KPIs Masters liberados.</p>
+                       ) : user.sector === 'COMERCIAL' ? (
+                          <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Responsável por Captação de Leads, Funil do CRM, WhatsApp (Inbox) e Propostas Comerciais.</p>
+                       ) : user.sector === 'CRIATIVO' || user.sector === 'CONTEÚDO' ? (
+                          <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Responsável visual e editorial. Foco em Kanban de Projetos, Upload de Mídia e Hub de Aprovações de Clientes.</p>
+                       ) : user.sector === 'TECNOLOGIA' ? (
+                          <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Atuação no Uptime Supporte. Controle de chamados/Tickets técnicos e resolução avançada (API).</p>
+                       ) : (
+                          <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Acesso padrão de módulo operacional (Projetos e Feed).</p>
+                       )}
+                    </div>
+                    
+                    {user.permissions && user.permissions.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                        {user.permissions.map((p: string) => (
+                           <span key={p} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'var(--border)', color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase' }}>{p}</span>
+                        ))}
+                      </div>
+                    )}
+                 </div>
+              </div>
+            </div>
+          )}
+
         </section>
       </main>
 

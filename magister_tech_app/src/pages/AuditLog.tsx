@@ -1,38 +1,9 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Clock, User, Fingerprint } from 'lucide-react';
-
-interface AuditRecord {
-  id: string;
-  action: string;
-  module: string;
-  details: string;
-  createdAt: string;
-  userId: string;
-  user: {
-    name: string;
-    role: string;
-  };
-}
+import { useData } from '../contexts/DataContext';
 
 export default function AuditLog() {
-  const [logs, setLogs] = useState<AuditRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const token = localStorage.getItem('magister_token');
-        const res = await axios.get('/api/audit', { headers: { Authorization: `Bearer ${token}` } });
-        setLogs(res.data);
-      } catch (err) {
-        console.error('Falha ao buscar auditoria', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLogs();
-  }, []);
+  const { logs, apiReady } = useData();
+  const loading = !apiReady;
 
   return (
     <div className="animate-in" style={{ paddingBottom: 40, maxWidth: 1000, margin: '0 auto' }}>
@@ -70,8 +41,8 @@ export default function AuditLog() {
                   </td>
                   <td style={{ padding: '12px 16px', fontWeight: 700 }}>
                     <User size={12} style={{ display: 'inline', marginBottom: -2, marginRight: 4 }}/> 
-                    {log.user?.name}
-                    <span className="badge" style={{ fontSize: 9, marginLeft: 6, background: 'var(--danger-glow)', color: 'var(--danger)' }}>{log.user?.role}</span>
+                    {log.userName}
+                    <span className="badge" style={{ fontSize: 9, marginLeft: 6, background: 'var(--danger-glow)', color: 'var(--danger)' }}>{log.userRole}</span>
                   </td>
                   <td style={{ padding: '12px 16px', fontWeight: 900, color: 'var(--text-main)' }}>{log.action}</td>
                   <td style={{ padding: '12px 16px' }}><span className="badge" style={{ background: 'var(--bg-card)' }}>{log.module}</span></td>

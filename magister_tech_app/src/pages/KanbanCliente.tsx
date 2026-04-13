@@ -6,7 +6,7 @@ import {
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import axios from 'axios';
+import { apiFetch } from '../lib/api';
 import {
   ArrowLeft, GripVertical, Calendar, Flag, User, AlertTriangle,
   Clock, Filter, Plus, Activity, X, RefreshCw
@@ -296,10 +296,9 @@ function NewTaskModal({
     setSaving(true);
     setErr('');
     try {
-      const token = localStorage.getItem('magister_token');
-      const { data } = await axios.post(
-        '/api/tasks',
-        {
+      const data = await apiFetch<KanbanTask>('/api/tasks', {
+        method: 'POST',
+        body: JSON.stringify({
           title: form.title,
           tipo: form.tipo,
           priority: form.priority,
@@ -307,9 +306,8 @@ function NewTaskModal({
           assigneeId: form.assigneeId || undefined,
           status: form.status,
           clientId: clienteId,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        }),
+      });
       onCreated(data);
       onClose();
     } catch {
@@ -412,21 +410,18 @@ export default function KanbanCliente() {
   const [filterTipo, setFilterTipo] = useState('');
   const [addModal, setAddModal] = useState<ColumnId | null>(null);
 
-  const token = localStorage.getItem('magister_token');
-  const headers = { Authorization: `Bearer ${token}` };
-
   const loadData = async () => {
     if (!clienteId) return;
     setLoading(true);
     try {
-      const [tasksRes, usersRes, clienteRes] = await Promise.all([
-        axios.get(`/api/clients/${clienteId}/kanban`, { headers }),
-        axios.get('/api/users', { headers }),
-        axios.get(`/api/clients/${clienteId}`, { headers }),
+      const [tasks, users, cliente] = await Promise.all([
+        apiFetch<KanbanTask[]>(`/api/clients/${clienteId}/kanban`),
+        apiFetch<{ id: string; name: string }[]>('/api/users'),
+        apiFetch<{ name: string }>(`/api/clients/${clienteId}`),
       ]);
-      setTasks(tasksRes.data);
-      setUsers(usersRes.data);
-      setClienteName(clienteRes.data.name || '');
+      setTasks(tasks);
+      setUsers(users);
+      setClienteName(cliente.name || '');
     } catch (e) {
       console.error('Erro ao carregar kanban:', e);
     } finally {
@@ -486,7 +481,10 @@ export default function KanbanCliente() {
     );
 
     try {
-      await axios.put(`/api/tasks/${activeId}/status`, { status: newStatus }, { headers });
+      await apiFetch(`/api/tasks/${activeId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
+      });
     } catch {
       setTasks(prevTasks);
     }

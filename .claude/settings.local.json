@@ -16,7 +16,13 @@
       "Bash(\"/c/Users/Danie/AppData/Local/Microsoft/WinGet/Packages/xhcoding.sshpass-win32_Microsoft.Winget.Source_8wekyb3d8bbwe/sshpass.exe\" -V)",
       "Bash(python -c \"import paramiko; print\\('paramiko OK'\\)\")",
       "Bash(python:*)",
-      "Bash(ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=none -o BatchMode=yes root@187.127.11.1)"
+      "Bash(ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=none -o BatchMode=yes root@187.127.11.1)",
+      "WebFetch(domain:www.shineray.com.br)",
+      "Bash(curl -s \"https://www.shineray.com.br/produto/pt4/\")",
+      "WebFetch(domain:graph.facebook.com)",
+      "WebFetch(domain:developers.hostinger.com)",
+      "WebFetch(domain:api.hostinger.com)",
+      "Bash(curl:*)"
     ]
   }
 }

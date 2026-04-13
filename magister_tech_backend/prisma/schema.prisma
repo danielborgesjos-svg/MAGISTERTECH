@@ -20,7 +20,10 @@ model User {
   sector       String?
   phone        String?
   avatar       String?
+  coverUrl     String?   // URL da imagem de capa do perfil
+  bio          String?   // Apresentação pessoal
   isActive     Boolean   @default(true)
+  preferences  String?   // JSON com configurações de UI (ex: theme: 'dark' | 'light')
   tasks        Task[]    @relation("TaskAssignee")
   events       Event[]
   contents     Content[]
@@ -36,31 +39,36 @@ model User {
 // CLIENTS (CRM)
 // ============================================================
 model Client {
-  id           String    @id @default(uuid())
-  name         String
-  company      String?
-  email        String?
-  phone        String?
-  cnpj         String?
-  status       String    @default("ATIVO")
-  briefing     String?
-  scope        String?
-  strategies   String?
-  observations String?
-  segment      String?
-  responsible  String?
+  id             String    @id @default(uuid())
+  name           String
+  company        String?
+  email          String?
+  phone          String?
+  cnpj           String?
+  status         String    @default("ATIVO")
+  briefing       String?
+  scope          String?
+  strategies     String?
+  observations   String?
+  segment        String?
+  responsible    String?
   // Health score 0-100 para medir saúde do cliente
-  healthScore  Float     @default(0)
-  projects     Project[]
-  contracts    Contract[]
-  contents     Content[]
-  events       Event[]
-  transactions Transaction[]
-  interactions Interaction[]
-  tasks        Task[]
-  faturas      Fatura[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  healthScore    Float     @default(0)
+  // Portal do Cliente: ID do User CLIENTE gerado automaticamente
+  clientUserId   String?   // UUID do User com role=CLIENTE vinculado a essa empresa
+  projects       Project[]
+  contracts      Contract[]
+  contents       Content[]
+  events         Event[]
+  transactions   Transaction[]
+  interactions   Interaction[]
+  tasks          Task[]
+  faturas        Fatura[]
+  tickets        Ticket[]
+  waLeads        WaLead[]
+  approvals      Approval[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // ============================================================
@@ -288,3 +296,219 @@ model AuditLog {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
+
+// ============================================================
+// TICKETS (SUPORTE)
+// ============================================================
+model Ticket {
+  id              String    @id @default(uuid())
+  protocol        String    @unique
+  subject         String
+  description     String?
+  status          String    @default("NOVO") // NOVO | EM_ATENDIMENTO | RESOLVIDO | FECHADO
+  priority        String    @default("MEDIA") // BAIXA | MEDIA | ALTA | CRITICA
+  clientName      String
+  clientWhatsapp  String
+  clientId        String?
+  client          Client?   @relation(fields: [clientId], references: [id])
+  messages        TicketMessage[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model TicketMessage {
+  id          String   @id @default(uuid())
+  ticketId    String
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorName  String
+  text        String
+  isInternal  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// CHAT & COMUNICAÇÃO
+// ============================================================
+model ChatChannel {
+  id          String   @id @default(uuid())
+  name        String
+  icon        String?
+  description String?
+  messages    ChatMessage[]
+  createdAt   DateTime @default(now())
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  channelId   String
+  channel     ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  senderName  String
+  senderId    String?
+  text        String
+  timestamp   DateTime @default(now())
+}
+
+model FeedPost {
+  id          String   @id @default(uuid())
+  authorName  String
+  authorId    String?
+  text        String
+  image       String?
+  type        String   @default("news") // news | alert | win
+  // likes como JSON ou relação m-n. Simplificando JSON p/ MVP.
+  likes       String   @default("[]") 
+  comments    FeedComment[]
+  createdAt   DateTime @default(now())
+}
+
+model FeedComment {
+  id          String   @id @default(uuid())
+  postId      String
+  post        FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorName  String
+  text        String
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// METAS & INDICADORES (GOALS)
+// ============================================================
+model Goal {
+  id          String   @id @default(uuid())
+  title       String
+  target      Float
+  current     Float    @default(0)
+  unit        String   @default("UN")
+  color       String   @default("var(--primary)")
+  deadline    DateTime?
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// BOARD COLUMNS (CUSTOM STATUS)
+// ============================================================
+model BoardColumn {
+  id          String   @id @default(uuid())
+  boardType   String   // KANBAN | PIPELINE
+  title       String
+  color       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// WHATSAPP BOT (Atendimento Automático)
+// ============================================================
+model WaBotRule {
+  id        String   @id @default(uuid())
+  keyword   String   // palavra-chave que ativa a regra (case-insensitive)
+  response  String   // resposta enviada automaticamente
+  isActive  Boolean  @default(true)
+  order     Int      @default(0) // ordem de prioridade (menor = maior prioridade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WaBotConfig {
+  id         String  @id @default(uuid())
+  isEnabled  Boolean @default(false)  // liga/desliga o bot globalmente
+  greeting   String? // mensagem de boas-vindas (enviada na 1a msg do dia)
+  awayMsg    String? // mensagem de ausência
+  workHours  String? // JSON: {start: '08:00', end: '18:00', days: [1,2,3,4,5]}
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Histórico persistente do cockpit (janela deslizante 100 msgs)
+model WaChatMessage {
+  id          String   @id @default(uuid())
+  waMessageId String   @unique // ID do WhatsApp
+  chatId      String   // ID do contato/conversa
+  authorName  String
+  text        String
+  fromMe      Boolean
+  timestamp   DateTime
+  createdAt   DateTime @default(now())
+}
+
+// Controle de saudação diária (evita flood)
+model WaGreeting {
+  id             String   @id @default(uuid())
+  clientWhatsapp String   @unique
+  lastGreetingAt DateTime @default(now())
+}
+
+// Silenciamento do bot (Handoff) quando um humano intervém
+model WaHandoff {
+  id             String   @id @default(uuid())
+  clientWhatsapp String   @unique
+  muteUntil      DateTime
+  createdAt      DateTime @default(now())
+}
+
+// ============================================================
+// PIPELINE DE LEADS (WHATSAPP)
+// ============================================================
+
+// Lead capturado via WhatsApp para o CRM
+model WaLead {
+  id           String   @id @default(uuid())
+  phone        String   @unique
+  name         String?
+  // Estágio no pipeline
+  stage        String   @default("NOVO_LEAD") // NOVO_LEAD | CONTATO_FEITO | PROPOSTA | FECHADO | PERDIDO
+  // Vínculo com cliente da Magister (qual cliente do CRM logado é dono deste lead)
+  clientId     String?
+  client       Client?  @relation(fields: [clientId], references: [id])
+  // Notas adicionadas pela equipe
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ============================================================
+// TECNOLOGIA E INFRAESTRUTURA (KPIs)
+// ============================================================
+model TechService {
+  id        String   @id @default(uuid())
+  nome      String
+  tipo      String   // infra | dev | dados | integ | ia
+  versao    String?
+  status    String   @default("operacional") // operacional | standby | critico
+  uptime    Float    @default(99.9)
+  custo_mes Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================
+// PROCESSOS E SLA (KPIs)
+// ============================================================
+model AgencyProcess {
+  id          String   @id @default(uuid())
+  nome        String
+  area        String
+  responsavel String
+  slaHoras    Int      @default(24)
+  realizado   Int      @default(0) // tempo atual ou mdia realizada
+  status      String   @default("ok") // ok | atraso | critico
+  automacao   Int      @default(0) // percentual de automao (0-100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================
+// APROVAÇÕES (CRIATIVOS, VÍDEOS E IDENTIDADE VISUAL)
+// ============================================================
+model Approval {
+  id          String   @id @default(uuid())
+  title       String
+  type        String   @default("Criativo") // Criativo, Video, Tráfego, Identidade Visual
+  fileUrl     String?  // Onde ficará guardado o arquivo vindo pelo Multer
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  respondedBy String?  // Quem aprovou/recusou (Nome/Whatsapp)
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

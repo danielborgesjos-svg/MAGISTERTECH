@@ -7,6 +7,22 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const supportStyles = `
+  .support-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 40px;
+  }
+  @media (max-width: 768px) {
+    .support-grid {
+      grid-template-columns: 1fr;
+    }
+    .form-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+`;
+
 export default function PortalSuporte() {
   const { addTicket } = useData();
   const navigate = useNavigate();
@@ -18,7 +34,8 @@ export default function PortalSuporte() {
     subject: '',
     category: 'suporte' as any,
     priority: 'media' as any,
-    description: ''
+    description: '',
+    socialLinks: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +45,14 @@ export default function PortalSuporte() {
     setLoading(true);
     // Simulação de delay para feeling premium
     setTimeout(() => {
-      addTicket(formData);
+      const finalDescription = formData.socialLinks 
+        ? `${formData.description}\n\n---\n**Mídias e Links Anexados:**\n${formData.socialLinks}`
+        : formData.description;
+        
+      addTicket({
+        ...formData,
+        description: finalDescription
+      });
       setLoading(false);
       setSent(true);
     }, 1200);
@@ -60,7 +84,18 @@ export default function PortalSuporte() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f9fc', color: '#0f172a' }}>
+    <div style={{ 
+      minHeight: '100vh', background: '#f8f9fc', color: '#0f172a',
+      '--bg': '#f8f9fc',
+      '--bg-card': '#ffffff',
+      '--bg-subtle': '#f1f5f9',
+      '--text-main': '#0f172a',
+      '--text-sec': '#334155',
+      '--text-muted': '#64748b',
+      '--border': '#e2e8f0'
+    } as any}>
+      <style>{supportStyles}</style>
+
       {/* Header Portal */}
       <header style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '16px 0' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -78,7 +113,7 @@ export default function PortalSuporte() {
         </div>
       </header>
 
-      <main style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px', display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 40 }}>
+      <main className="support-grid" style={{ maxWidth: 1000, margin: '40px auto', padding: '0 20px' }}>
         
         {/* Left: Form */}
         <div className="animate-in">
@@ -88,7 +123,7 @@ export default function PortalSuporte() {
           </div>
 
           <form className="card" style={{ padding: 32, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }} onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
               <div>
                 <label className="form-label">Seu Nome *</label>
                 <input 
@@ -122,7 +157,7 @@ export default function PortalSuporte() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
               <div>
                 <label className="form-label">Categoria</label>
                 <select 
@@ -162,6 +197,18 @@ export default function PortalSuporte() {
                 value={formData.description}
                 onChange={e => setFormData({...formData, description: e.target.value})}
               />
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label className="form-label">Mídias Sociais / Links Auxiliares (Opcional)</label>
+              <textarea 
+                className="input" 
+                rows={2} 
+                placeholder="Cole aqui links de redes sociais, prints hospedados ou páginas do erro..."
+                value={formData.socialLinks}
+                onChange={e => setFormData({...formData, socialLinks: e.target.value})}
+              />
+              <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>Essas informações serão anexadas no corpo do chamado para o time técnico.</p>
             </div>
 
             <button 

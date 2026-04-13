@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { AuthContext } from '../../contexts/AuthContext';
+import { apiLogin } from '../../lib/api';
 import { Loader2, Lock, Mail } from 'lucide-react';
 
 const ALL_PERMISSIONS = [
@@ -29,20 +29,25 @@ const Login = () => {
     setError('');
 
     try {
-      const { data } = await axios.post('/api/auth/login', {
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      // Backend seta o httpOnly cookie automaticamente na resposta
+      // Não precisamos guardar nem o token
+      const data = await apiLogin(email.trim().toLowerCase(), password);
 
-      login(data.token, {
+      login({
         ...data.user,
         accessLevel: data.user.role === 'ADMIN' || data.user.role === 'CEO' ? 'ADMIN' : 'EDITOR',
         permissions: ALL_PERMISSIONS,
       });
-      navigate('/admin/dashboard');
+
+      // Redirecionar baseado na role
+      if (data.user.role === 'CLIENTE') {
+        navigate('/cliente-dashboard');
+      } else {
+        navigate('/admin/dashboard');
+      }
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 401) {
+      const msg = err?.message || '';
+      if (msg.includes('401') || msg.includes('Credenciais')) {
         setError('E-mail ou senha incorretos.');
       } else {
         setError('Serviço temporariamente indisponível. Tente novamente.');

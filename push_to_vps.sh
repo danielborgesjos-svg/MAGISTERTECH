@@ -3,7 +3,7 @@
 # MAGISTER TECH — Enviar código e configurar VPS remotamente
 # Rode na sua máquina local (Windows/Git Bash):  bash push_to_vps.sh
 # =============================================================================
-VPS_IP="187.127.11.1"
+VPS_IP="187.127.11.172"
 VPS_USER="root"
 VPS_DIR="/opt/magister"
 SSH_KEY="$USERPROFILE/.ssh/magister_vps"
@@ -26,6 +26,16 @@ echo -e "${BLUE}║    MAGISTER TECH — Push → VPS Hostinger     ║${NC}"
 echo -e "${BLUE}║    $VPS_IP                     ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 echo ""
+
+# ─── SAFE DEPLOY PROTOCOL ────────────────────────────────────────────────────
+warn "Atenção: Este comando irá sincronizar o código LOCAL com a PRODUÇÃO (VPS)."
+warn "Os seguintes itens SERÃO IGNORADOS: .git, node_modules, .env, *.db, sessões WA."
+echo -n -e "${YELLOW}Deseja continuar com o Deploy Seguro? (S/N): ${NC}"
+read CONFIRM
+if [[ ! "$CONFIRM" =~ ^[Ss]$ ]]; then
+  echo -e "${RED}[✗] Deploy cancelado pelo usuário.${NC}"
+  exit 1
+fi
 
 # ─── 1. Instalar chave SSH (se ainda não tiver) ───────────────────────────────
 if [ -f "$SSH_KEY" ]; then
@@ -51,6 +61,9 @@ if command -v rsync &>/dev/null; then
     --exclude="*.db" \
     --exclude="*.db-journal" \
     --exclude=".env" \
+    --exclude=".wa_session" \
+    --exclude=".wwebjs_cache" \
+    --exclude=".wwebjs_auth" \
     -e "ssh $SSH_OPTS" \
     "$LOCAL_DIR/" "$VPS_USER@$VPS_IP:$VPS_DIR/"
 else
@@ -63,6 +76,9 @@ else
       --exclude="*.db" \
       --exclude="*.db-journal" \
       --exclude="*/.env" \
+      --exclude="*/.wa_session" \
+      --exclude="*/.wwebjs_cache" \
+      --exclude="*/.wwebjs_auth" \
       -czf "$TMPTAR" -C "$LOCAL_DIR" .
   scp $SSH_OPTS "$TMPTAR" "$VPS_USER@$VPS_IP:/tmp/magister_deploy.tar.gz"
   ssh_run "tar -xzf /tmp/magister_deploy.tar.gz -C $VPS_DIR && rm /tmp/magister_deploy.tar.gz"

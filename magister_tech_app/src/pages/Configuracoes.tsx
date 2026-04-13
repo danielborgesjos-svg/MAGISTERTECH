@@ -1,19 +1,15 @@
 import { useContext, useState } from 'react';
 import { Trash2, AlertTriangle, KeyRound, ShieldCheck, Activity } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 export default function Configuracoes() {
   const { logout } = useContext(AuthContext);
-  const navigate = useNavigate();
   const [confirmDelete, setConfirmDelete] = useState('');
   
   const handleFactoryReset = () => {
     if (confirmDelete === 'Zerar Tudo') {
-      localStorage.clear();
+      // logout() chama /api/auth/logout (limpa cookie no servidor) e redireciona para /login
       logout();
-      navigate('/login');
-      window.location.reload();
     }
   };
 

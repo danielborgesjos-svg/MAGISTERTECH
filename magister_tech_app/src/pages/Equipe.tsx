@@ -18,12 +18,12 @@ const FEED_TYPE_CONFIG: Record<FeedPost['type'], { label: string; color: string;
 };
 
 export default function Equipe() {
-  const { team, kanban, feed, addTeamRating, addTeamMember, updateTeamMember, addFeedPost, deleteFeedPost, pinFeedPost, addFeedComment, updateMemberPassword, updateMemberPermissions } = useData();
+  const { team, kanban, feed, projects, addTeamRating, addTeamMember, updateTeamMember, addFeedPost, deleteFeedPost, pinFeedPost, addFeedComment, updateMemberPassword, updateMemberPermissions } = useData();
   const { user } = useContext(AuthContext);
 
   const [selected, setSelected] = useState(team[0] || null);
   const [activeTab, setActiveTab] = useState<'team' | 'feed'>('team');
-  const [profileTab, setProfileTab] = useState<'perfil' | 'contrato'>('perfil');
+  const [profileTab, setProfileTab] = useState<'perfil' | 'contrato' | 'projetos'>('perfil');
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [saved, setSaved] = useState(false);
@@ -239,6 +239,7 @@ export default function Equipe() {
                 <div style={{ display: 'flex', gap: 24, marginTop: 16, marginBottom: 16, padding: '0 8px', borderBottom: '1px solid var(--border)' }}>
                   <button onClick={() => setProfileTab('perfil')} style={{ background: 'none', border: 'none', color: profileTab === 'perfil' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 800, borderBottom: profileTab === 'perfil' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: 8, cursor: 'pointer' }}>Avaliações</button>
                   <button onClick={() => setProfileTab('contrato')} style={{ background: 'none', border: 'none', color: profileTab === 'contrato' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 800, borderBottom: profileTab === 'contrato' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: 8, cursor: 'pointer' }}>Contrato de Trabalho</button>
+                  <button onClick={() => setProfileTab('projetos')} style={{ background: 'none', border: 'none', color: profileTab === 'projetos' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 800, borderBottom: profileTab === 'projetos' ? '2px solid var(--primary)' : '2px solid transparent', paddingBottom: 8, cursor: 'pointer' }}>Projetos Vinculados</button>
                 </div>
 
                 {profileTab === 'perfil' ? (
@@ -254,42 +255,55 @@ export default function Equipe() {
                       {saved ? 'Avaliação Salva!' : 'Gravar Avaliação'}
                     </button>
                   </div>
-                ) : (
+                ) : profileTab === 'contrato' ? (
                   <div className="card" style={{ padding: 24 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                       <h4 style={{ fontSize: 14, fontWeight: 800 }}>Contrato & Vínculo</h4>
                       <span className="badge badge-success">Ativo</span>
                     </div>
+                    {/* Campos de Contrato fictícios por enquanto */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                       <div>
                         <label className="form-label" style={{ fontSize: 11 }}>Tipo de Vínculo</label>
                         <select className="input" style={{ width: '100%' }}>
                           <option>PJ (Prestação de Serviços)</option>
                           <option>CLT</option>
-                          <option>Estágio</option>
-                          <option>Freelancer (Demanda)</option>
                         </select>
                       </div>
                       <div>
-                        <label className="form-label" style={{ fontSize: 11 }}>Carga Horária / Escopo</label>
-                        <input className="input" placeholder="Ex: 40h semanais" style={{ width: '100%' }} />
+                        <label className="form-label" style={{ fontSize: 11 }}>Remuneração / Carga</label>
+                        <input className="input" placeholder="R$ / h" style={{ width: '100%' }} />
                       </div>
-                      <div>
-                        <label className="form-label" style={{ fontSize: 11 }}>Remuneração Base</label>
-                        <input className="input" placeholder="R$ 0,00" style={{ width: '100%' }} />
-                      </div>
-                      <div>
-                        <label className="form-label" style={{ fontSize: 11 }}>Data de Início</label>
-                        <input type="date" className="input" style={{ width: '100%' }} />
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 24 }}>
-                      <label className="form-label" style={{ fontSize: 11 }}>Acordos Específicos & Bônus</label>
-                      <textarea className="input" rows={3} style={{ width: '100%' }} placeholder="Regras de comissão, metas, equipamentos cedidos..."></textarea>
                     </div>
                     <button className="btn btn-primary" style={{ width: '100%', marginTop: 20 }}>Atualizar Contrato</button>
                   </div>
-                )}
+                ) : profileTab === 'projetos' ? (
+                  <div className="card" style={{ padding: 24 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 16 }}>Projetos e Contas Vinculadas</h4>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+                      Abaixo você pode habilitar ou desabilitar quais projetos este colaborador está alocado.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 300, overflowY: 'auto', paddingRight: 4 }}>
+                      {projects.map(p => {
+                         const prefs = (selected as any)?.preferences || {};
+                         const linkedProjects = prefs.linkedProjects || [];
+                         const isLinked = linkedProjects.includes(p.id);
+                         return (
+                           <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer', background: isLinked ? 'var(--bg-subtle)' : 'transparent', transition: '0.2s' }}>
+                             <input type="checkbox" checked={isLinked} onChange={() => {
+                                const nextProjects = isLinked ? linkedProjects.filter((id: string) => id !== p.id) : [...linkedProjects, p.id];
+                                const nextPrefs = { ...prefs, linkedProjects: nextProjects };
+                                updateTeamMember(selected.id, { preferences: nextPrefs });
+                                setSelected({ ...selected, preferences: nextPrefs } as any);
+                             }} style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
+                             <span style={{ fontSize: 14, fontWeight: 700 }}>{p.name}</span>
+                           </label>
+                         );
+                      })}
+                      {projects.length === 0 && <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Nenhum projeto cadastrado no sistema.</p>}
+                    </div>
+                  </div>
+                ) : null}
               </>
             ) : null}
           </div>
