@@ -52,10 +52,10 @@ model Client {
   observations   String?
   segment        String?
   responsible    String?
-  // Health score 0-100 para medir saúde do cliente
   healthScore    Float     @default(0)
-  // Portal do Cliente: ID do User CLIENTE gerado automaticamente
-  clientUserId   String?   // UUID do User com role=CLIENTE vinculado a essa empresa
+  clientUserId   String?
+  isDeleted      Boolean   @default(false)
+  deletedAt      DateTime?
   projects       Project[]
   contracts      Contract[]
   contents       Content[]
@@ -84,12 +84,13 @@ model Project {
   description  String?
   deliverables String?
   observations String?
-  // NOVOS CAMPOS: Briefing Profundo
   coreColors   String?
   fontFamily   String?
   socialMediaLinks String?
   mandatoryRules String?
   organogramData String?
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime?
   clientId     String
   client       Client    @relation(fields: [clientId], references: [id])
   tasks        Task[]
@@ -109,12 +110,13 @@ model Task {
   status      String    @default("BACKLOG")
   priority    String    @default("MEDIA")
   deadline    DateTime?
-  checklist   String?   // JSON string
+  checklist   String?
   tags        String?
   order       Int       @default(0)
-  // Tipo de conteúdo: post | stories | video | trafego | tarefa
   tipo        String    @default("tarefa")
   masterSeen  Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
   assigneeId  String?
   assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
   projectId   String?
@@ -201,6 +203,8 @@ model Contract {
   renewal     Boolean   @default(false)
   observations String?
   fileUrl     String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
   clientId    String
   client      Client    @relation(fields: [clientId], references: [id])
   transactions Transaction[]
@@ -234,7 +238,7 @@ model Fatura {
 model Transaction {
   id          String    @id @default(uuid())
   description String
-  type        String    // RECEITA | DESPESA
+  type        String
   amount      Float
   dueDate     DateTime
   paidAt      DateTime?
@@ -242,10 +246,12 @@ model Transaction {
   category    String?
   costCenter  String?
   recurrence  Boolean   @default(false)
-  recurringType String? // mensal, anual, semestral
+  recurringType String?
   isFixedExpense Boolean @default(false)
-  employeeId  String?   // Para despesas atreladas a colaboradores na folha
+  employeeId  String?
   observations String?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
   clientId    String?
   client      Client?   @relation(fields: [clientId], references: [id])
   contractId  String?
@@ -305,10 +311,12 @@ model Ticket {
   protocol        String    @unique
   subject         String
   description     String?
-  status          String    @default("NOVO") // NOVO | EM_ATENDIMENTO | RESOLVIDO | FECHADO
-  priority        String    @default("MEDIA") // BAIXA | MEDIA | ALTA | CRITICA
+  status          String    @default("NOVO")
+  priority        String    @default("MEDIA")
   clientName      String
   clientWhatsapp  String
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
   clientId        String?
   client          Client?   @relation(fields: [clientId], references: [id])
   messages        TicketMessage[]
@@ -381,6 +389,8 @@ model Goal {
   unit        String   @default("UN")
   color       String   @default("var(--primary)")
   deadline    DateTime?
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
   createdAt   DateTime @default(now())
 }
 
@@ -502,13 +512,42 @@ model AgencyProcess {
 model Approval {
   id          String   @id @default(uuid())
   title       String
-  type        String   @default("Criativo") // Criativo, Video, Tráfego, Identidade Visual
-  fileUrl     String?  // Onde ficará guardado o arquivo vindo pelo Multer
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  respondedBy String?  // Quem aprovou/recusou (Nome/Whatsapp)
+  type        String   @default("Criativo")
+  fileUrl     String?
+  status      String   @default("PENDING")
+  respondedBy String?
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
+// ============================================================
+// APP CONFIG (configurações globais e alíquotas editáveis)
+// ============================================================
+model AppConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique // ex: "ALIQUOTA_SIMPLES", "ALIQUOTA_ISS"
+  value     String   // valor como string (número, JSON, etc)
+  label     String?  // nome amigável para exibir na UI
+  group     String?  // ex: "impostos", "dashboard", "alertas"
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================
+// DASHBOARD METRICS (cards do cockpit, editáveis pelo admin)
+// ============================================================
+model DashboardMetric {
+  id          String   @id @default(uuid())
+  label       String
+  icon        String   @default("BarChart2")
+  color       String   @default("var(--primary)")
+  metricKey   String   // ex: "MRR", "CLIENTES_ATIVOS", "PIPELINE"
+  isVisible   Boolean  @default(true)
+  order       Int      @default(0)
+  rolesAllowed String  @default("ADMIN,CEO")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

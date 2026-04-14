@@ -351,13 +351,10 @@ app.delete('/api/users/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async 
 app.get('/api/clients', authMiddleware, blockCliente, async (req: any, res: any) => {
   try {
     const { withContracts } = req.query;
-    
-    let where = {};
+    let where: any = { isDeleted: false };
     if (withContracts === 'true') {
-      // Filtra apenas clientes que possuem contratos VIGENTES ou ativos
-      where = { contracts: { some: { status: 'VIGENTE' } } };
+      where.contracts = { some: { status: 'VIGENTE' } };
     }
-
     const clients = await prisma.client.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -531,14 +528,14 @@ app.put('/api/clients/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR'
 
 app.delete('/api/clients/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
   try {
-    // Soft Delete: Apenas altera o status para evitar quebras estruturais na base de dados
     await prisma.client.update({ 
        where: { id: req.params.id },
-       data: { status: 'INATIVO' }
+       data: { isDeleted: true, deletedAt: new Date() }
     });
-    res.json({ ok: true, message: 'Cliente inativado.' });
+    await logAudit(req.user.id, 'MOVE_TRASH', 'CRM', { target: req.params.id });
+    res.json({ ok: true, message: 'Cliente movido para a lixeira.' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao inativar cliente.' });
+    res.status(500).json({ error: 'Erro ao mover cliente para lixeira.' });
   }
 });
 
@@ -608,10 +605,11 @@ app.put('/api/projects/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR
 
 app.delete('/api/projects/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
   try {
-    await prisma.project.delete({ where: { id: req.params.id } });
-    res.json({ ok: true });
+    await prisma.project.update({ where: { id: req.params.id }, data: { isDeleted: true, deletedAt: new Date() } });
+    await logAudit(req.user.id, 'MOVE_TRASH', 'PROJETOS', { target: req.params.id });
+    res.json({ ok: true, message: 'Projeto movido para a lixeira.' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao excluir projeto.' });
+    res.status(500).json({ error: 'Erro ao mover projeto para lixeira.' });
   }
 });
 
@@ -807,10 +805,11 @@ app.put('/api/tasks/:id/status', authMiddleware, blockCliente, async (req: any, 
 
 app.delete('/api/tasks/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'GESTOR_PROJETOS'), async (req: any, res: any) => {
   try {
-    await prisma.task.delete({ where: { id: req.params.id } });
-    res.json({ ok: true });
+    await prisma.task.update({ where: { id: req.params.id }, data: { isDeleted: true, deletedAt: new Date() } });
+    await logAudit(req.user.id, 'MOVE_TRASH', 'KANBAN', { target: req.params.id });
+    res.json({ ok: true, message: 'Tarefa movida para a lixeira.' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao excluir tarefa.' });
+    res.status(500).json({ error: 'Erro ao mover tarefa para lixeira.' });
   }
 });
 
@@ -886,10 +885,11 @@ app.put('/api/contracts/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTO
 
 app.delete('/api/contracts/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
   try {
-    await prisma.contract.delete({ where: { id: req.params.id } });
-    res.json({ ok: true });
+    await prisma.contract.update({ where: { id: req.params.id }, data: { isDeleted: true, deletedAt: new Date() } });
+    await logAudit(req.user.id, 'MOVE_TRASH', 'CONTRATOS', { target: req.params.id });
+    res.json({ ok: true, message: 'Contrato movido para a lixeira.' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao excluir contrato.' });
+    res.status(500).json({ error: 'Erro ao mover contrato para lixeira.' });
   }
 });
 
@@ -1043,35 +1043,17 @@ app.post('/api/transactions', authMiddleware, requireRole('ADMIN', 'CEO', 'FINAN
 
 app.delete('/api/transactions/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
   try {
-    await prisma.transaction.delete({ where: { id: req.params.id } });
-    res.json({ ok: true });
+    await prisma.transaction.update({ where: { id: req.params.id }, data: { isDeleted: true, deletedAt: new Date() } });
+    await logAudit(req.user.id, 'MOVE_TRASH', 'FINANCEIRO', { target: req.params.id });
+    res.json({ ok: true, message: 'Transação movida para a lixeira.' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao excluir transação.' });
+    res.status(500).json({ error: 'Erro ao mover transação para lixeira.' });
   }
 });
 
 // =====================================================
-// GOALS & LOGS
+// LOGS
 // =====================================================
-app.get('/api/goals', authMiddleware, async (_req: any, res: any) => {
-  try {
-    const goals = await prisma.goal.findMany();
-    res.json(goals);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar metas.' });
-  }
-});
-
-app.put('/api/goals/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR'), async (req: any, res: any) => {
-  try {
-    const { current } = req.body;
-    const goal = await prisma.goal.update({ where: { id: req.params.id }, data: { current: parseFloat(current) } });
-    res.json(goal);
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao atualizar meta.' });
-  }
-});
-
 app.get('/api/logs', authMiddleware, requireRole('ADMIN', 'CEO'), async (_req: any, res: any) => {
   try {
     const logs = await prisma.auditLog.findMany({
@@ -1290,11 +1272,11 @@ app.post('/api/chat/messages', authMiddleware, async (req: any, res: any) => {
 });
 
 // =====================================================
-// METAS & INDICADORES (GOALS)
+// METAS & INDICADORES (GOALS) — Consolidado
 // =====================================================
 app.get('/api/goals', authMiddleware, async (_req: any, res: any) => {
   try {
-    const goals = await prisma.goal.findMany({ orderBy: { createdAt: 'desc' } });
+    const goals = await prisma.goal.findMany({ where: { isDeleted: false }, orderBy: { createdAt: 'desc' } });
     res.json(goals);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar metas.' });
@@ -1305,7 +1287,7 @@ app.post('/api/goals', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR'), as
   try {
     const { title, target, current, unit, color, deadline } = req.body;
     const goal = await prisma.goal.create({
-      data: { title, target, current: current || 0, unit, color, deadline: deadline ? new Date(deadline) : null }
+      data: { title, target: parseFloat(target), current: parseFloat(current) || 0, unit, color, deadline: deadline ? new Date(deadline) : null }
     });
     res.status(201).json(goal);
   } catch (err) {
@@ -1313,13 +1295,140 @@ app.post('/api/goals', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR'), as
   }
 });
 
-app.put('/api/goals/:id', authMiddleware, async (req: any, res: any) => {
+app.put('/api/goals/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR'), async (req: any, res: any) => {
   try {
-    const { current } = req.body;
-    const goal = await prisma.goal.update({ where: { id: req.params.id }, data: { current } });
+    const { title, target, current, unit, color, deadline } = req.body;
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (target !== undefined) data.target = parseFloat(target);
+    if (current !== undefined) data.current = parseFloat(current);
+    if (unit !== undefined) data.unit = unit;
+    if (color !== undefined) data.color = color;
+    if (deadline !== undefined) data.deadline = deadline ? new Date(deadline) : null;
+    const goal = await prisma.goal.update({ where: { id: req.params.id }, data });
     res.json(goal);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar meta.' });
+  }
+});
+
+app.delete('/api/goals/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR'), async (req: any, res: any) => {
+  try {
+    await prisma.goal.update({ where: { id: req.params.id }, data: { isDeleted: true, deletedAt: new Date() } });
+    await logAudit(req.user.id, 'MOVE_TRASH', 'GOALS', { target: req.params.id });
+    res.json({ ok: true, message: 'Meta movida para a lixeira.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao mover meta para lixeira.' });
+  }
+});
+
+// =====================================================
+// APP CONFIG (Alíquotas, métricas e configs globais)
+// =====================================================
+app.get('/api/config', authMiddleware, async (_req: any, res: any) => {
+  try {
+    let configs = await prisma.appConfig.findMany();
+    if (configs.length === 0) {
+      // Seed inicial das alíquotas
+      const defaults = [
+        { key: 'ALIQUOTA_SIMPLES', value: '0.06', label: 'Simples Nacional', group: 'impostos' },
+        { key: 'ALIQUOTA_ISS', value: '0.02', label: 'ISS', group: 'impostos' },
+        { key: 'ALIQUOTA_COFINS', value: '0.03', label: 'COFINS', group: 'impostos' },
+        { key: 'ALIQUOTA_PIS', value: '0.0065', label: 'PIS', group: 'impostos' },
+        { key: 'CHURN_ALERT_DAYS', value: '30', label: 'Alerta Churn (dias)', group: 'alertas' },
+        { key: 'CONTRACT_EXPIRY_ALERT_DAYS', value: '30', label: 'Alerta Vencimento Contrato (dias)', group: 'alertas' },
+      ];
+      for (const d of defaults) {
+        await prisma.appConfig.create({ data: d });
+      }
+      configs = await prisma.appConfig.findMany();
+    }
+    res.json(configs);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar configurações.' });
+  }
+});
+
+app.put('/api/config/:key', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
+  try {
+    const { value, label } = req.body;
+    const config = await prisma.appConfig.upsert({
+      where: { key: req.params.key },
+      update: { value, label },
+      create: { key: req.params.key, value, label }
+    });
+    await logAudit(req.user.id, 'UPDATE_CONFIG', 'SISTEMA', { key: req.params.key, value });
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar configuração.' });
+  }
+});
+
+// =====================================================
+// LIXEIRA GLOBAL (Trash)
+// =====================================================
+app.get('/api/trash', authMiddleware, requireRole('ADMIN', 'CEO'), async (_req: any, res: any) => {
+  try {
+    const [clients, projects, tasks, contracts, transactions, goals] = await Promise.all([
+      prisma.client.findMany({ where: { isDeleted: true }, select: { id: true, name: true, company: true, deletedAt: true } }),
+      prisma.project.findMany({ where: { isDeleted: true }, select: { id: true, name: true, type: true, deletedAt: true } }),
+      prisma.task.findMany({ where: { isDeleted: true }, select: { id: true, title: true, status: true, deletedAt: true } }),
+      prisma.contract.findMany({ where: { isDeleted: true }, select: { id: true, title: true, value: true, deletedAt: true } }),
+      prisma.transaction.findMany({ where: { isDeleted: true }, select: { id: true, description: true, amount: true, type: true, deletedAt: true } }),
+      prisma.goal.findMany({ where: { isDeleted: true }, select: { id: true, title: true, target: true, deletedAt: true } }),
+    ]);
+    res.json({
+      clients: clients.map(i => ({ ...i, model: 'client' })),
+      projects: projects.map(i => ({ ...i, model: 'project' })),
+      tasks: tasks.map(i => ({ ...i, model: 'task' })),
+      contracts: contracts.map(i => ({ ...i, model: 'contract' })),
+      transactions: transactions.map(i => ({ ...i, model: 'transaction' })),
+      goals: goals.map(i => ({ ...i, model: 'goal' })),
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar lixeira.' });
+  }
+});
+
+app.post('/api/trash/restore/:model/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
+  const { model, id } = req.params;
+  const modelMap: Record<string, any> = {
+    client: prisma.client,
+    project: prisma.project,
+    task: prisma.task,
+    contract: prisma.contract,
+    transaction: prisma.transaction,
+    goal: prisma.goal,
+  };
+  const repo = modelMap[model];
+  if (!repo) return res.status(400).json({ error: 'Modelo inválido.' });
+  try {
+    await repo.update({ where: { id }, data: { isDeleted: false, deletedAt: null } });
+    await logAudit(req.user.id, 'RESTORE_TRASH', model.toUpperCase(), { target: id });
+    res.json({ ok: true, message: 'Item restaurado.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao restaurar item.' });
+  }
+});
+
+app.delete('/api/trash/permanent/:model/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
+  const { model, id } = req.params;
+  const hardDeleteMap: Record<string, any> = {
+    client: prisma.client,
+    project: prisma.project,
+    task: prisma.task,
+    contract: prisma.contract,
+    transaction: prisma.transaction,
+    goal: prisma.goal,
+  };
+  const repo = hardDeleteMap[model];
+  if (!repo) return res.status(400).json({ error: 'Modelo inválido.' });
+  try {
+    await repo.delete({ where: { id } });
+    await logAudit(req.user.id, 'PERMANENT_DELETE', model.toUpperCase(), { target: id });
+    res.json({ ok: true, message: 'Item excluído permanentemente.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir permanentemente.' });
   }
 });
 

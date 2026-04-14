@@ -37,6 +37,7 @@ import ViewAs from './pages/ViewAs';
 import Aprovacoes from './pages/Aprovacoes';
 import ValidarAprovacao from './pages/ValidarAprovacao';
 import MetaAdsDashboard from './pages/MetaAdsDashboard';
+import Lixeira from './pages/Lixeira';
 
 function ProtectedRoute({ children, module }: { children: React.ReactNode, module: string }) {
   const { canViewModule } = usePermission();
@@ -86,6 +87,7 @@ function App() {
               <Route path="feed" element={<ProtectedRoute module="feed"><Feed /></ProtectedRoute>} />
               <Route path="tickets" element={<ProtectedRoute module="crm"><Tickets /></ProtectedRoute>} />
               <Route path="config" element={<Configuracoes />} />
+              <Route path="lixeira" element={<ProtectedRoute module="dashboard"><Lixeira /></ProtectedRoute>} />
               <Route path="conectividade" element={<ProtectedRoute module="dashboard"><Conectividade /></ProtectedRoute>} />
               <Route path="perfil" element={<Perfil />} />
 

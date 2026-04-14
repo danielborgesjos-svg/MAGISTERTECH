@@ -4,7 +4,7 @@ import {
   LayoutDashboard, KanbanSquare, Users, FileText,
   LogOut, Terminal, Calendar, PenTool,
   Briefcase, Landmark, Moon, Sun, Target, UserCircle,
-  Bell, Search, ChevronRight, Settings, X, Rss, Activity, Wifi, MessageCircle, Network, Fingerprint, Headset, BarChart2, Eye, EyeOff, CheckCircle
+  Bell, Search, ChevronRight, Settings, X, Rss, Activity, Wifi, MessageCircle, Network, Fingerprint, Headset, BarChart2, Eye, EyeOff, CheckCircle, Trash2
 } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
 import { usePermission } from '../hooks/usePermission';
@@ -211,6 +211,11 @@ const AdminLayout = () => {
               <button onClick={() => navigate('/admin/config')} className="nav-item">
                 <Settings size={18} /> Configurações
               </button>
+              {(role === 'ADMIN' || role === 'CEO') && (
+                <button onClick={() => navigate('/admin/lixeira')} className="nav-item" style={{ color: 'var(--danger)', opacity: 0.8 }}>
+                  <Trash2 size={18} /> Lixeira
+                </button>
+              )}
               <button onClick={() => { logout(); navigate('/login'); }} className="nav-item" style={{ color: 'var(--danger)' }}>
                 <LogOut size={18} /> Sair do Sistema
               </button>
