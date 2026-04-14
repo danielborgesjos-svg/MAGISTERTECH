@@ -18,6 +18,7 @@ interface TrashItem {
   amount?: number;
   value?: number;
   target?: number;
+  deletedByName?: string;
 }
 
 interface TrashData {
@@ -278,10 +279,16 @@ export default function Lixeira() {
                   )}
                 </div>
 
-                {/* Deleted date */}
+                {/* Deleted date & who */}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>Excluído em</p>
-                  <p style={{ fontSize: 11, fontWeight: 700, margin: 0 }}>{deletedDate}</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, margin: '0 0 4px' }}>{deletedDate}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                     <Users size={10} color="var(--text-muted)" />
+                     <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: 0, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.deletedByName || 'Desconhecido'}>
+                       {item.deletedByName || 'Desconhecido'}
+                     </p>
+                  </div>
                 </div>
 
                 {/* Actions */}

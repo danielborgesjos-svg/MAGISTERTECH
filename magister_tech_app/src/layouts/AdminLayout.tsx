@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, KanbanSquare, Users, FileText,
@@ -9,6 +9,7 @@ import {
 import { AuthContext } from '../contexts/AuthContext';
 import { usePermission } from '../hooks/usePermission';
 import { useData } from '../contexts/DataContext';
+import { apiFetch } from '../lib/api';
 
 const AdminLayout = () => {
   const { user, loading, theme, logout, updatePreferences, impersonating, stopImpersonation } = useContext(AuthContext);
@@ -18,6 +19,24 @@ const AdminLayout = () => {
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+  useEffect(() => {
+    // Carrega a logo da empresa do banco
+    apiFetch<{ value: string }>('/api/config/LOGO_URL')
+      .then(d => { if (d?.value) setLogoUrl(d.value); })
+      .catch(() => {});
+
+    // Ouve atualizações em tempo real da logo
+    const handleLogoUpdate = (e: Event) => {
+      const url = (e as CustomEvent).detail?.url;
+      if (url) setLogoUrl(url);
+    };
+    window.addEventListener('logoUpdated', handleLogoUpdate);
+    return () => window.removeEventListener('logoUpdated', handleLogoUpdate);
+  }, []);
   if (loading) {
     return (
       <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
@@ -95,14 +114,37 @@ const AdminLayout = () => {
       <aside className={`admin-sidebar ${collapsed ? 'collapsed' : ''}`} style={{ width: collapsed ? 72 : 256 }}>
         {/* Logo */}
         <div className="logo-area" style={{ justifyContent: collapsed ? 'center' : 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div className="logo-icon">
-              <Terminal size={18} color="#fff" />
-            </div>
-            {!collapsed && (
-              <div>
-                <div className="logo-text">Magister<span>.</span></div>
-                <div style={{ fontSize: 10, color: 'rgba(148,163,184,0.6)', letterSpacing: 1 }}>ERP SYSTEM</div>
+          <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflow: 'hidden' }}>
+            {logoUrl ? (
+              <div style={{ 
+                width: collapsed ? 44 : '100%', 
+                height: collapsed ? 44 : 120, /* 120px = Altura quase 3x maior que o 48px original */
+                display: 'flex', alignItems: 'center', 
+                justifyContent: 'center', /* Centralizado sempre */
+                transition: 'all 0.2s ease-in-out',
+                margin: collapsed ? '0 auto' : '0'
+              }}>
+                <img
+                  src={logoUrl.startsWith('http') ? logoUrl : `${backendUrl}${logoUrl}`}
+                  alt="Logo"
+                  style={{ 
+                    width: '100%', height: '100%', 
+                    objectFit: collapsed ? 'cover' : 'contain', 
+                    borderRadius: collapsed ? '50%' : 0,
+                    objectPosition: 'center', /* Centralizado sempre */
+                    maxWidth: collapsed ? 44 : 200 /* Limite de expansão para não explodir */
+                  }}
+                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div className="logo-icon">
+                  <Terminal size={18} color="#fff" />
+                </div>
+                {!collapsed && (
+                  <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-0.04em' }}>Magister.</span>
+                )}
               </div>
             )}
           </div>
@@ -224,9 +266,11 @@ const AdminLayout = () => {
       <main className="admin-main" style={{ marginLeft: collapsed ? 72 : 256 }}>
         {/* Top Bar */}
         <header className="admin-header">
-          <div className="search-bar">
-            <Search size={15} style={{ color: 'var(--text-light)', flexShrink: 0 }} />
-            <input placeholder="Buscar clientes, projetos, tarefas..." />
+          {/* Header Centralizado */}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.01em', margin: 0, textAlign: 'center' }}>
+              Magister Tech — Inovação em TI e Marketing para o Crescimento da sua Empresa
+            </h2>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

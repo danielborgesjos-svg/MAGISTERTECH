@@ -16,6 +16,7 @@ interface Approval {
   clientId: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   respondedBy?: string;
+  rejectReason?: string;
   createdAt: string;
   client: { name: string; phone: string };
 }
@@ -59,6 +60,16 @@ function ApprovalCard({ app, onDelete, onPreview, onResend }: {
   const StatusIcon = sm.icon;
   const TypeIcon = tm.icon;
 
+  let firstUrl = app.fileUrl;
+  let fileCount = 1;
+  try {
+    const parsed = JSON.parse(app.fileUrl);
+    if (Array.isArray(parsed)) {
+       firstUrl = parsed[0];
+       fileCount = parsed.length;
+    }
+  } catch(e) {}
+
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden', borderLeft: `3px solid ${sm.borderVar}`, transition: 'var(--transition)', display: 'flex', flexDirection: 'column' }}>
 
@@ -68,13 +79,13 @@ function ApprovalCard({ app, onDelete, onPreview, onResend }: {
         className="aprv-thumb"
         style={{ height: 160, background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
       >
-        {app.fileUrl && isImage(app.fileUrl) ? (
-          <img src={app.fileUrl} alt={app.title}
+        {firstUrl && isImage(firstUrl) ? (
+          <img src={firstUrl} alt={app.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }}
             className="aprv-thumb-img"
           />
-        ) : app.fileUrl && isVideo(app.fileUrl) ? (
-          <video src={app.fileUrl} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : firstUrl && isVideo(firstUrl) ? (
+          <video src={firstUrl} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <TypeIcon size={40} color={tm.color} strokeWidth={1.5} />
@@ -84,10 +95,16 @@ function ApprovalCard({ app, onDelete, onPreview, onResend }: {
 
         {/* Status overlay badge */}
         <div className={`badge ${sm.cls}`}
-          style={{ position: 'absolute', top: 10, right: 10, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 5 }}>
+          style={{ position: 'absolute', top: 10, right: 10, backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', gap: 5, zIndex: 5 }}>
           <StatusIcon size={11} />
           {sm.label}
         </div>
+        
+        {fileCount > 1 && (
+          <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, zIndex: 5 }}>
+            +{fileCount - 1} fotos
+          </div>
+        )}
 
         {/* Hover overlay */}
         <div className="aprv-hover-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.38)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}>
@@ -139,9 +156,14 @@ function ApprovalCard({ app, onDelete, onPreview, onResend }: {
 
         {/* Respondido por */}
         {app.respondedBy && (
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
-            Respondido por: <strong style={{ color: 'var(--text-main)' }}>{app.respondedBy}</strong>
-          </p>
+          <div style={{ background: app.status === 'REJECTED' ? 'var(--danger-glow)' : 'transparent', padding: app.status === 'REJECTED' ? '6px 10px' : 0, borderRadius: 6 }}>
+            <p style={{ fontSize: 11, color: app.status === 'REJECTED' ? 'var(--danger)' : 'var(--text-muted)', margin: 0 }}>
+              {app.status === 'REJECTED' ? 'Recusado por:' : 'Respondido por:'} <strong style={{ color: app.status === 'REJECTED' ? 'var(--danger)' : 'var(--text-main)' }}>{app.respondedBy}</strong>
+            </p>
+            {app.rejectReason && (
+               <p style={{ fontSize: 11, color: 'var(--danger)', margin: '4px 0 0', fontStyle: 'italic' }}>"{app.rejectReason}"</p>
+            )}
+          </div>
         )}
 
         {/* Footer */}
@@ -154,9 +176,9 @@ function ApprovalCard({ app, onDelete, onPreview, onResend }: {
               <Send size={13} />
             </button>
             {/* Abrir arquivo */}
-            <button className="btn-icon" onClick={() => app.fileUrl && window.open(app.fileUrl, '_blank')} title="Abrir arquivo"
-              disabled={!app.fileUrl}
-              style={{ color: 'var(--primary)', width: 32, height: 32, opacity: app.fileUrl ? 1 : 0.35 }}>
+            <button className="btn-icon" onClick={() => firstUrl && window.open(firstUrl, '_blank')} title="Abrir primeiro arquivo"
+              disabled={!firstUrl}
+              style={{ color: 'var(--primary)', width: 32, height: 32, opacity: firstUrl ? 1 : 0.35 }}>
               <ExternalLink size={13} />
             </button>
             {/* Excluir */}
@@ -199,16 +221,24 @@ function PreviewModal({ app, onClose }: { app: Approval; onClose: () => void }) 
 
         {/* Media */}
         <div style={{ background: 'var(--bg-subtle)', maxHeight: 360, minHeight: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          {app.fileUrl && isImage(app.fileUrl) ? (
-            <img src={app.fileUrl} alt={app.title} style={{ maxWidth: '100%', maxHeight: 360, objectFit: 'contain' }} />
-          ) : app.fileUrl && isVideo(app.fileUrl) ? (
-            <video src={app.fileUrl} controls style={{ maxWidth: '100%', maxHeight: 360 }} />
-          ) : (
-            <div style={{ padding: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-              <FileText size={48} color="var(--text-light)" />
-              <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Sem preview disponível</p>
-            </div>
-          )}
+          {Array.from({ length: 1 }).map(() => {
+             let files: string[] = [];
+             try {
+                const parsed = JSON.parse(app.fileUrl);
+                files = Array.isArray(parsed) ? parsed : [app.fileUrl];
+             } catch(e) { files = app.fileUrl ? [app.fileUrl] : []; }
+             
+             const url = files[0];
+             if (!url) return (
+                <div style={{ padding: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                  <FileText size={48} color="var(--text-light)" />
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Sem preview disponível</p>
+                </div>
+             );
+             if (isImage(url)) return <img src={url} alt={app.title} style={{ maxWidth: '100%', maxHeight: 360, objectFit: 'contain' }} />;
+             if (isVideo(url)) return <video src={url} controls style={{ maxWidth: '100%', maxHeight: 360 }} />;
+             return <div style={{ padding: 60, color: 'var(--primary)' }}>Baixe o arquivo para visualizar</div>;
+          })}
         </div>
 
         {/* Info cards */}
@@ -258,41 +288,40 @@ function CreateModal({ clients, onClose, onCreated }: {
   const [title, setTitle] = useState('');
   const [type, setType] = useState('Criativo');
   const [clientId, setClientId] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [step, setStep] = useState<'idle' | 'uploading' | 'sending_wa' | 'done'>('idle');
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = (f: File) => {
-    setFile(f);
-    if (f.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = e => setPreview(e.target?.result as string);
-      reader.readAsDataURL(f);
-    } else setPreview(null);
+  const handleFile = (newFiles: FileList | null) => {
+    if (!newFiles) return;
+    setFiles(prev => [...prev, ...Array.from(newFiles)]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title || !clientId) return;
+    if (files.length === 0 || !title || !clientId) return;
     setSubmitting(true); setStep('uploading');
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const token = localStorage.getItem('token');
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST', body: formData,
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!uploadRes.ok) throw new Error('Upload falhou');
-      const { url: fileUrl } = await uploadRes.json();
+      const uploadedUrls: string[] = [];
+      
+      for(const f of files) {
+         const formData = new FormData();
+         formData.append('file', f);
+         const uploadRes = await fetch('/api/upload', {
+           method: 'POST', body: formData,
+           credentials: 'include',
+         });
+         if (!uploadRes.ok) throw new Error('Upload falhou');
+         const { url } = await uploadRes.json();
+         uploadedUrls.push(url);
+      }
 
       setStep('sending_wa');
       const newApproval = await apiFetch<Approval>('/api/approvals', {
         method: 'POST',
-        body: JSON.stringify({ title, type, clientId, fileUrl }),
+        // Passa o array de strings
+        body: JSON.stringify({ title, type, clientId, fileUrl: uploadedUrls }),
       });
       setStep('done');
       setTimeout(() => { onCreated(newApproval); onClose(); }, 1000);
@@ -304,7 +333,7 @@ function CreateModal({ clients, onClose, onCreated }: {
   };
 
   const selectedClient = clients.find(c => c.id === clientId);
-  const canSubmit = !!file && !!title && !!clientId;
+  const canSubmit = files.length > 0 && !!title && !!clientId;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -371,44 +400,53 @@ function CreateModal({ clients, onClose, onCreated }: {
               )}
             </div>
 
-            {/* Drag & Drop */}
+            {/* Drag & Drop Multiplo */}
             <div>
-              <label className="form-label">Arquivo *</label>
+              <label className="form-label">Aquivos ({files.length}) *</label>
               <div
                 onClick={() => fileRef.current?.click()}
                 onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
-                onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+                onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files); }}
                 style={{
-                  border: `2px dashed ${dragOver ? 'var(--primary)' : file ? 'var(--success)' : 'var(--border-strong)'}`,
+                  border: `2px dashed ${dragOver ? 'var(--primary)' : files.length > 0 ? 'var(--success)' : 'var(--border-strong)'}`,
                   borderRadius: 12, padding: '24px 20px', cursor: 'pointer',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-                  background: dragOver ? 'var(--primary-glow)' : file ? 'var(--success-glow)' : 'var(--bg-subtle)',
+                  background: dragOver ? 'var(--primary-glow)' : 'var(--bg-subtle)',
                   transition: 'all 0.2s',
                 }}
               >
-                {preview ? (
-                  <img src={preview} alt="preview" style={{ maxHeight: 130, maxWidth: '100%', borderRadius: 8, objectFit: 'contain' }} />
-                ) : (
-                  <Upload size={32} color={file ? 'var(--success)' : 'var(--text-light)'} strokeWidth={1.5} />
-                )}
+                <Upload size={32} color={files.length > 0 ? 'var(--success)' : 'var(--text-light)'} strokeWidth={1.5} />
                 <div style={{ textAlign: 'center' }}>
-                  {file ? (
+                  {files.length > 0 ? (
                     <>
-                      <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--success)', margin: 0 }}>{file.name}</p>
-                      <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>{(file.size / 1024 / 1024).toFixed(2)} MB · clique para substituir</p>
+                      <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--success)', margin: 0 }}>{files.length} arquivo(s) selecionado(s)</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '4px 0 0' }}>clique para adicionar mais</p>
                     </>
                   ) : (
                     <>
                       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', margin: 0 }}>Arraste ou clique para selecionar</p>
-                      <p style={{ fontSize: 11, color: 'var(--text-light)', margin: '4px 0 0' }}>PNG, JPG, MP4, PDF — máx. 50MB</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-light)', margin: '4px 0 0' }}>PNG, JPG, MP4, PDF — máx. 50MB. Aceita múltiplos.</p>
                     </>
                   )}
                 </div>
               </div>
-              <input ref={fileRef} type="file" style={{ display: 'none' }}
+              <input ref={fileRef} type="file" multiple style={{ display: 'none' }}
                 accept="image/*,video/*,.pdf"
-                onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+                onChange={e => handleFile(e.target.files)} />
+              
+              {files.length > 0 && (
+                 <div style={{ display: 'flex', gap: 8, marginTop: 12, overflowX: 'auto', paddingBottom: 8 }}>
+                    {files.map((f, i) => (
+                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-card)', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)', flexShrink: 0 }}>
+                         <span style={{ fontSize: 11, fontWeight: 600 }}>{f.name.length > 15 ? f.name.substring(0, 15)+'...' : f.name}</span>
+                         <button type="button" onClick={(e) => { e.stopPropagation(); setFiles(files.filter((_, idx) => idx !== i)); }} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 2 }}>
+                           <X size={12} />
+                         </button>
+                       </div>
+                    ))}
+                 </div>
+              )}
             </div>
 
             {/* WA info */}

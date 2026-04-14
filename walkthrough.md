@@ -1,53 +1,27 @@
-# Walkthrough: Integração Master KPIs
+# Entrega: Estrutura Organizacional e Fluxos
+
+O novo painel de Organograma foi reescrito **do zero** para garantir que sua visualização da equipe seja totalmente limpa (sem tela branca) e altamente funcional para a Gestão de Contratos e Setores.
+
+## 1. Múltiplas Visões Interativas
+
+Criamos três modos distintos de visualização, disponíveis via Switcher no topo do módulo da equipe:
+
+1. **Organograma (Hierárquico):** Exibe o CEO (diretoria) acima, os Gestores intermediários e alinhados num grid, todos agrupados pelo Setor (`CRIATIVO`, `TECNOLOGIA`, `COMERCIAL` etc).
+2. **Fluxograma (Processos):** Uma apresentação visual do pipeline oficial que descreve os "7 Passos" desde o chumbamento e _Onboarding_ até a conclusão da "Produção e Relatórios".
+3. **Lista por Setor:** Visão compacta tipo lista colapsável, excelente para achar um membro rápido se a agência ficar superlotada.
+
+## 2. Alocação de Contratos (Admin Master)
+
+Usuários que são `ADMIN` ou `CEO` agora têm acesso ao botão **Editar** sobre qualquer cartão no Diagrama. O painel modal de edição garante:
 
 > [!IMPORTANT]
-> Os KPIs de Tecnologia e Processos agora são **100% integrados e reais**. Os contadores do painel puxam relatórios diretamente do PostgreSQL (migrados via Prisma) e dispensam variáveis fixas de escopo, garantindo verdade absoluta.
+> **O Poder do Master**
+> - **Mudança de Setor:** Você pode definir "CRIATIVO", "CONTEÚDO" alterando-os sob demanda via texto, e ele recriará o setor no diagrama instantaneamente!
+> - **Atribuição de Contratos:** Traz todos os clientes em lista de checkboxes. Tudo que é assinalado a uma pessoa reflete diretamente no card dela que "X e Y são sob a responsabilidade" dessa pessoa.
 
-## O que foi realizado:
-1. **Banco de Dados (Schema)**: Foram criadas duas novas entidades no `schema.prisma`: `AgencyProcess` e `TechService`. Em seguida, aplicamos o Migration.
-2. **Backend (CRUD e Auto-Seed)**: Desenvolvidas as rotas globais (`/api/tech` e `/api/processos`). Adicionado um Auto-seed contendo as informações passadas como padrão do sistema.
-3. **Contexto Global (Frontend)**: O Frontend agora busca, durante o Single-Page-Load da classe principal do SPA, esses valores. Eles foram expostos e centralizados na memória para agilidade na renderização e reuso entre módulos.
-4. **Interface Gráfica (`KPIs.tsx`)**: 
-   - Os *"mocks"* (dados de mentirinha) foram sumariamente deletados.
-   - Os cálculos reativos (ex: Margens e Custo %) e gráficos (Status e Up/Down) agora cruzam as transações brutas de pagamentos com o valor dinâmico real da Stack Tech.
-   - Foram implementados dois botões de ação e modais nativos ativados pelo `useState` para: **"Nova Ferramenta"** e **"Novo Processo"**. 
+## 3. Dinamismo de Backend
 
-> [!TIP]
-> Você pode acessar na UI o painel em `/kpis` e usar os botões azuis recém adicionados em cada aba para registrar novas ferramentas à sua stack e ver o custo de tech % vs faturamento recalculado dinamicamente em *real-time*.
+- O Backend (`server.ts`: Rota de update `PUT` do user) foi reprogramado para injetar **bio**, modificar **sector** e colocar o array selecionado **contracts** encapsulado de forma engenhosa no campo json de *preferences*, garantindo a persistência.
+- O Frontend usa o React `useContext(DataContext)` com uma nova função assíncrona `refreshTeam()`, para que ao trocar um funcionário de setor, a tela atualize realocando-o na hora. 
 
-## Operação de VPS e Produção:
-Atendendo a exigência da política operacional (Safe Deploy Protocol), foi executado e documentado o processo completo de deploy na produção da Hostinger (`187.127.11.172`).
-*   Um erro de compilação da Prisma via `createMany()` no SQLite foi interceptado e refatorado ativamente para loops compatíveis na camada Node.JS.
-*   **A implantação remota ocorreu com sucesso total.**
-*   *As instâncias do PM2 foram reiniciadas remotamente.*
-
-## Validação Realizada:
-- Typescript compila sem impedimentos.
-- O Frontend e Backend foram reiniciados com sucesso.
-- Banco SQLite da área Dev rodou o Push com total sincronia.
-
-O Dashboard estratégico agora está completo, livre de placeholds e apto para gestão C-Level da Magister ERP.
-
----
-
-# Walkthrough: Refatoração Responsiva e Resolucão TS
-
-> [!IMPORTANT]
-> O Portal do Cliente (Dashboard Cliente) foi totalmente refatorado para funcionar magicamente via Celular. Além disso, foram resolvidos todos os conflitos de Type e dependências nulas para garantir um build verde antes do push na VPS.
-
-## O que foi realizado:
-1. **Responsividade no ClienteDashboard.tsx**: 
-   - Criação e integração de um hook `useIsMobile`.
-   - Modificação estrutural: Transformação da Sidebar fixa numa `Bottom Nav Menu` (navegação inferior bar) para acessos de telas `< 768px`.
-   - Aplicação de `flexbox` e margens condicionais nos Componentes Filhos (como `AdsCard`, `CalendarioPostagens`, e `TicketModal`).
-2. **Correção Global de TypeScript**: 
-   - Retirado o uso ocioso de imports (`Trello`, `Calendar`, `Agenda`, `ExternalLink`, etc).
-   - Componente de Kanban do Lucide substituído oficialmente por `KanbanSquare`.
-   - Remoção de variáveis não usadas em `KPIs.tsx`, `Aprovacoes.tsx`, `Clientes.tsx` e `AdminLayout.tsx`.
-3. **Deploy VPS em Produção**:
-   - Os commits foram sincronizados na master remota (`git commit && git push`).
-   - O `Safe Deploy Protocol` (via `push_to_vps.sh`) foi executado com rsync, SSH pre-configurado e build do Vite via VPS. 
-
-## Validação e Próximos Passos
-- Toda a Stack de frontend construiu imagens via TS sem acusações de Warnings.
-- Agora, a empresa pode apresentar o sistema tranquilamente nos celulares de clientes.
+Agora a estrutura da empresa escala com seu negócio sem nenhum *crash*. Sugiro checar a tela de Organograma na viação Local e mudar alguem de setor para ver a mágica estrutural se refazendo!

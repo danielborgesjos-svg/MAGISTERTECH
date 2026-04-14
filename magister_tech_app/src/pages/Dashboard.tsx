@@ -219,7 +219,10 @@ export default function Dashboard() {
 
       {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
-        {kpis.map((kpi, i) => <KpiCa      {/* Cockpit Grid */}
+        {kpis.map((kpi, i) => <KpiCard key={i} {...kpi} />)}
+      </div>
+
+      {/* Cockpit Grid */}
       {['CRIATIVO', 'CONTEÚDO', 'PRODUÇÃO'].includes(sector) ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24, marginBottom: 24 }}>
           {/* Creative / Content Cockpit */}

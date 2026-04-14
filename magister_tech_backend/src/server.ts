@@ -322,13 +322,28 @@ app.post('/api/users', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: 
 
 app.put('/api/users/:id', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
   try {
-    const { name, email, password, role, sector, phone, avatar, isActive, preferences } = req.body;
+    const { name, email, password, role, sector, phone, avatar, isActive, preferences, bio, contracts } = req.body;
     const data: any = { name, email, role, sector, phone, avatar, isActive };
-    if (preferences !== undefined) data.preferences = preferences;
+
+    // bio é campo direto
+    if (bio !== undefined) data.bio = bio;
+
+    // preferences: merge com contracts
+    if (preferences !== undefined) {
+      data.preferences = preferences;
+    } else if (contracts !== undefined) {
+      // Merge contracts dentro das preferences existentes
+      const existing = await prisma.user.findUnique({ where: { id: req.params.id }, select: { preferences: true } });
+      let prefs: any = {};
+      try { prefs = JSON.parse(existing?.preferences || '{}'); } catch {}
+      prefs.contracts = contracts;
+      data.preferences = JSON.stringify(prefs);
+    }
+
     if (password) data.password = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.update({ where: { id: req.params.id }, data });
-    await logAudit(req.user.id, 'UPDATE_USER', 'EQUIPE', { target: user.email });
+    await logAudit(req.user.id, 'UPDATE_USER', 'EQUIPE', { target: user.email, sector, bio, contracts });
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar usuário.' });
@@ -1351,11 +1366,11 @@ app.get('/api/config', authMiddleware, async (_req: any, res: any) => {
 
 app.put('/api/config/:key', authMiddleware, requireRole('ADMIN', 'CEO'), async (req: any, res: any) => {
   try {
-    const { value, label } = req.body;
+    const { value, label, group } = req.body;
     const config = await prisma.appConfig.upsert({
       where: { key: req.params.key },
-      update: { value, label },
-      create: { key: req.params.key, value, label }
+      update: { value, label, group },
+      create: { key: req.params.key, value, label, group }
     });
     await logAudit(req.user.id, 'UPDATE_CONFIG', 'SISTEMA', { key: req.params.key, value });
     res.json(config);
@@ -1364,26 +1379,50 @@ app.put('/api/config/:key', authMiddleware, requireRole('ADMIN', 'CEO'), async (
   }
 });
 
+// Busca por chave individual (pública para carregar logo etc.)
+app.get('/api/config/:key', async (req: any, res: any) => {
+  try {
+    const config = await prisma.appConfig.findUnique({ where: { key: req.params.key } });
+    if (!config) return res.status(404).json({ error: 'Config não encontrada.' });
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro.' });
+  }
+});
+
 // =====================================================
 // LIXEIRA GLOBAL (Trash)
 // =====================================================
 app.get('/api/trash', authMiddleware, requireRole('ADMIN', 'CEO'), async (_req: any, res: any) => {
   try {
-    const [clients, projects, tasks, contracts, transactions, goals] = await Promise.all([
+    const [clients, projects, tasks, contracts, transactions, goals, auditLogs] = await Promise.all([
       prisma.client.findMany({ where: { isDeleted: true }, select: { id: true, name: true, company: true, deletedAt: true } }),
       prisma.project.findMany({ where: { isDeleted: true }, select: { id: true, name: true, type: true, deletedAt: true } }),
       prisma.task.findMany({ where: { isDeleted: true }, select: { id: true, title: true, status: true, deletedAt: true } }),
       prisma.contract.findMany({ where: { isDeleted: true }, select: { id: true, title: true, value: true, deletedAt: true } }),
       prisma.transaction.findMany({ where: { isDeleted: true }, select: { id: true, description: true, amount: true, type: true, deletedAt: true } }),
       prisma.goal.findMany({ where: { isDeleted: true }, select: { id: true, title: true, target: true, deletedAt: true } }),
+      prisma.auditLog.findMany({ where: { action: 'MOVE_TRASH' }, include: { user: { select: { name: true } } } })
     ]);
+
+    // Lookup table
+    const deletedByMap: Record<string, string> = {};
+    for(const log of auditLogs) {
+      try {
+        const details = JSON.parse(log.details);
+        if(details.target) {
+          deletedByMap[details.target] = log.user?.name || 'Desconhecido';
+        }
+      } catch(e) {}
+    }
+
     res.json({
-      clients: clients.map(i => ({ ...i, model: 'client' })),
-      projects: projects.map(i => ({ ...i, model: 'project' })),
-      tasks: tasks.map(i => ({ ...i, model: 'task' })),
-      contracts: contracts.map(i => ({ ...i, model: 'contract' })),
-      transactions: transactions.map(i => ({ ...i, model: 'transaction' })),
-      goals: goals.map(i => ({ ...i, model: 'goal' })),
+      clients: clients.map(i => ({ ...i, model: 'client', deletedByName: deletedByMap[i.id] })),
+      projects: projects.map(i => ({ ...i, model: 'project', deletedByName: deletedByMap[i.id] })),
+      tasks: tasks.map(i => ({ ...i, model: 'task', deletedByName: deletedByMap[i.id] })),
+      contracts: contracts.map(i => ({ ...i, model: 'contract', deletedByName: deletedByMap[i.id] })),
+      transactions: transactions.map(i => ({ ...i, model: 'transaction', deletedByName: deletedByMap[i.id] })),
+      goals: goals.map(i => ({ ...i, model: 'goal', deletedByName: deletedByMap[i.id] })),
     });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar lixeira.' });
@@ -1985,8 +2024,11 @@ app.post('/api/approvals', authMiddleware, blockCliente, async (req: any, res: a
     const { title, type, fileUrl, clientId } = req.body;
     if (!title || !clientId) return res.status(400).json({ error: 'Título e cliente são obrigatórios.' });
 
+    // Aceita array e serializa em string no DB para flexibilidade
+    const processedUrl = Array.isArray(fileUrl) ? JSON.stringify(fileUrl) : fileUrl;
+
     const approval = await prisma.approval.create({
-      data: { title, type: type || 'Criativo', fileUrl, clientId, status: 'PENDING' },
+      data: { title, type: type || 'Criativo', fileUrl: processedUrl, clientId, status: 'PENDING' },
       include: { client: { select: { phone: true, name: true } } }
     });
     
@@ -2009,14 +2051,14 @@ app.post('/api/approvals', authMiddleware, blockCliente, async (req: any, res: a
 app.put('/api/approvals/:id/reply', async (req: any, res: any) => {
   try {
     // Rota pública para aprovar/recusar
-    const { status, respondedBy } = req.body;
+    const { status, respondedBy, rejectReason } = req.body;
     if (!['APPROVED', 'REJECTED'].includes(status)) {
       return res.status(400).json({ error: 'Status inválido.' });
     }
 
     const approval = await prisma.approval.update({
       where: { id: req.params.id },
-      data: { status, respondedBy }
+      data: { status, respondedBy, rejectReason }
     });
     
     res.json({ ok: true, approval });

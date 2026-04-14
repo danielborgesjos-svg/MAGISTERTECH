@@ -565,12 +565,18 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         })));
 
         // 8. Equipe do Banco
-        setTeam(users.map((u: any) => ({
-          id: u.id, name: u.name, initials: u.name.substring(0, 2).toUpperCase(),
-          role: u.role, sector: u.sector || '', email: u.email, avatar: u.avatar,
-          preferences: typeof u.preferences === 'string' ? JSON.parse(u.preferences) : (u.preferences || {}),
-          performance: 5, tasksOpen: 0, ratings: []
-        })));
+        setTeam(users.map((u: any) => {
+          let prefs: any = {};
+          try { prefs = typeof u.preferences === 'string' ? JSON.parse(u.preferences) : (u.preferences || {}); } catch {}
+          return {
+            id: u.id, name: u.name, initials: u.name.substring(0, 2).toUpperCase(),
+            role: u.role, sector: u.sector || '', email: u.email, avatar: u.avatar,
+            bio: u.bio || '',
+            contracts: prefs.contracts || [],
+            preferences: prefs,
+            performance: 5, tasksOpen: 0, ratings: []
+          };
+        }));
 
         // 9. Agenda
         setEvents(evs.map((e: any) => ({
@@ -922,6 +928,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) { console.error('Erro ao atualizar membro:', err); }
   }, []);
 
+  const refreshTeam = useCallback(async () => {
+    try {
+      const users = await apiFetch<any[]>('/api/users');
+      setTeam(users.map((u: any) => {
+        let prefs: any = {};
+        try { prefs = typeof u.preferences === 'string' ? JSON.parse(u.preferences) : (u.preferences || {}); } catch {}
+        return {
+          id: u.id, name: u.name, initials: u.name.substring(0, 2).toUpperCase(),
+          role: u.role, sector: u.sector || '', email: u.email, avatar: u.avatar,
+          bio: u.bio || '', contracts: prefs.contracts || [], preferences: prefs,
+          performance: 5, tasksOpen: 0, ratings: []
+        };
+      }));
+    } catch (err) { console.error('Erro ao recarregar equipe:', err); }
+  }, []);
+
   const deleteTeamMember = useCallback(async (id: string) => {
     try {
       await apiFetch(`/api/users/${id}`, { method: 'DELETE' });
@@ -1138,7 +1160,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       addTransaction, updateTransactionStatus, updateTransaction, deleteTransaction,
       addEvent, updateEvent, deleteEvent, updateClientContentPlan, updateClientSchedule, updateContentComments,
       addContent, updateContent, updateContentStatus, deleteContent,
-      addTeamMember, updateTeamMember, deleteTeamMember, addTeamRating,
+      addTeamMember, updateTeamMember, deleteTeamMember, addTeamRating, refreshTeam,
       updateMemberPassword, updateMemberPermissions,
       addMessage, addFeedPost, deleteFeedPost, pinFeedPost, addFeedComment,
       archiveTask, addTaskLog, updateGoal,

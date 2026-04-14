@@ -517,6 +517,7 @@ model Approval {
   fileUrl     String?
   status      String   @default("PENDING")
   respondedBy String?
+  rejectReason String?
   isDeleted   Boolean  @default(false)
   deletedAt   DateTime?
   clientId    String
