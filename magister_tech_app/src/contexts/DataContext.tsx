@@ -581,9 +581,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
         // 9. Agenda
         setEvents(evs.map((e: any) => ({
-          id: e.id, title: e.title, date: e.startDate?.split('T')[0], time: e.startDate?.split('T')[1]?.substring(0, 5) || '09:00',
-          type: (e.type || 'reunião') as any, clientId: e.clientId, projectId: e.projectId, color: e.color || '#7c3aed',
-          description: e.description
+          id: e.id, title: e.title,
+          date: e.startDate?.split('T')[0] || '',
+          time: e.startDate ? new Date(e.startDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '09:00',
+          type: (e.type?.toLowerCase() === 'internó' ? 'reunião' : e.type?.toLowerCase() || 'reunião') as any,
+          location: e.location || '', clientId: e.clientId, projectId: e.projectId,
+          color: e.color || 'var(--primary)', description: e.description,
         })));
 
         // 10. Financeiro (Faturas e Transações)
@@ -596,8 +599,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         const mappedTrs: Transaction[] = trs.map((t: any) => ({
           id: t.id, description: t.description, amount: t.amount, 
           type: (t.type === 'RECEITA' ? 'income' : 'expense') as "income" | "expense",
-          category: t.category || 'Geral', date: t.dueDate?.split('T')[0], 
-          status: t.status.toLowerCase() as any, contractId: t.contractId, clientId: t.clientId
+          category: t.category || 'Geral', date: t.dueDate?.split('T')[0] || t.createdAt?.split('T')[0], 
+          status: (t.status === 'PAGO' ? 'pago' : 'pendente') as any,
+          contractId: t.contractId, clientId: t.clientId,
+          isFixedExpense: !!t.isFixedExpense,
+          recurringType: t.recurringType || 'mensal',
+          employeeId: t.employeeId || undefined,
         }));
 
         setTransactions([...mappedFts, ...mappedTrs]);
@@ -865,9 +872,30 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   // ─── TRANSACTION ACTIONS (API) ─────────────────────────────────────────────
   const addTransaction = useCallback(async (t: any) => {
     try {
-      const body = { ...t, type: t.type === 'income' ? 'RECEITA' : 'DESPESA' };
+      const body = { 
+        ...t, 
+        type: t.type === 'income' ? 'RECEITA' : 'DESPESA',
+        dueDate: t.date || t.dueDate, // backend expects dueDate
+        status: (t.status || 'pendente').toUpperCase(),
+        recurrence: !!(t.isFixedExpense), // boolean: fixo = true
+      };
       const data = await apiFetch<any>('/api/transactions', { method: 'POST', body: JSON.stringify(body) });
-      setTransactions(prev => [{ ...t, id: data.id }, ...prev]);
+      // Normalize response back to frontend format before adding to state
+      const normalized: Transaction = {
+        id: data.id,
+        description: data.description,
+        amount: data.amount,
+        type: data.type === 'RECEITA' ? 'income' : 'expense',
+        category: data.category || t.category || 'Geral',
+        date: data.dueDate?.split('T')[0] || t.date,
+        status: (data.status === 'PAGO' ? 'pago' : 'pendente') as any,
+        isFixedExpense: !!data.isFixedExpense,
+        recurringType: data.recurringType,
+        employeeId: data.employeeId,
+        contractId: data.contractId,
+        clientId: data.clientId,
+      };
+      setTransactions(prev => [normalized, ...prev]);
     } catch (err) { console.error('Erro ao adicionar transação:', err); }
   }, []);
 
@@ -875,8 +903,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
   }, []);
 
-  const updateTransactionStatus = useCallback((id: string, status: any) => {
+  const updateTransactionStatus = useCallback(async (id: string, status: any) => {
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+    try {
+      await apiFetch(`/api/transactions/${id}/status`, { 
+        method: 'PUT', 
+        body: JSON.stringify({ status }) 
+      });
+    } catch (err) { console.error('Erro ao atualizar status da transação:', err); }
   }, []);
 
   const deleteTransaction = useCallback(async (id: string) => {
@@ -889,13 +923,38 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   // ─── EVENT ACTIONS (API) ──────────────────────────────────────────────────
   const addEvent = useCallback(async (e: any) => {
     try {
-      const data = await apiFetch<any>('/api/events', { method: 'POST', body: JSON.stringify(e) });
-      setEvents(prev => [...prev, { ...e, id: data.id }]);
+      // Backend espera startDate (ISO 8601), não 'date'+'time' separados
+      const datePart = e.date || new Date().toISOString().split('T')[0];
+      const timePart = e.time || '09:00';
+      const startDate = `${datePart}T${timePart}:00`;
+
+      const body = {
+        title: e.title,
+        description: e.description || null,
+        type: (e.type && e.type !== 'reunião') ? e.type.toUpperCase() : 'INTERNO',
+        startDate,
+        endDate: null,
+        allDay: false,
+        location: e.location || null,
+        color: e.color || 'var(--primary)',
+        clientId: e.clientId || null,
+        projectId: e.projectId || null,
+      };
+      const data = await apiFetch<any>('/api/events', { method: 'POST', body: JSON.stringify(body) });
+      // Normaliza resposta de volta ao formato do frontend
+      setEvents(prev => [...prev, {
+        ...e,
+        id: data.id,
+        date: datePart,
+        time: timePart,
+        color: data.color || e.color || 'var(--primary)',
+      }]);
     } catch (err) { console.error('Erro ao adicionar evento:', err); }
   }, []);
 
-  const updateEvent = useCallback((id: string, data: any) => setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data } : e)), []);
-
+  const updateEvent = useCallback((id: string, patch: any) => {
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...patch } : e));
+  }, []);
 
   const deleteEvent = useCallback(async (id: string) => {
     try {

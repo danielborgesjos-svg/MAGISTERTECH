@@ -1044,15 +1044,53 @@ app.get('/api/transactions', authMiddleware, requireRole('ADMIN', 'CEO', 'FINANC
 
 app.post('/api/transactions', authMiddleware, requireRole('ADMIN', 'CEO', 'FINANCEIRO'), async (req: any, res: any) => {
   try {
-    const { description, type, amount, dueDate, status, category, clientId, contractId } = req.body;
+    const { 
+      description, type, amount, dueDate, status, category, clientId, contractId,
+      isFixedExpense, recurringType, recurrence, employeeId, observations
+    } = req.body;
+    
     if (!description || !amount || !dueDate) return res.status(400).json({ error: 'Campos faltando.' });
 
     const transaction = await prisma.transaction.create({
-      data: { description, type, amount: parseFloat(amount), dueDate: new Date(dueDate), status: status || 'PENDENTE', category, clientId, contractId }
+      data: { 
+        description, 
+        type: type.toUpperCase(), // Normalize to RECEITA/DESPESA if coming from frontend as income/expense
+        amount: parseFloat(amount), 
+        dueDate: new Date(dueDate), 
+        status: (status || 'PENDENTE').toUpperCase(), 
+        category, 
+        clientId, 
+        contractId,
+        isFixedExpense: !!isFixedExpense,
+        recurringType,
+        recurrence: !!recurrence, // Schema expects boolean
+        employeeId,
+        observations
+      }
     });
     res.status(201).json(transaction);
   } catch (err) {
+    console.error('[Financeiro] Erro ao criar transação:', err);
     res.status(500).json({ error: 'Erro ao criar transação.' });
+  }
+});
+
+app.put('/api/transactions/:id/status', authMiddleware, requireRole('ADMIN', 'CEO', 'FINANCEIRO'), async (req: any, res: any) => {
+  try {
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ error: 'Status é obrigatório.' });
+
+    const data: any = { status: status.toUpperCase() };
+    if (status.toUpperCase() === 'PAGO') data.paidAt = new Date();
+    else data.paidAt = null;
+
+    const transaction = await prisma.transaction.update({
+      where: { id: req.params.id },
+      data
+    });
+    res.json(transaction);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar status da transação.' });
   }
 });
 
