@@ -5,8 +5,8 @@ import {
   Crown, Briefcase, Code2, PenTool, Megaphone,
   X, Mail, ChevronRight, ChevronDown,
   ShieldCheck, Zap, Users, Target, Network,
-  Plus, Edit2, Trash2, FileText, GitBranch,
-  LayoutDashboard, ArrowDown, ArrowRight, Save
+  Edit2, FileText, GitBranch,
+  LayoutDashboard, Save
 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
@@ -118,7 +118,6 @@ function MemberModal({ member, onClose, onEdit, isAdmin }: {
   member: any; onClose: () => void; onEdit: (m: any) => void; isAdmin: boolean;
 }) {
   const color = getColor(member.sector || member.id);
-  const Icon = getSectorIcon(member.sector);
   const contracts = member.contracts || [];
 
   return (
@@ -588,7 +587,6 @@ export default function DiagramaEquipe() {
         <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
           {enrichedTeam.map(m => {
             const color = getColor(m.sector || m.id);
-            const Icon = getSectorIcon(m.sector);
             return (
               <div key={m.id} className="card" onClick={() => setSelected(m)}
                 style={{ cursor: 'pointer', padding: '16px 18px', borderLeft: `3px solid ${color}`, transition: 'var(--transition)', display: 'flex', alignItems: 'center', gap: 12 }}

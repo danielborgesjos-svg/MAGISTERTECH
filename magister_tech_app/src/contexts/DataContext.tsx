@@ -387,6 +387,7 @@ interface DataContextType {
   updateTeamMember: (id: string, data: Partial<TeamMember>) => void;
   deleteTeamMember: (id: string) => void;
   addTeamRating: (memberId: string, stars: number, feedback: string) => void;
+  refreshTeam: () => Promise<void>;
   updateMemberPassword: (memberId: string, newPassword: string) => void;
   updateMemberPermissions: (memberId: string, permissions: string[], accessLevel: TeamMember['accessLevel']) => void;
   updateMemberPreferences: (memberId: string, preferences: any) => void;
@@ -969,6 +970,16 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // ─── CHAT ACTIONS (API) ───────────────────────────────────────────────────
+  const updateMemberPreferences = useCallback(async (memberId: string, preferences: any) => {
+    try {
+      await apiFetch(`/api/users/${memberId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ preferences: typeof preferences === 'string' ? preferences : JSON.stringify(preferences) })
+      });
+      setTeam(prev => prev.map(m => m.id === memberId ? { ...m, preferences } : m));
+    } catch (err) { console.error('Erro ao atualizar preferências do membro:', err); }
+  }, []);
+
   const addMessage = useCallback(async (channelId: string, authorInitials: string, authorName: string, text: string) => {
     try {
       const msg = await apiFetch<any>('/api/chat/messages', {
@@ -1161,7 +1172,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       addEvent, updateEvent, deleteEvent, updateClientContentPlan, updateClientSchedule, updateContentComments,
       addContent, updateContent, updateContentStatus, deleteContent,
       addTeamMember, updateTeamMember, deleteTeamMember, addTeamRating, refreshTeam,
-      updateMemberPassword, updateMemberPermissions,
+      updateMemberPassword, updateMemberPermissions, updateMemberPreferences,
       addMessage, addFeedPost, deleteFeedPost, pinFeedPost, addFeedComment,
       archiveTask, addTaskLog, updateGoal,
       addTicket, updateTicket, addTicketMessage, deleteTicket,

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import {
   Trash2, CheckCircle, X, TrendingUp, Activity, PieChart,
   Users, Server, Briefcase, ArrowUpRight, ArrowDownRight,
-  LayoutDashboard, Calculator, Plus, Search, Edit2, Filter,
+  LayoutDashboard, Calculator, Plus, Search, Edit2,
   DollarSign, AlertTriangle
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
@@ -61,7 +61,7 @@ export default function Financeiro() {
       description: form.description, amount: parseFloat(form.amount), type: form.type,
       category: form.category, date: form.date, status: form.status,
       isFixedExpense: form.isFixedExpense,
-      recurrence: form.isFixedExpense ? 'mensal' : 'unico',
+      recurrence: (form.isFixedExpense ? 'mensal' : 'unico') as any,
       recurringType: form.isFixedExpense ? form.recurringType : undefined,
       employeeId: form.employeeId || undefined,
     };

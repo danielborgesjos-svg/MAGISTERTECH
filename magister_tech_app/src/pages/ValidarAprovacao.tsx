@@ -190,7 +190,7 @@ export default function ValidarAprovacao() {
                 <h3 style={{ fontSize: 18, fontWeight: 600, color: approval.status === 'APPROVED' ? '#065f46' : '#991b1b' }}>{successMsg}</h3>
                 <p style={{ marginTop: 6, color: approval.status === 'APPROVED' ? '#047857' : '#b91c1c' }}>A equipe já foi notificada!</p>
                 {approval.status === 'REJECTED' && approval.rejectReason && (
-                   <p style={{ marginTop: 12, paddingtop: 12, borderTop: '1px solid #fecaca', color: '#7f1d1d', fontSize: 13 }}>
+                   <p style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #fecaca', color: '#7f1d1d', fontSize: 13 }}>
                      <strong>Seu motivo:</strong> {approval.rejectReason}
                    </p>
                 )}

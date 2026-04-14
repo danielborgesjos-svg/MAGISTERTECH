@@ -8,7 +8,7 @@ import {
   MessageCircle, Image, RefreshCw, ChevronRight,
   Star, AlertCircle, Briefcase, BarChart2, KanbanSquare,
   HelpCircle, X, Send, DollarSign, Eye, MousePointer2,
-  Activity, ChevronLeft, CheckCircle, Plus, Edit2, Upload, Paperclip
+  Activity, ChevronLeft, CheckCircle, Plus, Edit2, Paperclip
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
