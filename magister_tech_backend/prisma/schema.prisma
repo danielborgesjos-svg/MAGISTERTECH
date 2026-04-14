@@ -114,6 +114,7 @@ model Task {
   tags        String?
   order       Int       @default(0)
   tipo        String    @default("tarefa")
+  fileUrl     String?
   masterSeen  Boolean   @default(false)
   isDeleted   Boolean   @default(false)
   deletedAt   DateTime?

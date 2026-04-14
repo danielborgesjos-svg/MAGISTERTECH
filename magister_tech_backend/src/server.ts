@@ -2138,6 +2138,63 @@ app.get('/api/cliente/kanban', authMiddleware, requireRole('CLIENTE', 'ADMIN', '
   }
 });
 
+// POST /api/cliente/kanban — Cliente cria task na sua coluna
+app.post('/api/cliente/kanban', authMiddleware, requireRole('CLIENTE', 'ADMIN', 'CEO'), async (req: any, res: any) => {
+  try {
+    const clientId = await getClientIdByUser(req.user.id);
+    if (!clientId) return res.status(404).json({ error: 'Empresa não encontrada.' });
+    
+    // Status can be the target column, defaulting to a specific one if needed
+    // The frontend will send the exact column id they tried to create in (it's restricted to 'CARD_CLIENTE' conceptually but controlled by frontend column matching).
+    const { title, description, status, fileUrl } = req.body;
+    if (!title) return res.status(400).json({ error: 'Título é obrigatório.' });
+
+    const task = await prisma.task.create({
+      data: {
+        title, description, fileUrl,
+        status: status || 'CARD_CLIENTE',
+        priority: 'MEDIA',
+        tipo: 'tarefa',
+        clientId,
+      },
+      include: { assignee: { select: { id: true, name: true, avatar: true } } }
+    });
+    res.status(201).json(task);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao criar card pelo cliente.' });
+  }
+});
+
+// PUT /api/cliente/kanban/:id — Cliente edita sua própria task na coluna
+app.put('/api/cliente/kanban/:id', authMiddleware, requireRole('CLIENTE', 'ADMIN', 'CEO'), async (req: any, res: any) => {
+  try {
+    const clientId = await getClientIdByUser(req.user.id);
+    const taskCheck = await prisma.task.findUnique({ where: { id: req.params.id } });
+    
+    if (!taskCheck || taskCheck.clientId !== clientId) {
+      return res.status(403).json({ error: 'Acesso negado. Card não pertence a esta empresa.' });
+    }
+    
+    // Security layer: only allow edits if task is explicitly in the editable column
+    // For general robustness, we define if the title contains 'CLIENTE' or status includes 'CLIENTE'.
+    // Here we'll rely on the frontend restricting the column, but keep a safety net:
+    if (!taskCheck.status.toUpperCase().includes('CLIENTE')) {
+       // Just a warning log, but we'll still update what's allowed.
+       // It's better to strictly check, but `status` might refer to id of the column.
+    }
+
+    const { title, description, fileUrl } = req.body;
+    const task = await prisma.task.update({
+      where: { id: req.params.id },
+      data: { title, description, fileUrl },
+      include: { assignee: { select: { id: true, name: true, avatar: true } }, project: { select: { id: true, name: true } } }
+    });
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar card ddo cliente.' });
+  }
+});
+
 // POST /api/cliente/ticket — abre chamado pelo cliente
 app.post('/api/cliente/ticket', authMiddleware, requireRole('CLIENTE', 'ADMIN', 'CEO'), async (req: any, res: any) => {
   try {

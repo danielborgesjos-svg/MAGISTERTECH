@@ -84,6 +84,7 @@ const AdminLayout = () => {
         { to: '/suporte', icon: Headset, label: 'Portal de Suporte (Público)', module: 'dashboard' },
         { to: '/admin/audit', icon: Fingerprint, label: 'Logs Master', module: 'dashboard' },
         { to: '/admin/view-as', icon: Eye, label: 'Visualizar Como', module: 'view-as' },
+        { to: '/admin/lixeira', icon: Trash2, label: 'Lixeira', module: 'dashboard' },
       ]
     },
   ];
@@ -211,11 +212,6 @@ const AdminLayout = () => {
               <button onClick={() => navigate('/admin/config')} className="nav-item">
                 <Settings size={18} /> Configurações
               </button>
-              {(role === 'ADMIN' || role === 'CEO') && (
-                <button onClick={() => navigate('/admin/lixeira')} className="nav-item" style={{ color: 'var(--danger)', opacity: 0.8 }}>
-                  <Trash2 size={18} /> Lixeira
-                </button>
-              )}
               <button onClick={() => { logout(); navigate('/login'); }} className="nav-item" style={{ color: 'var(--danger)' }}>
                 <LogOut size={18} /> Sair do Sistema
               </button>

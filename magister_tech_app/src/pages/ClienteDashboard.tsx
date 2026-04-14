@@ -8,7 +8,7 @@ import {
   MessageCircle, Image, RefreshCw, ChevronRight,
   Star, AlertCircle, Briefcase, BarChart2, KanbanSquare,
   HelpCircle, X, Send, DollarSign, Eye, MousePointer2,
-  Activity, ChevronLeft, CheckCircle
+  Activity, ChevronLeft, CheckCircle, Plus, Edit2, Upload, Paperclip
 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -375,77 +375,165 @@ function CalendarioPostagens({ conteudos }: { conteudos: any[] }) {
   );
 }
 
-function KanbanCliente({ tasks }: { tasks: any[] }) {
+function KanbanCliente({ tasks, columns, fetchTasks }: { tasks: any[], columns: any[], fetchTasks: () => void }) {
   const grouped: Record<string, any[]> = {};
-  KANBAN_COLS.forEach(col => { grouped[col.id] = tasks.filter(t => t.status === col.id); });
+  const [showModal, setShowModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [form, setForm] = useState({ title: '', description: '', fileUrl: '' });
+  const [saving, setSaving] = useState(false);
 
-  // tasks sem status mapeado caem em BACKLOG
-  tasks.filter(t => !KANBAN_COLS.find(c => c.id === t.status)).forEach(t => {
-    if (!grouped['BACKLOG']) grouped['BACKLOG'] = [];
-    grouped['BACKLOG'].push(t);
+  // Consideramos coluna "Card Cliente" ou qualquer uma que contenha "cliente" no titulo
+  const clientCol = columns.find(c => c.title?.toLowerCase().includes('cliente') || c.id === 'CARD_CLIENTE') || columns[0];
+
+  columns.forEach(col => { grouped[col.id] = tasks.filter(t => t.status === col.id); });
+
+  // tasks sem status mapeado caem na primeira coluna
+  tasks.filter(t => !columns.find(c => c.id === t.status)).forEach(t => {
+    const fallbackId = columns[0]?.id || 'BACKLOG';
+    if (!grouped[fallbackId]) grouped[fallbackId] = [];
+    grouped[fallbackId].push(t);
   });
 
   const priorityColor: Record<string, string> = { ALTA: '#ef4444', MEDIA: '#f59e0b', BAIXA: '#10b981' };
 
+  const handleOpenNew = () => {
+    setEditingTask(null);
+    setForm({ title: '', description: '', fileUrl: '' });
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (task: any) => {
+    setEditingTask(task);
+    setForm({ title: task.title || '', description: task.description || '', fileUrl: task.fileUrl || '' });
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    if(!form.title.trim()) return;
+    setSaving(true);
+    try {
+      if(editingTask) {
+        await apiFetch(`/api/cliente/kanban/${editingTask.id}`, { method: 'PUT', body: JSON.stringify(form) });
+      } else {
+        await apiFetch('/api/cliente/kanban', { method: 'POST', body: JSON.stringify({ ...form, status: clientCol?.id }) });
+      }
+      setShowModal(false);
+      fetchTasks();
+    } catch(e) {
+      alert("Houve um erro ao salvar o Card.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.02em' }}>Minhas Tarefas</h2>
-        <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)', marginTop: 4 }}>Acompanhe o andamento das demandas do seu projeto</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div>
+           <h2 style={{ fontSize: 22, fontWeight: 900, color: '#f8fafc', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 10 }}>Minhas Tarefas</h2>
+           <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)', marginTop: 4 }}>Acompanhe o andamento das demandas do seu projeto</p>
+        </div>
+        {clientCol && (
+          <button className="btn btn-primary" onClick={handleOpenNew} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Plus size={16} /> Criar Novo Card
+          </button>
+        )}
       </div>
 
-      {tasks.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 0', color: 'rgba(148,163,184,0.35)' }}>
-          <KanbanSquare size={48} style={{ marginBottom: 16 }} />
-          <p style={{ fontSize: 16, fontWeight: 600 }}>Nenhuma tarefa no momento</p>
-          <p style={{ fontSize: 13, marginTop: 8 }}>As tarefas do seu projeto aparecerão aqui.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 16 }}>
-          {KANBAN_COLS.map(col => (
-            <div key={col.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, overflow: 'hidden' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderTop: `3px solid ${col.color}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc' }}>{col.label}</span>
-                <span style={{ width: 22, height: 22, borderRadius: '50%', background: `${col.color}25`, color: col.color, fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {grouped[col.id]?.length || 0}
-                </span>
-              </div>
-              <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 120, maxHeight: 500, overflowY: 'auto' }}>
-                {(grouped[col.id] || []).length === 0 ? (
-                  <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.25)', textAlign: 'center', padding: '20px 0' }}>Vazio</p>
-                ) : (grouped[col.id] || []).map((task: any) => (
-                  <div key={task.id} style={{
-                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: 10, padding: '12px 14px',
-                    borderLeft: `3px solid ${priorityColor[task.priority] || '#6366f1'}`
-                  }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc', marginBottom: 8, lineHeight: 1.4 }}>{task.title}</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-                      {task.deadline && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Clock size={11} color="rgba(148,163,184,0.5)" />
-                          <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', fontWeight: 600 }}>
-                            {new Date(task.deadline).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
-                      )}
-                      {task.assignee && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#818cf8' }}>
-                            {task.assignee.name?.[0] || '?'}
-                          </div>
-                          <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', fontWeight: 600 }}>{task.assignee.name}</span>
-                        </div>
-                      )}
-                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: `${priorityColor[task.priority] || '#6366f1'}20`, color: priorityColor[task.priority] || '#6366f1' }}>
-                        {task.priority || 'MEDIA'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16 }}>
+        {columns.map(col => (
+          <div key={col.id} style={{ minWidth: 260, width: 280, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, overflow: 'hidden', flexShrink: 0 }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', borderTop: `3px solid ${col.color || '#3b82f6'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#f8fafc' }}>{col.title || col.label}</span>
+              <span style={{ width: 22, height: 22, borderRadius: '50%', background: `${col.color || '#3b82f6'}25`, color: col.color || '#3b82f6', fontSize: 11, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {grouped[col.id]?.length || 0}
+              </span>
             </div>
-          ))}
+            
+            <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 120, maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+              {(grouped[col.id] || []).length === 0 ? (
+                <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.25)', textAlign: 'center', padding: '20px 0' }}>Vazio</p>
+              ) : (grouped[col.id] || []).map((task: any) => (
+                <div key={task.id} style={{
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 10, padding: '12px 14px',
+                  borderLeft: `3px solid ${priorityColor[task.priority] || '#6366f1'}`,
+                  position: 'relative'
+                }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc', marginBottom: 8, lineHeight: 1.4 }}>{task.title}</p>
+                  
+                  {/* Se estiver na coluna do cliente, mostrar botão de Editar */}
+                  {col.id === clientCol?.id && (
+                    <button className="btn-icon" style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(255,255,255,0.1)', padding: 4, borderRadius: 6 }} onClick={() => handleOpenEdit(task)}>
+                       <Edit2 size={12} color="#f8fafc" />
+                    </button>
+                  )}
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                    {task.deadline && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Clock size={11} color="rgba(148,163,184,0.5)" />
+                        <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', fontWeight: 600 }}>
+                          {new Date(task.deadline).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    )}
+                    {task.fileUrl && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} title="Contém Anexo">
+                         <Paperclip size={11} color="rgba(148,163,184,0.5)" />
+                      </div>
+                    )}
+                    {task.assignee && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900, color: '#818cf8' }}>
+                          {task.assignee.name?.[0] || '?'}
+                        </div>
+                        <span style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', fontWeight: 600 }}>{task.assignee.name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {columns.length === 0 && (
+          <div style={{ width: '100%', textAlign: 'center', padding: '40px 0', color: 'rgba(148,163,184,0.5)' }}>Nenhuma coluna configurada.</div>
+        )}
+      </div>
+
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card modal animate-scale-in" style={{ width: 440, background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', padding: 32 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{editingTask ? 'Editar Card' : 'Novo Card'}</h3>
+              <button className="btn-icon" onClick={() => setShowModal(false)}><X size={18} color="#fff" /></button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label className="form-label" style={{ color: '#cbd5e1' }}>Título</label>
+                <input className="input" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }} value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="Do que você precisa?" />
+              </div>
+              
+              <div>
+                <label className="form-label" style={{ color: '#cbd5e1' }}>Detalhes Adicionais (opcional)</label>
+                <textarea className="input" style={{ width: '100%', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', minHeight: 100 }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Descreva tudo que achar relevante para a equipe..." />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ color: '#cbd5e1' }}>Link do Anexo (Google Drive, Imagem, etc)</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Paperclip size={18} color="rgba(148,163,184,0.5)" />
+                  <input className="input" style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }} value={form.fileUrl} onChange={e => setForm({...form, fileUrl: e.target.value})} placeholder="Cole a URL do arquivo" />
+                </div>
+              </div>
+
+              <button className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} onClick={handleSave} disabled={saving || !form.title.trim()}>
+                 {saving ? 'Aguarde...' : 'Salvar Card de Interação'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -608,6 +696,7 @@ export default function ClienteDashboard() {
   const [_agenda, setAgenda]         = useState<any[]>([]);
   const [relatorios, setRelatorios] = useState<any>({ conteudos: [], projetos: [] });
   const [kanbanTasks, setKanbanTasks] = useState<any[]>([]);
+  const [kanbanColumns, setKanbanColumns] = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [ticketOpen, setTicketOpen] = useState(false);
@@ -637,7 +726,16 @@ export default function ClienteDashboard() {
   };
 
   const fetchKanban = async () => {
-    try { const d = await apiFetch<any[]>('/api/cliente/kanban'); setKanbanTasks(d); } catch { }
+    try { 
+      const [tasks, columns] = await Promise.all([
+        apiFetch<any[]>('/api/cliente/kanban'),
+        apiFetch<any[]>('/api/boards/columns')
+      ]);
+      // filter only kanban columns
+      const kanbanCols = columns.filter((c: any) => c.boardType === 'KANBAN');
+      setKanbanColumns(kanbanCols.length > 0 ? kanbanCols : KANBAN_COLS);
+      setKanbanTasks(tasks); 
+    } catch { }
   };
 
   useEffect(() => { fetchDashboard(); }, []);
@@ -1016,14 +1114,14 @@ export default function ClienteDashboard() {
           {/* === CALENDÁRIO === */}
           {activeTab === 'calendario' && (
             <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <CalendarioPostagens conteudos={relatorios.conteudos || []} />
+              <CalendarioPostagens conteudos={dashData?.conteudos || []} />
             </div>
           )}
 
           {/* === KANBAN === */}
           {activeTab === 'kanban' && (
             <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <KanbanCliente tasks={kanbanTasks} />
+              <KanbanCliente tasks={kanbanTasks} columns={kanbanColumns} fetchTasks={fetchKanban} />
             </div>
           )}
 
