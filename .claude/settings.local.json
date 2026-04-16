@@ -22,7 +22,8 @@
       "WebFetch(domain:graph.facebook.com)",
       "WebFetch(domain:developers.hostinger.com)",
       "WebFetch(domain:api.hostinger.com)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "mcp__claude_ai_Google_Calendar__create_event"
     ]
   }
 }

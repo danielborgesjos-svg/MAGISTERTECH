@@ -27,6 +27,7 @@ cd $WORKSPACE_DIR
 $EXCLUDES = @(
     "--exclude=node_modules",
     "--exclude=dist",
+    "--exclude=dev.db",
     "--exclude=.env",
     "--exclude=.wa_session",
     "--exclude=.wwebjs_auth",
