@@ -56,11 +56,11 @@ function DealCard({ task, isOverlay, onEdit, onWAClick }: { task: Task; isOverla
         )}
 
         <div style={{ paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-             <div className="avatar" title={task.assignee} style={{ width: 24, height: 24, fontSize: 10, fontWeight: 800, background: `hsl(${(task.assignee || 'X').charCodeAt(0) * 30}, 60%, 50%)`, color: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', background: 'var(--bg-subtle)', borderRadius: 100, border: '1px solid var(--border)' }}>
+             <div className="avatar" title={task.assignee} style={{ width: 20, height: 20, fontSize: 9, fontWeight: 900, background: `hsl(${(task.assignee || 'X').charCodeAt(0) * 30}, 60%, 45%)`, color: '#fff', borderRadius: '50%' }}>
                 {task.assignee}
              </div>
-             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Proprietário</span>
+             <span style={{ fontSize: 10, color: 'var(--text-sec)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>Proprietário</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
              {task.phone && (

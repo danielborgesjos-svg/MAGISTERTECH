@@ -507,17 +507,41 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           id: c.id, title: c.title, clientId: c.clientId, value: c.value,
           startDate: c.startDate?.split('T')[0] || '', endDate: c.endDate?.split('T')[0] || '',
           recurrence: (c.recurrence || 'mensal') as any,
-          status: c.status === 'VIGENTE' ? 'ativo' : c.status === 'ENCERRADO' ? 'encerrado' : 'vencendo',
+          status: c.status === 'VIGENTE' ? 'ativo' : c.status === 'CANCELADO' ? 'cancelado' : c.status === 'ENCERRADO' ? 'encerrado' : 'vencendo',
           createdAt: c.createdAt?.split('T')[0] || '',
         })));
 
         // 3. Mapear Projetos
-        setProjects(projs.map(p => ({
-          id: p.id, name: p.name, clientId: p.clientId, type: p.type || 'marketing',
-          status: (p.status === 'EM_ANDAMENTO' ? 'ativo' : p.status === 'CONCLUIDO' ? 'concluido' : 'pausado') as any,
-          progress: 0, startDate: p.startDate?.split('T')[0] || '', endDate: p.endDate?.split('T')[0] || '',
-          team: [], budget: 0, color: '#7c3aed',
-        })));
+        setProjects(projs.map(p => {
+          let meetings: any[] = [];
+          try { meetings = typeof p.reunioes === 'string' ? JSON.parse(p.reunioes) : (p.reunioes || []); } catch {}
+          
+          return {
+            id: p.id, name: p.name, clientId: p.clientId, type: p.type || 'marketing',
+            status: (p.status === 'EM_ANDAMENTO' ? 'ativo' : p.status === 'CONCLUIDO' ? 'concluido' : 'pausado') as any,
+            progress: p.progress || 0, 
+            startDate: p.startDate?.split('T')[0] || '', 
+            endDate: p.endDate?.split('T')[0] || '',
+            team: p.team ? p.team.split(',') : [], 
+            budget: p.budget || 0, 
+            color: p.coreColors || '#7c3aed',
+            responsavelInterno: p.responsavelInterno,
+            responsavelCliente: p.responsavelCliente,
+            emailCliente: p.emailCliente,
+            whatsappCliente: p.whatsappCliente,
+            plano: p.plano,
+            objetivos: p.objetivos,
+            metas: p.metas,
+            resumo: p.resumo,
+            reunioes: meetings,
+            postagens: p.postagens,
+            atribuicoes: p.atribuicoes,
+            coreColors: p.coreColors,
+            fontFamily: p.fontFamily,
+            mandatoryRules: p.mandatoryRules,
+            organogramData: p.organogramData,
+          };
+        }));
 
         // 4. Mapear Tickets
         setTickets(tks.map(t => ({
@@ -783,6 +807,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const updateContractStatus = useCallback(async (id: string, status: any) => {
     setContracts(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+    try {
+      // O backend mapeia 'ativo' -> 'VIGENTE', 'encerrado' -> 'ENCERRADO', 'cancelado' -> 'CANCELADO'
+      const dbStatus = status === 'ativo' ? 'VIGENTE' : status.toUpperCase();
+      await apiFetch(`/api/contracts/${id}`, { 
+        method: 'PUT', 
+        body: JSON.stringify({ status: dbStatus }) 
+      });
+    } catch (err) { console.error('Erro ao atualizar status do contrato:', err); }
   }, []);
 
   const deleteContract = useCallback(async (id: string) => {
@@ -793,12 +825,29 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   // ─── PROJECT ACTIONS (API) ─────────────────────────────────────────────────
   const addProject = useCallback(async (p: any) => {
     try {
+      const body = {
+        name: p.name, clientId: p.clientId, type: p.type || 'marketing', 
+        startDate: p.startDate, endDate: p.endDate,
+        progress: p.progress || 0, budget: p.budget || 0,
+        team: Array.isArray(p.team) ? p.team.join(',') : p.team,
+        responsavelInterno: p.responsavelInterno, responsavelCliente: p.responsavelCliente,
+        emailCliente: p.emailCliente, whatsappCliente: p.whatsappCliente,
+        plano: p.plano, objetivos: p.objetivos, metas: p.metas, resumo: p.resumo,
+        postagens: p.postagens, atribuicoes: p.atribuicoes,
+        coreColors: p.color || p.coreColors || '#7c3aed', fontFamily: p.fontFamily,
+        mandatoryRules: p.mandatoryRules, organogramData: p.organogramData,
+        reunioes: JSON.stringify(p.reunioes || [])
+      };
+
       const data = await apiFetch<any>('/api/projects', {
         method: 'POST',
-        body: JSON.stringify({ name: p.name, clientId: p.clientId, type: p.type, startDate: p.startDate, endDate: p.endDate }),
+        body: JSON.stringify(body),
       });
-      setProjects(prev => [{ ...p, id: data.id, progress: 0, color: '#7c3aed' }, ...prev]);
-    } catch { setProjects(prev => [{ ...p, id: `proj${Date.now()}`, progress: 0, color: '#7c3aed' }, ...prev]); }
+      setProjects(prev => [{ ...p, id: data.id, progress: body.progress, color: body.coreColors }, ...prev]);
+    } catch (err) { 
+      console.error('[DataContext] Erro ao criar projeto:', err);
+      setProjects(prev => [{ ...p, id: `proj${Date.now()}`, progress: 0, color: '#7c3aed' }, ...prev]); 
+    }
   }, []);
 
   const updateProject = useCallback(async (id: string, data: any) => {

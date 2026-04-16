@@ -79,11 +79,28 @@ model Project {
   name         String
   type         String    @default("marketing")
   status       String    @default("EM_ANDAMENTO")
+  progress     Int       @default(0)
+  budget       Float     @default(0)
+  team         String?   // JSON ou string separada por vírgula
   startDate    DateTime
   endDate      DateTime?
   description  String?
   deliverables String?
   observations String?
+  
+  // Cockpit / Branding fields
+  responsavelInterno String?
+  responsavelCliente String?
+  emailCliente       String?
+  whatsappCliente    String?
+  plano              String?
+  objetivos          String?
+  metas              String?
+  resumo             String?
+  postagens          String?
+  atribuicoes        String?
+  reunioes           String?   // JSON com histórico de reuniões
+  
   coreColors   String?
   fontFamily   String?
   socialMediaLinks String?

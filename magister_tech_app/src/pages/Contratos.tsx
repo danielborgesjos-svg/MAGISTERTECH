@@ -355,14 +355,28 @@ export default function Contratos() {
                 ))}
               </div>
             </div>
-            <div className="modal-footer" style={{ padding: '20px 32px', background: 'var(--bg-card)', justifyContent: 'space-between' }}>
-              {canManageContracts ? (
-                <button className="btn btn-secondary" onClick={() => { updateContractStatus(selectedContract.id, 'ativo'); setSelectedContract(null); }}>
-                  <RefreshCw size={14} /> Renovar Contrato
-                </button>
-              ) : <div/>}
-              <button className="btn btn-outline" onClick={() => setSelectedContract(null)}>Fechar</button>
-            </div>
+            <div className="modal-footer" style={{ padding: '20px 32px', background: 'var(--bg-card)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+               {canManageContracts && (
+                 <>
+                   {selectedContract.status !== 'ativo' && (
+                     <button className="btn btn-secondary" onClick={() => { updateContractStatus(selectedContract.id, 'ativo'); setSelectedContract(null); }}>
+                       <RefreshCw size={14} /> Reativar Contrato
+                     </button>
+                   )}
+                   {selectedContract.status !== 'encerrado' && (
+                     <button className="btn btn-ghost" style={{ color: 'var(--text-muted)' }} onClick={() => { updateContractStatus(selectedContract.id, 'encerrado'); setSelectedContract(null); }}>
+                       Inativar
+                     </button>
+                   )}
+                   {selectedContract.status !== 'cancelado' && (
+                     <button className="btn btn-ghost" style={{ color: 'var(--danger)' }} onClick={() => { if(confirm('Cancelar contrato?')) { updateContractStatus(selectedContract.id, 'cancelado'); setSelectedContract(null); } }}>
+                       Cancelar Contrato
+                     </button>
+                   )}
+                 </>
+               )}
+               <button className="btn btn-outline" onClick={() => setSelectedContract(null)}>Fechar</button>
+             </div>
           </div>
         </div>
       )}

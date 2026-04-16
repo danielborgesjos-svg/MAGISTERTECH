@@ -519,8 +519,13 @@ export default function Projetos() {
                <div style={{ display: 'flex', gap: 12 }}>
                   <button className="btn btn-outline" onClick={() => setSelected(null)}>Fechar Visualização</button>
                   <button className="btn btn-primary" onClick={() => {
-                    updateProject(selected.id, { progress: Math.min(selected.progress + 10, 100) });
-                    setSelected(p => p ? { ...p, progress: Math.min(p.progress + 10, 100) } : p);
+                     updateProject(selected.id, selected);
+                     alert('Dados do projeto salvos no banco de dados!');
+                   }} style={{ background: 'var(--success)', borderColor: 'var(--success)' }}><CheckCircle size={16}/> Salvar Alterações</button>
+                  <button className="btn btn-primary" onClick={() => {
+                    const newProgress = Math.min(selected.progress + 10, 100);
+                    updateProject(selected.id, { progress: newProgress });
+                    setSelected(p => p ? { ...p, progress: newProgress } : p);
                   }}><ChevronRight size={16}/> Adiantar 10% do Escopo</button>
                </div>
             </div>

@@ -110,7 +110,9 @@ function BoardColumn({ col, onAddTask, onEditTask }: {
             </div>
             <div style={{ width: 14, height: 14, borderRadius: '50%', background: col.color || 'var(--primary)', flexShrink: 0, boxShadow: `0 0 14px ${col.color || 'var(--primary)'}` }} />
             <h4 style={{ fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-main)' }}>{col.title}</h4>
-            <span className="badge" style={{ fontSize: 10, background: 'var(--bg-subtle)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{col.tasks.filter(t => !t.isArchived).length}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-subtle)', padding: '2px 8px', borderRadius: 100, border: '1px solid var(--border)' }}>
+               <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)' }}>{col.tasks.filter(t => !t.isArchived).length}</span>
+            </div>
           </div>
           <button className="btn-icon" style={{ width: 30, height: 30, background: 'var(--bg-card)', borderColor: 'var(--border)' }} onClick={onAddTask}><Plus size={14} /></button>
         </div>
@@ -251,6 +253,7 @@ export default function Kanban() {
     }
     setModalTask(null);
     setTargetColId(null);
+    setIsNew(false);
   };
 
   const handleDelete = () => {
@@ -258,6 +261,7 @@ export default function Kanban() {
     if (confirm('Excluir esta tarefa permanentemente?')) {
       deleteTask(modalTask.id);
       setModalTask(null);
+      setIsNew(false);
     }
   };
 
@@ -267,6 +271,7 @@ export default function Kanban() {
      archiveTask(modalTask.id, newArchivedState);
      addTaskLog(modalTask.id, newArchivedState ? 'Arquivou a tarefa' : 'Desarquivou a tarefa', user?.name || 'Membro');
      setModalTask(null);
+     setIsNew(false);
   };
 
   const addColumn = () => {
@@ -287,27 +292,24 @@ export default function Kanban() {
             <Activity size={12} color="var(--primary)" /> Produção · Workflow
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.03em', color: 'var(--text-main)', margin: 0, lineHeight: 1.1 }}>
-            Kanban Cockpit
+            PLANEJAMENTO INTERNO MAGISTER TECH
           </h1>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>
-            Sistema ágil de produção Magister. Arraste tickets entre as colunas para atualizar status.
+            Gestão centralizada de demandas, processos e backlog operacional.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          <div className="card" style={{ padding: '8px 16px', display: 'flex', gap: 16 }}>
-            {kanban.map(col => (
-              <div key={col.id} style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: 16, fontWeight: 900, color: col.color || 'var(--primary)' }}>{col.tasks.length}</p>
-                <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 700, maxWidth: 60, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase' }}>{col.title}</p>
-              </div>
-            ))}
-          </div>
-          <button className="btn btn-primary" onClick={addColumn}><Plus size={16} /> Add Coluna</button>
+           <button className="btn btn-primary" onClick={addColumn}>
+             <Plus size={16} /> Nova Coluna
+           </button>
         </div>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-        <div className="kanban-container">
+        <div className="kanban-container" style={{
+          display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 20, minHeight: 'calc(100vh - 280px)',
+          paddingRight: 20, maskImage: 'linear-gradient(to right, black 95%, transparent 100%)'
+        }}>
           <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
             {kanban.map(col => (
               <BoardColumn key={col.id} col={col} onAddTask={() => openNew(col.id)} onEditTask={openEdit} />
@@ -353,7 +355,7 @@ export default function Kanban() {
 
       {/* ─── TASK MODAL PREMIUM ────────────────────────────────────── */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => { setModalTask(null); setTargetColId(null); }} style={{ background: 'rgba(15, 14, 26, 0.45)', backdropFilter: 'blur(4px)', alignItems: 'flex-start', overflowY: 'auto', padding: '60px 20px' }}>
+        <div className="modal-overlay" onClick={() => { setModalTask(null); setTargetColId(null); setIsNew(false); }} style={{ background: 'rgba(15, 14, 26, 0.45)', backdropFilter: 'blur(4px)', alignItems: 'flex-start', overflowY: 'auto', padding: '60px 20px' }}>
           <div className="modal modal-xl" style={{ maxWidth: 640, padding: 0, display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.2)', margin: 'auto' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header" style={{ padding: '24px 32px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -365,7 +367,7 @@ export default function Kanban() {
                     <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Produção e execução de demandas</p>
                  </div>
               </div>
-              <button className="btn-icon" style={{ background: 'var(--bg-subtle)' }} onClick={() => { setModalTask(null); setTargetColId(null); }}><X size={18} /></button>
+              <button className="btn-icon" style={{ background: 'var(--bg-subtle)' }} onClick={() => { setModalTask(null); setTargetColId(null); setIsNew(false); }}><X size={18} /></button>
             </div>
 
             <div className="modal-body" style={{ padding: 32 }}>
@@ -494,7 +496,7 @@ export default function Kanban() {
                 )}
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
-                <button className="btn btn-ghost" onClick={() => { setModalTask(null); setTargetColId(null); }}>Cancelar</button>
+                <button className="btn btn-ghost" onClick={() => { setModalTask(null); setTargetColId(null); setIsNew(false); }}>Cancelar</button>
                 <button className="btn btn-primary" onClick={handleSave} disabled={!form.title} style={{ padding: '0 24px', height: 42 }}>
                    {isNew ? <><CheckCircle size={16} /> Emitir Ticket</> : <><CheckCircle size={16} /> Salvar Ticket</>}
                 </button>

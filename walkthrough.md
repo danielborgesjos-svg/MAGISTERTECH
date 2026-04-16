@@ -1,27 +1,36 @@
-# Entrega: Estrutura Organizacional e Fluxos
+# Walkthrough — Agenda Corporativa Premium & Ajustes UX
 
-O novo painel de Organograma foi reescrito **do zero** para garantir que sua visualização da equipe seja totalmente limpa (sem tela branca) e altamente funcional para a Gestão de Contratos e Setores.
+Transformamos a agenda simples em um **Cockpit de Gestão de Tempo** de nível empresarial e refinamos a experiência visual no funil de vendas (Pipeline).
 
-## 1. Múltiplas Visões Interativas
+## 📅 Agenda Corporativa Premium
 
-Criamos três modos distintos de visualização, disponíveis via Switcher no topo do módulo da equipe:
+### 1. Layout Imersivo (Split-Pane)
+O modo Mensal agora conta com um painel duplo:
+- **Lado Esquerdo**: Grade de calendário moderna com glassmorphism nos dias selecionados e indicadores de carga por dia.
+- **Lado Direito ("Smart Feed")**: Painel de destaques do dia selecionado, permitindo visualizar rapidamente todos os compromissos sem trocar de tela.
 
-1. **Organograma (Hierárquico):** Exibe o CEO (diretoria) acima, os Gestores intermediários e alinhados num grid, todos agrupados pelo Setor (`CRIATIVO`, `TECNOLOGIA`, `COMERCIAL` etc).
-2. **Fluxograma (Processos):** Uma apresentação visual do pipeline oficial que descreve os "7 Passos" desde o chumbamento e _Onboarding_ até a conclusão da "Produção e Relatórios".
-3. **Lista por Setor:** Visão compacta tipo lista colapsável, excelente para achar um membro rápido se a agência ficar superlotada.
+### 2. Visão Diária em Timeline
+A visualização do dia foi totalmente reformulada:
+- **Eixo Temporal**: Timeline vertical clara com marcação de horas.
+- **Cards de Alta Fidelidade**: Cada compromisso exibe ícones dinâmicos (Vídeo para reuniões, Mapa para locais físicos) e badges de cliente/projeto.
+- **Painel de Performance**: Resumo lateral de ocupação e lembretes rápidos para produtividade.
 
-## 2. Alocação de Contratos (Admin Master)
+### 3. Novo Modal de Agendamento
+O modal de criação agora é mais intuitivo e profissional:
+- Campos agrupados por relevância (O que, Quando, Onde).
+- Design focado em alta legibilidade e rapidez de preenchimento.
 
-Usuários que são `ADMIN` ou `CEO` agora têm acesso ao botão **Editar** sobre qualquer cartão no Diagrama. O painel modal de edição garante:
+## 📈 Ajustes no Pipeline
+- **Agrupamento de Responsáveis**: Corrigimos o layout do "Proprietário" nos cards. O avatar e o nome agora estão centralizados dentro de um badge elegante, eliminando a sensação de descentralização relatada.
 
-> [!IMPORTANT]
-> **O Poder do Master**
-> - **Mudança de Setor:** Você pode definir "CRIATIVO", "CONTEÚDO" alterando-os sob demanda via texto, e ele recriará o setor no diagrama instantaneamente!
-> - **Atribuição de Contratos:** Traz todos os clientes em lista de checkboxes. Tudo que é assinalado a uma pessoa reflete diretamente no card dela que "X e Y são sob a responsabilidade" dessa pessoa.
+---
 
-## 3. Dinamismo de Backend
+## Como Validar
+1.  **Agenda**: Alterne entre as visões Mês/Semana/Dia e observe o novo layout de Cockpit. Experimente criar um evento para ver o novo modal em ação.
+2.  **Pipeline**: Verifique os cards do pipeline; o rodapé com o avatar do responsável agora deve estar perfeitamente alinhado e agrupado.
 
-- O Backend (`server.ts`: Rota de update `PUT` do user) foi reprogramado para injetar **bio**, modificar **sector** e colocar o array selecionado **contracts** encapsulado de forma engenhosa no campo json de *preferences*, garantindo a persistência.
-- O Frontend usa o React `useContext(DataContext)` com uma nova função assíncrona `refreshTeam()`, para que ao trocar um funcionário de setor, a tela atualize realocando-o na hora. 
+> [!TIP]
+> Use a nova **Gaveta de Lembretes** na visão diária para notas rápidas que não precisam de um horário específico mas são cruciais para o dia.
 
-Agora a estrutura da empresa escala com seu negócio sem nenhum *crash*. Sugiro checar a tela de Organograma na viação Local e mudar alguem de setor para ver a mágica estrutural se refazendo!
+---
+**JARVIS-001** | Agenda Premium Ativada. Design Magister Tech Elevado.

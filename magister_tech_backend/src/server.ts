@@ -588,32 +588,64 @@ app.get('/api/projects/:id', authMiddleware, blockCliente, async (req: any, res:
 
 app.post('/api/projects', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'GESTOR_PROJETOS'), async (req: any, res: any) => {
   try {
-    const { name, type, status, startDate, endDate, description, deliverables, observations, clientId } = req.body;
+    const { 
+      name, type, status, startDate, endDate, description, deliverables, observations, clientId,
+      progress, budget, team, responsavelInterno, responsavelCliente, emailCliente, whatsappCliente,
+      plano, objetivos, metas, resumo, postagens, atribuicoes, reunioes, coreColors, fontFamily,
+      socialMediaLinks, mandatoryRules, organogramData 
+    } = req.body;
+    
     if (!name || !clientId || !startDate) return res.status(400).json({ error: 'name, clientId e startDate são obrigatórios.' });
 
     const project = await prisma.project.create({
-      data: { name, type: type || 'marketing', status: status || 'EM_ANDAMENTO', startDate: new Date(startDate), endDate: endDate ? new Date(endDate) : null, description, deliverables, observations, clientId }
+      data: { 
+        name, type: type || 'marketing', status: status || 'EM_ANDAMENTO', 
+        startDate: new Date(startDate), 
+        endDate: endDate ? new Date(endDate) : null, 
+        description, deliverables, observations, clientId,
+        progress: parseInt(progress) || 0,
+        budget: parseFloat(budget) || 0,
+        team, responsavelInterno, responsavelCliente, emailCliente, whatsappCliente,
+        plano, objetivos, metas, resumo, postagens, atribuicoes, 
+        reunioes: typeof reunioes === 'string' ? reunioes : JSON.stringify(reunioes || []),
+        coreColors, fontFamily, socialMediaLinks, mandatoryRules, organogramData
+      }
     });
     res.status(201).json(project);
   } catch (err) {
+    console.error('[Projects] Erro ao criar:', err);
     res.status(500).json({ error: 'Erro ao criar projeto.' });
   }
 });
 
 app.put('/api/projects/:id', authMiddleware, requireRole('ADMIN', 'CEO', 'GESTOR', 'GESTOR_PROJETOS'), async (req: any, res: any) => {
   try {
-    const { name, type, status, startDate, endDate, description, deliverables, observations } = req.body;
+    const { 
+      name, type, status, startDate, endDate, description, deliverables, observations,
+      progress, budget, team, responsavelInterno, responsavelCliente, emailCliente, whatsappCliente,
+      plano, objetivos, metas, resumo, postagens, atribuicoes, reunioes, coreColors, fontFamily,
+      socialMediaLinks, mandatoryRules, organogramData
+    } = req.body;
+    
     const project = await prisma.project.update({
       where: { id: req.params.id },
       data: {
         name, type, status,
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : null,
-        description, deliverables, observations
+        description, deliverables, observations,
+        progress: progress !== undefined ? parseInt(progress) : undefined,
+        budget: budget !== undefined ? parseFloat(budget) : undefined,
+        team: team !== undefined ? (Array.isArray(team) ? team.join(',') : team) : undefined,
+        responsavelInterno, responsavelCliente, emailCliente, whatsappCliente,
+        plano, objetivos, metas, resumo, postagens, atribuicoes,
+        reunioes: reunioes !== undefined ? (typeof reunioes === 'string' ? reunioes : JSON.stringify(reunioes)) : undefined,
+        coreColors, fontFamily, socialMediaLinks, mandatoryRules, organogramData
       }
     });
     res.json(project);
   } catch (err) {
+    console.error('[Projects] Erro ao atualizar:', err);
     res.status(500).json({ error: 'Erro ao atualizar projeto.' });
   }
 });
